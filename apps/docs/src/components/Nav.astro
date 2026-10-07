@@ -1,0 +1,32 @@
+---
+import Icon from "./Icon.astro";
+import ThemeSwitch from "./ThemeSwitch.astro";
+
+interface Props {
+  current: "home" | "docs";
+}
+
+const { current } = Astro.props;
+---
+
+<header class="nav">
+  <div class="nav__bar lb">
+    <a class="brand" href="/" aria-label="Liquid Blur, home">
+      <span class="mark"><span class="lb"></span></span>
+      Liquid Blur <span class="brand__by">by Mikhail Mogilnikov</span>
+    </a>
+    <nav class="nav__links" aria-label="Sections">
+      <a href="/#playground">Playground</a>
+      <a href="/docs" aria-current={current === "docs" ? "page" : undefined}>Docs</a>
+      <a href="/docs#api">API</a>
+      <a href="/docs#faq">FAQ</a>
+    </nav>
+    <div class="nav__end">
+      <a class="nav__docs" href="/docs" aria-current={current === "docs" ? "page" : undefined}>Docs</a>
+      <ThemeSwitch />
+      <a class="icon-link" href="https://github.com/mikhailmogilnikov" aria-label="Mikhail Mogilnikov on GitHub">
+        <Icon name="github" size={19} />
+      </a>
+    </div>
+  </div>
+</header>

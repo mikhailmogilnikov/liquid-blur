@@ -1,0 +1,187 @@
+---
+import Icon from "./Icon.astro";
+
+/** Album art without images: two soft lights over a diagonal, enough color for the glass to blur. */
+const art = (a: string, b: string, c: string, d: string) =>
+  `radial-gradient(circle at 28% 24%, ${a} 0, transparent 58%), radial-gradient(circle at 78% 82%, ${b} 0, transparent 55%), linear-gradient(135deg, ${c}, ${d})`;
+
+const palette: [string, string, string, string][] = [
+  ["#ffd36e", "#ff4f81", "#ff7a59", "#b5179e"],
+  ["#7cf3ff", "#2f7bff", "#3a0ca3", "#4cc9f0"],
+  ["#c7ff6b", "#1fd1a5", "#0b7a75", "#2ec4b6"],
+  ["#ffb3c7", "#b45cff", "#5a189a", "#f72585"],
+  ["#fff3b0", "#ff9f1c", "#e85d04", "#ffba08"],
+  ["#a0c4ff", "#bdb2ff", "#3d5a80", "#98c1d9"],
+  ["#ff8fab", "#ffd166", "#ef476f", "#06d6a0"],
+  ["#caffbf", "#9bf6ff", "#2a9d8f", "#264653"],
+  ["#ffc6ff", "#ff595e", "#8338ec", "#3a86ff"],
+  ["#fde2e4", "#ff8c42", "#6d597a", "#e56b6f"],
+];
+
+const albums = [
+  ["Neon Tides", "Lumen"],
+  ["Glass Houses", "Paper Kites"],
+  ["Soft Machines", "Arlo Vance"],
+  ["Afterglow", "Mira Sol"],
+  ["Low Light", "The Weekend Club"],
+  ["Night Swim", "Coral"],
+  ["Bloom", "Ines Okafor"],
+  ["Still Water", "Northern Lakes"],
+  ["Prism", "Vela"],
+  ["Golden Hour", "June & the Tide"],
+].map(([name, by], i) => ({ name, by, art: art(...palette[i % palette.length]) }));
+
+const tracks = [
+  ["Surface Tension", "Lumen", "3:42"],
+  ["Frosted", "Vela", "4:05"],
+  ["Refraction (Not Included)", "Paper Kites", "2:58"],
+  ["Backdrop", "Mira Sol", "3:21"],
+  ["Saturate", "Coral", "3:47"],
+].map(([name, by, time], i) => ({ name, by, time, art: albums[(i * 3) % albums.length].art }));
+
+const features = [
+  { kicker: "New album", title: "Neon Tides, out now", art: art("#ffe66d", "#ff4f81", "#ff6b6b", "#5f0f40") },
+  { kicker: "Playlist", title: "Glass, calm and clear", art: art("#90f1ef", "#2f7bff", "#1b4965", "#62b6cb") },
+];
+---
+
+<section class="stage" aria-label="Live demo">
+  <div class="stage__panel">
+    <div class="screen">
+      <div class="feed" data-feed tabindex="0" aria-label="Scrollable demo content">
+        {
+          [0, 1].map((copy) => (
+            <div class="feed__loop" aria-hidden={copy === 1 ? "true" : undefined}>
+              <h3 class="feed__title">Listen Now</h3>
+              <div class="features">
+                {features.map((f) => (
+                  <div class="feature" style={`background: ${f.art}`}>
+                    <small>{f.kicker}</small>
+                    <strong>{f.title}</strong>
+                  </div>
+                ))}
+              </div>
+              <h4 class="feed__head">Recently Played</h4>
+              <div class="covers">
+                {albums.map((a) => (
+                  <div class="cover">
+                    <div class="cover__art" style={`background: ${a.art}`} />
+                    <div class="cover__name">{a.name}</div>
+                    <div class="cover__by">{a.by}</div>
+                  </div>
+                ))}
+              </div>
+              <h4 class="feed__head">Top Songs</h4>
+              <ol class="tracks">
+                {tracks.map((t) => (
+                  <li class="track">
+                    <span class="track__art" style={`background: ${t.art}`} />
+                    <span>
+                      {t.name}
+                      <br />
+                      <span class="track__by">{t.by}</span>
+                    </span>
+                    <span class="track__time">{t.time}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="screen__top">
+        <button class="lb lb-highlight lb-swell lb-stretch round" type="button" aria-label="Back">
+          <Icon name="back" size={20} />
+        </button>
+        <div class="screen__seg lb lb-stretch">
+          <div class="seg" role="group" aria-label="Browse" data-demo-seg>
+            <span class="seg__thumb" aria-hidden="true"></span>
+            <button type="button" data-value="albums" aria-pressed="true">Albums</button>
+            <button type="button" data-value="songs" aria-pressed="false">Songs</button>
+            <button type="button" data-value="artists" aria-pressed="false">Artists</button>
+          </div>
+        </div>
+        <div class="pair lb lb-stretch">
+          <button type="button" aria-label="Search"><Icon name="search" /></button>
+          <button type="button" aria-label="More"><Icon name="more" /></button>
+        </div>
+      </div>
+
+      <div class="screen__bottom">
+        <div class="player lb lb-highlight lb-stretch">
+          <span class="player__art" style={`background: ${albums[0].art}`}></span>
+          <span class="player__meta">
+            <strong>Surface Tension</strong>
+            <span>Lumen — Neon Tides</span>
+          </span>
+          <button type="button" data-play aria-pressed="true" aria-label="Pause">
+            <Icon name="play" size={20} class="is-play" />
+            <Icon name="pause" size={20} class="is-pause" />
+          </button>
+          <button class="player__next" type="button" aria-label="Next"><Icon name="next" size={20} /></button>
+        </div>
+        <button class="lb lb-tinted lb-highlight lb-swell lb-stretch round" type="button" aria-label="Like">
+          <Icon name="heart" size={22} />
+        </button>
+      </div>
+    </div>
+  </div>
+  <p class="stage__hint">It's live: scroll under the glass, press it, drag it.</p>
+</section>
+
+<script>
+  import { segmented } from "../scripts/segmented";
+
+  const feed = document.querySelector<HTMLElement>("[data-feed]");
+  const seg = document.querySelector<HTMLElement>("[data-demo-seg]");
+  if (seg) segmented(seg);
+
+  // Play / pause on the mini player
+  const play = document.querySelector<HTMLButtonElement>("[data-play]");
+  play?.addEventListener("click", () => {
+    const on = play.getAttribute("aria-pressed") !== "true";
+    play.setAttribute("aria-pressed", String(on));
+    play.setAttribute("aria-label", on ? "Pause" : "Play");
+  });
+
+  /*
+   * The feed drifts on its own so the glass always has something moving under it. Two copies of
+   * the content make the loop seamless; any touch, wheel or key hands it to the reader for a while.
+   */
+  if (feed && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const SPEED = 26; // px per second
+    let pos = 0;
+    let last = 0;
+    let pausedUntil = 0;
+    let visible = false;
+
+    const loop = () => (feed.firstElementChild as HTMLElement).offsetHeight;
+    const hold = () => {
+      pausedUntil = performance.now() + 3500;
+    };
+    for (const type of ["wheel", "touchstart", "pointerdown", "keydown"]) {
+      feed.addEventListener(type, hold, { passive: true });
+    }
+    feed.addEventListener("scroll", () => {
+      if (performance.now() < pausedUntil) pos = feed.scrollTop;
+    });
+
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (visible && now >= pausedUntil) {
+        const height = loop();
+        pos += SPEED * dt;
+        if (pos >= height) pos -= height;
+        feed.scrollTop = pos;
+      }
+      requestAnimationFrame(tick);
+    };
+    new IntersectionObserver(([entry]) => (visible = entry.isIntersecting)).observe(feed);
+    requestAnimationFrame((now) => {
+      last = now;
+      tick(now);
+    });
+  }
+</script>

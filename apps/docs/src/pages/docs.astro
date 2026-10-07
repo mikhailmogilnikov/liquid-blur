@@ -1,0 +1,495 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import Icon from "../components/Icon.astro";
+import Footer from "../components/Footer.astro";
+
+
+const toc = [
+  ["start", "Get started"],
+  ["classes", "Classes"],
+  ["customize", "Customize"],
+  ["colors", "Colors"],
+  ["theming", "Theming"],
+  ["tailwind", "Tailwind & layers"],
+  ["accessibility", "Accessibility"],
+  ["behaviors", "Press behaviors"],
+  ["api", "API"],
+  ["support", "Browser support"],
+  ["faq", "FAQ"],
+];
+
+const classes = [
+  {
+    name: "lb",
+    text: "The material. Backdrop blur, a fill, volume, rims, an edge and a shadow. Required.",
+    sample: "lb",
+    bd: "bd-aurora",
+  },
+  {
+    name: "lb-clear",
+    text: "At least transparency 1. For glass over photos and video, where the content is the point.",
+    sample: "lb lb-clear",
+    bd: "bd-stripes",
+  },
+  {
+    name: "lb-tinted",
+    text: "The fill is --lb-tint and the text is --lb-tint-text. Volume and rims stay.",
+    sample: "lb lb-tinted",
+    bd: "bd-aurora",
+  },
+  {
+    name: "lb-highlight",
+    text: "Lights up where it's pressed and follows the finger. Press it.",
+    sample: "lb lb-highlight",
+    bd: "bd-dots",
+  },
+  {
+    name: "lb-swell",
+    text: "Grows while pressed, on a spring that can turn around mid-flight. Small glass grows more, big glass barely.",
+    sample: "lb lb-swell lb-highlight",
+    bd: "bd-aurora",
+  },
+  {
+    name: "lb-stretch",
+    text: "Pulls toward the finger and stretches along the drag. Small glass is lively, big glass is heavy. Drag it.",
+    sample: "lb lb-stretch lb-highlight",
+    bd: "bd-stripes",
+  },
+];
+
+const vars = [
+  {
+    group: "Material",
+    items: [
+      ["--lb-transparency", "0.5", "0 is opaque, 1 is clear. Moves fill and blur together."],
+      ["--lb-depth", "0.5", "0 is flat, 1 is pronounced. Moves shading, glow and rims."],
+      ["--lb-dark", "per theme", "0 is light, 1 is dark. Follows the system and data-theme."],
+    ],
+  },
+  {
+    group: "Color",
+    items: [
+      ["--lb-fill-light", "#ffffff", "Fill in the light theme."],
+      ["--lb-fill-dark", "#3a3a3a", "Fill in the dark theme."],
+      ["--lb-fill", "unset", "One fill for both themes; wins over the two above."],
+      ["--lb-text-light", "#000000", "Text in the light theme."],
+      ["--lb-text-dark", "#ffffff", "Text in the dark theme."],
+      ["--lb-text", "unset", "One text color for both themes."],
+      ["--lb-tint", "#007aff", "Color of lb-tinted glass."],
+      ["--lb-tint-text", "#ffffff", "Text on lb-tinted glass."],
+      ["--lb-shade-color", "#000000", "The dark parts: volume shading, edge, drop shadow."],
+      ["--lb-shine-color", "#ffffff", "The light parts: rims, glow, press highlight."],
+    ],
+  },
+  {
+    group: "Behavior",
+    items: [
+      ["--lb-highlight-size", "90px", "Radius of the press highlight."],
+      ["--lb-swell", "1.1", "Pressed scale at button size. Smaller glass grows more, bigger less."],
+      ["--lb-stretch", "2", "Stretch strength; 0 turns it off."],
+    ],
+  },
+];
+
+const a11y = [
+  ["eye", "Reduced transparency", "With the system setting on, glass turns opaque and the backdrop filter goes away."],
+  ["contrast", "Increased contrast", "Opaque glass with a stronger edge, so every control keeps its outline."],
+  ["frame", "Forced colors", "Windows High Contrast drops backgrounds and shadows; an outline takes their place."],
+  ["motion", "Reduced motion", "No swell, no stretch. Presses still light up, without anything moving."],
+  ["keyboard", "Keyboard", "Enter and Space on a focused glass press it, until that same key comes up."],
+  ["layers", "Solid material", 'data-lb-material="solid" on any ancestor makes all glass inside it opaque.'],
+] as const;
+
+const code = {
+  css: `import "liquid-blur/liquid-blur.css";`,
+  html: `<button class="lb">Glass</button>`,
+  script: `import { installLiquidBlur } from "liquid-blur";
+
+installLiquidBlur();`,
+  cdn: `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/liquid-blur/dist/liquid-blur.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/liquid-blur/dist/auto.js"></script>`,
+  customize: `.toolbar {
+  --lb-transparency: 0.8;
+  --lb-depth: 0.3;
+}
+
+.danger {
+  --lb-tint: #ff3b30;
+}`,
+  colors: `/* Your own neutral, per theme */
+:root {
+  --lb-fill-light: #f5f5f7;
+  --lb-fill-dark: #1c1c1e;
+}
+
+/* Warm glass: fill, shading and rims all lean amber */
+.warm {
+  --lb-fill-light: #ffe08a;
+  --lb-shade-color: #5a2a00;
+  --lb-shine-color: #fff4c0;
+}
+
+/* A light tint needs dark text */
+.warning {
+  --lb-tint: #ffcc00;
+  --lb-tint-text: #111;
+}`,
+  theming: `<html data-theme="dark">
+  <section data-theme="light">
+    <button class="lb">Always light</button>
+  </section>
+</html>`,
+  themeSwitch: `/* Tailwind, shadcn, next-themes with attribute="class" */
+.dark { --lb-dark: 1; }
+
+/* daisyUI and other named themes */
+[data-theme="dracula"] { --lb-dark: 1; }`,
+  tailwind: `@layer liquid-blur, theme, base, components, utilities;
+@import "tailwindcss";
+@import "liquid-blur/liquid-blur.css";`,
+  install: `const uninstall = installLiquidBlur();
+
+// An iframe has its own document
+installLiquidBlur(frame.contentDocument);
+
+// Later, if the page goes away
+uninstall();`,
+  spring: `import { SpringAnimator } from "liquid-blur";
+
+const spring = new SpringAnimator(
+  { width: 100, radius: 12 },
+  { duration: 0.4, bounce: 0.2 },
+  ({ width, radius }) => {
+    el.style.width = \`\${width}px\`;
+    el.style.borderRadius = \`\${radius}px\`;
+  },
+);
+
+spring.to({ width: 240, radius: 24 });`,
+  channels: `new SpringAnimator(
+  { opacity: 0, scale: 1 },
+  {
+    opacity: { duration: 0.15, bounce: 0 },
+    scale: { duration: 0.45, bounce: 0.3 },
+  },
+  ({ opacity, scale }) => { /* … */ },
+);`,
+  react: `import { useEffect } from "react";
+import { installLiquidBlur } from "liquid-blur";
+
+export function App() {
+  useEffect(() => installLiquidBlur(), []);
+  return <button className="lb lb-highlight">Glass</button>;
+}`,
+};
+---
+
+<Base
+  title="Docs — Liquid Blur"
+  description="How to install, style, theme and animate Liquid Blur: classes, variables, accessibility and the API."
+>
+  <Nav current="docs" />
+
+  <main>
+    <section class="docs-head">
+      <p class="lead rise" style="--i: 0">
+        <b>Documentation.</b> Install it, put a class on something, then tune it — every class, variable
+        and export, with live glass along the way. Want to play first?
+        Try the <a href="/#playground">playground</a>.
+      </p>
+    </section>
+
+    <div class="docs">
+      <aside class="toc" aria-label="On this page">
+        <span class="toc__title">On this page</span>
+        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      </aside>
+
+      <div>
+        <section class="doc" id="start">
+          <p class="lead reveal">
+            <a class="anchor" href="#start"><b>Three lines to glass.</b></a> Install the package, import the
+            stylesheet once, and put <code>lb</code> on anything.
+          </p>
+          <ol class="steps">
+            <li class="step reveal">
+              <div>
+                <p><b>Install.</b></p>
+                <div class="code" data-install>
+                  <div class="code__bar">
+                    <div class="seg" role="group" aria-label="Package manager">
+                      <span class="seg__thumb" aria-hidden="true"></span>
+                      <button type="button" data-value="pnpm" aria-pressed="true">pnpm</button>
+                      <button type="button" data-value="npm" aria-pressed="false">npm</button>
+                      <button type="button" data-value="yarn" aria-pressed="false">yarn</button>
+                      <button type="button" data-value="bun" aria-pressed="false">bun</button>
+                    </div>
+                  </div>
+                  <pre><code><span class="tk-cmd">pnpm</span> add liquid-blur</code></pre>
+                  <button class="code__copy" type="button" data-copy aria-label="Copy command">
+                    <Icon name="copy" class="is-idle" />
+                    <Icon name="check" class="is-done" />
+                  </button>
+                </div>
+              </div>
+            </li>
+            <li class="step reveal">
+              <div>
+                <p><b>Import the stylesheet</b>, once, anywhere in your app.</p>
+                <CodeBlock code={code.css} lang="ts" />
+              </div>
+            </li>
+            <li class="step reveal">
+              <div>
+                <p><b>Add the class.</b> That's the whole material.</p>
+                <CodeBlock code={code.html} lang="html" />
+              </div>
+            </li>
+            <li class="step reveal">
+              <div>
+                <p>
+                  <b>Install the script</b> if you use press behaviors. One delegated listener covers the whole
+                  document, so elements mounted later just work — in React, Vue, Svelte, Astro or plain HTML.
+                </p>
+                <CodeBlock code={code.script} lang="ts" />
+              </div>
+            </li>
+          </ol>
+          <p class="prose reveal">
+            No build step? Link the stylesheet and load the <code>auto</code> entry, which installs itself.
+          </p>
+          <div class="reveal"><CodeBlock code={code.cdn} lang="html" /></div>
+        </section>
+
+        <section class="doc" id="classes">
+          <p class="lead reveal">
+            <a class="anchor" href="#classes"><b>Six classes.</b></a> One for the material, two for its
+            character, three for how it answers a touch. They combine freely.
+          </p>
+          <div class="rows">
+            {
+              classes.map((c) => (
+                <div class="row reveal">
+                  <p>
+                    <b>
+                      <code>{c.name}</code>
+                    </b>
+                    {c.text}
+                  </p>
+                  <div class="tile">
+                    <div class={`bd ${c.bd}`} />
+                    <button class={c.sample} type="button">
+                      {c.name}
+                    </button>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+          <p class="prose reveal">
+            Shape is plain <code>border-radius</code>; the default is a capsule. Press behaviors are for single
+            controls, not containers.
+          </p>
+        </section>
+
+        <section class="doc" id="customize">
+          <p class="lead reveal">
+            <a class="anchor" href="#customize"><b>One knob per idea.</b></a> Every variable is inherited, like a
+            SwiftUI environment value: set it on any ancestor, and all glass inside picks it up.
+          </p>
+          <div class="vars reveal">
+            {
+              vars.map((g) => (
+                <>
+                  <div class="vars__group">{g.group}</div>
+                  {g.items.map(([name, value, what]) => (
+                    <div class="var">
+                      <code>{name}</code>
+                      <span class="var__default">
+                        {value.startsWith("#") && <span class="dot" style={`--c: ${value}`} />}
+                        <code>{value}</code>
+                      </span>
+                      <span class="var__what">{what}</span>
+                    </div>
+                  ))}
+                </>
+              ))
+            }
+          </div>
+          <div class="reveal" style="margin-top: 28px"><CodeBlock code={code.customize} lang="css" /></div>
+          <p class="prose reveal">
+            Everything prefixed <code>--_</code> is internal calibration and may change without notice.
+          </p>
+        </section>
+
+        <section class="doc" id="colors">
+          <p class="lead reveal">
+            <a class="anchor" href="#colors"><b>Your colors, our physics.</b></a> Colors resolve on the glass
+            itself, so they follow the theme in effect — even on a subtree. You set the color; the material
+            still decides how much of it shows.
+          </p>
+          <div class="reveal"><CodeBlock code={code.colors} lang="css" /></div>
+          <p class="prose reveal">
+            The glass sets its own text color for contrast with its fill. A <code>color</code> on the element
+            still wins, as does <code>--lb-text</code>.
+          </p>
+        </section>
+
+        <section class="doc" id="theming">
+          <p class="lead reveal">
+            <a class="anchor" href="#theming"><b>Light, dark, and yours.</b></a> The theme is one inherited
+            number, <code>--lb-dark</code>. It follows the system by default, and
+            <code>data-theme</code> on any element switches its subtree.
+          </p>
+          <div class="reveal"><CodeBlock code={code.theming} lang="html" /></div>
+          <p class="prose reveal">Any other theme switch plugs in with a single line:</p>
+          <div class="reveal"><CodeBlock code={code.themeSwitch} lang="css" /></div>
+        </section>
+
+        <section class="doc" id="tailwind">
+          <p class="lead reveal">
+            <a class="anchor" href="#tailwind"><b>Plays well with Tailwind.</b></a> All styles live in
+            <code>@layer liquid-blur</code>, so any unlayered rule of yours wins without
+            <code>!important</code>. Between layers the first one declared loses — declare ours first, and
+            utilities like <code>rounded-xl</code> win.
+          </p>
+          <div class="reveal"><CodeBlock code={code.tailwind} lang="css" /></div>
+        </section>
+
+        <section class="doc" id="accessibility">
+          <p class="lead reveal">
+            <a class="anchor" href="#accessibility"><b>Glass that steps aside.</b></a> Transparency is a choice,
+            not a requirement. Every system setting that asks for less of it is honored without a line of your
+            code.
+          </p>
+          <ul class="grid grid--doc">
+            {
+              a11y.map(([icon, title, text], i) => (
+                <li class="reveal" style={`--d: ${(i % 2) * 80}ms`}>
+                  <Icon name={icon} size={24} />
+                  <p>
+                    <b>{title}.</b> {text}
+                  </p>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="doc" id="behaviors">
+          <p class="lead reveal">
+            <a class="anchor" href="#behaviors"><b>Made for fingers.</b></a> Presses feel like iOS, on any
+            device.
+          </p>
+          <div class="rows reveal">
+            <div class="row">
+              <p>
+                <b>Pressed state</b>
+                While a pointer is down the element gets <code>data-lb-pressed</code>, which you can style
+                too. On touch it waits a beat, so a finger landing to scroll doesn't flash it.
+              </p>
+              <p>
+                <b>Springs, not transitions</b>
+                Highlight and swell run on interruptible springs and clean up after themselves. Small glass
+                swells more and bouncier, big glass barely. Your own
+                <code>transition</code> stays yours; the swell multiplies your <code>scale</code>.
+              </p>
+            </div>
+            <div class="row">
+              <p>
+                <b>Stretch</b>
+                Like the swell, it has mass: the bigger the glass, the less it gives and bounces. Writes only
+                <code>transform</code>, once a frame, with no layout reads, and restores yours when it settles.
+              </p>
+              <p>
+                <b>Release outside</b>
+                Let go more than 32px outside the element and the click is cancelled, as on iOS.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc" id="api">
+          <p class="lead reveal">
+            <a class="anchor" href="#api"><b>Two exports.</b></a> One to turn presses on, and the spring that
+            powers them.
+          </p>
+          <p class="prose reveal">
+            <b><code>installLiquidBlur(root?: Document): () =&gt; void</code></b><br />
+            Installs press behaviors on a document and returns a cleanup. Installing twice returns the first
+            cleanup. Looks through open shadow roots, works in iframes, and does nothing during server
+            rendering.
+          </p>
+          <div class="reveal"><CodeBlock code={code.install} lang="ts" /></div>
+          <p class="prose reveal" style="margin-top: 40px">
+            <b><code>SpringAnimator</code></b><br />
+            Animates several numbers at once with SwiftUI-style springs: a perceptual duration in seconds and a
+            bounce from 0 to 1. Retargeting keeps the velocity, so reversing mid-flight stays smooth — which
+            CSS transitions can't do.
+          </p>
+          <div class="reveal"><CodeBlock code={code.spring} lang="ts" /></div>
+          <p class="prose reveal">Each channel can have a spring of its own:</p>
+          <div class="reveal"><CodeBlock code={code.channels} lang="ts" /></div>
+        </section>
+
+        <section class="doc" id="support">
+          <p class="lead reveal">
+            <a class="anchor" href="#support"><b>Browser support.</b></a> Anything with
+            <code>backdrop-filter</code>, <code>color-mix()</code> and CSS <code>pow()</code>: Chrome and Edge
+            120+, Safari 16.2+, Firefox 118+. Firefox before 128 skips a few registered properties and still
+            renders the glass.
+          </p>
+        </section>
+
+        <section class="doc" id="faq">
+          <p class="lead reveal">
+            <a class="anchor" href="#faq"><b>Questions? Answers.</b></a>
+          </p>
+          <div class="faq reveal">
+            <details>
+              <summary>Why no refraction?<Icon name="plus" /></summary>
+              <div class="answer">
+                Refraction on the web means SVG filters, which only one engine applies to a backdrop, and which
+                cost a lot for every frame of scrolling. Liquid Blur keeps to what renders the same everywhere —
+                so the glass you design is the glass everyone sees.
+              </div>
+            </details>
+            <details>
+              <summary>Does it need JavaScript?<Icon name="plus" /></summary>
+              <div class="answer">
+                No. The material is pure CSS. The script only adds press behaviors; without it, highlight and
+                swell fall back to <code>:active</code>.
+              </div>
+            </details>
+            <details>
+              <summary>How do I use it with React, Vue or Svelte?<Icon name="plus" /></summary>
+              <div class="answer">
+                Use the classes as they are, and install the script once at the root. It returns its own cleanup.
+                <CodeBlock code={code.react} lang="tsx" />
+              </div>
+            </details>
+            <details>
+              <summary>What does it cost?<Icon name="plus" /></summary>
+              <div class="answer">
+                A backdrop filter is work for the GPU, proportional to the area of glass on screen — so glass the
+                size of a toolbar is cheap, and glass the size of the page is not. The script writes only
+                transforms and two private properties per frame, and never reads layout while animating.
+              </div>
+            </details>
+            <details>
+              <summary>Is this Apple's Liquid Glass?<Icon name="plus" /></summary>
+              <div class="answer">
+                No. It's inspired by it and doesn't copy it: a calmer material, with no lensing, built for the
+                web as it is.
+              </div>
+            </details>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Base>

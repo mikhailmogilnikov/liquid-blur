@@ -1,0 +1,229 @@
+---
+import Icon from "./Icon.astro";
+
+const tints = [
+  ["#007aff", "Blue"],
+  ["#34c759", "Green"],
+  ["#ff9500", "Orange"],
+  ["#ff2d55", "Pink"],
+  ["#af52de", "Purple"],
+  ["#1d1d1f", "Graphite"],
+];
+const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refraction", "Liquid Blur"];
+---
+
+<div class="play" data-playground>
+  <div class="play__stage" data-play-stage>
+    <div class="bd bd-aurora" data-bd="aurora"></div>
+    <div class="bd bd-stripes" data-bd="stripes" hidden></div>
+    <div class="bd bd-type" data-bd="type" hidden aria-hidden="true">
+      {words.map((w) => <span>{w}</span>)}
+    </div>
+    <div class="bd bd-dots" data-bd="dots" hidden></div>
+
+    <div class="play__samples">
+      <div class="sample-row">
+        <button class="lb lb-highlight lb-swell sample-button" type="button" data-sample>Continue</button>
+        <button class="lb lb-highlight lb-swell sample-round" type="button" data-sample aria-label="Play">
+          <Icon name="play" size={20} />
+        </button>
+      </div>
+      <div class="lb sample-card" data-sample data-card>
+        <strong>Now Playing</strong>
+        <p>Surface Tension — Lumen. Backdrop blur, a fill, rims and a little light.</p>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="controls">
+      <div class="control">
+        <label class="control__label" for="pg-transparency">Transparency</label>
+        <div class="control__body">
+          <input class="range" id="pg-transparency" type="range" min="0" max="1" step="0.01" value="0.5" data-range="transparency" />
+          <output for="pg-transparency">0.50</output>
+        </div>
+      </div>
+      <div class="control">
+        <label class="control__label" for="pg-depth">Depth</label>
+        <div class="control__body">
+          <input class="range" id="pg-depth" type="range" min="0" max="1" step="0.01" value="0.5" data-range="depth" />
+          <output for="pg-depth">0.50</output>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control__label">Material</span>
+        <div class="control__body">
+          <div class="seg" role="group" aria-label="Material" data-seg="variant">
+            <span class="seg__thumb" aria-hidden="true"></span>
+            <button type="button" data-value="regular" aria-pressed="true">Regular</button>
+            <button type="button" data-value="clear" aria-pressed="false">Clear</button>
+            <button type="button" data-value="tinted" aria-pressed="false">Tinted</button>
+          </div>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control__label">Tint</span>
+        <div class="control__body" role="group" aria-label="Tint">
+          {
+            tints.map(([color, name], i) => (
+              <button
+                class="swatch"
+                type="button"
+                style={`--c: ${color}`}
+                data-tint={color}
+                aria-pressed={i === 0 ? "true" : "false"}
+                aria-label={name}
+                title={name}
+              />
+            ))
+          }
+        </div>
+      </div>
+      <div class="control">
+        <span class="control__label">Press</span>
+        <div class="control__body" role="group" aria-label="Press behaviors">
+          <button class="chip" type="button" data-behavior="highlight" aria-pressed="true">Highlight</button>
+          <button class="chip" type="button" data-behavior="swell" aria-pressed="true">Swell</button>
+          <button class="chip" type="button" data-behavior="stretch" aria-pressed="false">Stretch</button>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control__label">Theme</span>
+        <div class="control__body">
+          <div class="seg" role="group" aria-label="Preview theme" data-seg="theme">
+            <span class="seg__thumb" aria-hidden="true"></span>
+            <button type="button" data-value="auto" aria-pressed="true">Page</button>
+            <button type="button" data-value="light" aria-pressed="false">Light</button>
+            <button type="button" data-value="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control__label">Backdrop</span>
+        <div class="control__body">
+          <div class="seg" role="group" aria-label="Backdrop" data-seg="backdrop">
+            <span class="seg__thumb" aria-hidden="true"></span>
+            <button type="button" data-value="aurora" aria-pressed="true">Aurora</button>
+            <button type="button" data-value="stripes" aria-pressed="false">Stripes</button>
+            <button type="button" data-value="type" aria-pressed="false">Type</button>
+            <button type="button" data-value="dots" aria-pressed="false">Dots</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code play__code">
+      <pre><code data-play-code></code></pre>
+      <button class="code__copy" type="button" data-copy aria-label="Copy code">
+        <Icon name="copy" class="is-idle" />
+        <Icon name="check" class="is-done" />
+      </button>
+    </div>
+    <p class="play__note" data-play-note></p>
+  </div>
+</div>
+
+<script>
+  import { segmented } from "../scripts/segmented";
+
+  const root = document.querySelector<HTMLElement>("[data-playground]");
+  if (root) {
+    const stage = root.querySelector<HTMLElement>("[data-play-stage]")!;
+    const samples = [...root.querySelectorAll<HTMLElement>("[data-sample]")];
+    const codeOut = root.querySelector<HTMLElement>("[data-play-code]")!;
+    const note = root.querySelector<HTMLElement>("[data-play-note]")!;
+
+    const state = {
+      transparency: 0.5,
+      depth: 0.5,
+      variant: "regular",
+      tint: "#007aff",
+      behaviors: new Set(["highlight", "swell"]),
+      theme: "auto",
+      backdrop: "aurora",
+    };
+
+    const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const attr = (name: string, value: string) =>
+      ` <span class="tk-attr">${name}</span><span class="tk-mute">=</span><span class="tk-str">"${escape(value)}"</span>`;
+
+    const render = () => {
+      const classes = ["lb"];
+      if (state.variant !== "regular") classes.push(`lb-${state.variant}`);
+      for (const b of ["highlight", "swell", "stretch"]) if (state.behaviors.has(b)) classes.push(`lb-${b}`);
+
+      const vars: string[] = [];
+      if (state.transparency !== 0.5) vars.push(`--lb-transparency: ${state.transparency}`);
+      if (state.depth !== 0.5) vars.push(`--lb-depth: ${state.depth}`);
+      if (state.variant === "tinted" && state.tint !== "#007aff") vars.push(`--lb-tint: ${state.tint}`);
+
+      // The preview
+      stage.style.setProperty("--lb-transparency", String(state.transparency));
+      stage.style.setProperty("--lb-depth", String(state.depth));
+      stage.style.setProperty("--lb-tint", state.tint);
+      if (state.theme === "auto") delete stage.dataset.theme;
+      else stage.dataset.theme = state.theme;
+      for (const el of samples) {
+        const keep = [...el.classList].filter((c) => !c.startsWith("lb"));
+        el.className = [...classes, ...keep].join(" ");
+      }
+      for (const bd of stage.querySelectorAll<HTMLElement>("[data-bd]")) bd.hidden = bd.dataset.bd !== state.backdrop;
+
+      // The code for it
+      let html = `<span class="tk-mute">&lt;</span><span class="tk-tag">button</span>`;
+      html += attr("class", classes.join(" "));
+      if (vars.length) html += attr("style", vars.join("; "));
+      if (state.theme !== "auto") html += attr("data-theme", state.theme);
+      html += `<span class="tk-mute">&gt;</span>Continue<span class="tk-mute">&lt;/</span><span class="tk-tag">button</span><span class="tk-mute">&gt;</span>`;
+      codeOut.innerHTML = html;
+
+      note.innerHTML = state.behaviors.size
+        ? "Press behaviors need <code>installLiquidBlur()</code> once on the page."
+        : "Plain CSS. No script needed.";
+    };
+
+    for (const input of root.querySelectorAll<HTMLInputElement>("[data-range]")) {
+      const output = input.nextElementSibling as HTMLOutputElement;
+      const sync = () => {
+        const value = Number(input.value);
+        state[input.dataset.range as "transparency" | "depth"] = value;
+        output.value = value.toFixed(2);
+        input.style.setProperty("--p", `${value * 100}%`);
+        render();
+      };
+      input.addEventListener("input", sync);
+      sync();
+    }
+
+    for (const seg of root.querySelectorAll<HTMLElement>("[data-seg]")) {
+      const key = seg.dataset.seg as "variant" | "theme" | "backdrop";
+      segmented(seg, (value) => {
+        state[key] = value;
+        render();
+      });
+    }
+
+    const swatches = [...root.querySelectorAll<HTMLButtonElement>("[data-tint]")];
+    for (const swatch of swatches) {
+      swatch.addEventListener("click", () => {
+        state.tint = swatch.dataset.tint!;
+        for (const s of swatches) s.setAttribute("aria-pressed", String(s === swatch));
+        render();
+      });
+    }
+
+    for (const chip of root.querySelectorAll<HTMLButtonElement>("[data-behavior]")) {
+      chip.addEventListener("click", () => {
+        const b = chip.dataset.behavior!;
+        const on = !state.behaviors.has(b);
+        if (on) state.behaviors.add(b);
+        else state.behaviors.delete(b);
+        chip.setAttribute("aria-pressed", String(on));
+        render();
+      });
+    }
+
+    render();
+  }
+</script>

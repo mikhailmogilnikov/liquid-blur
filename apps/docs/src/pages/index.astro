@@ -1,0 +1,121 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Stage from "../components/Stage.astro";
+import Playground from "../components/Playground.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+
+const GITHUB = "https://github.com/mikhailmogilnikov";
+
+/** The docs, one door per topic */
+const topics = [
+  ["/docs#classes", "Classes", "Six of them: the material, its character, and how it answers a touch."],
+  ["/docs#customize", "Customize", "One inherited knob per idea — transparency, depth, colors, springs."],
+  ["/docs#theming", "Theming", "Light and dark from one number, wired to any theme switch you have."],
+  ["/docs#tailwind", "Tailwind", "Cascade layers that let your utilities win, in one line."],
+  ["/docs#accessibility", "Accessibility", "Every system setting that asks for less glass, honored."],
+  ["/docs#api", "API", "installLiquidBlur and the spring that powers the presses."],
+] as const;
+---
+
+<Base
+  title="Liquid Blur — a glass material for the web"
+  description="Backdrop blur, a fill, rims and springy press behaviors. Plain CSS classes and one optional script. No refraction."
+>
+  <Nav current="home" />
+
+  <main>
+    <section class="hero">
+      <div class="mark mark--hero"><span class="lb"></span></div>
+      <p class="lead rise" style="--i: 1">
+        <b>Liquid Blur</b> is a glass material for the web. <b>Plain CSS classes</b>, one optional script,
+        and <b>no refraction</b> — just a calm, blurred surface built from what every browser renders the
+        same way. Light and dark, <b>springy to the touch</b>, and polite to people who'd rather it stepped
+        aside.
+      </p>
+      <div class="actions rise" style="--i: 2">
+        <a class="button button--ink breathe" href="/docs">Get started</a>
+        <a class="button button--wash" href="#playground">Playground</a>
+      </div>
+      <p class="fine rise" style="--i: 3">MIT · 12 KB of CSS · no dependencies</p>
+    </section>
+
+    <Stage />
+
+    <section class="block" id="playground">
+      <p class="lead reveal">
+        <b>Tune it by hand.</b> Two numbers carry the material: transparency and depth. Pick a backdrop, press
+        the glass, and take the markup with you.
+      </p>
+      <div class="reveal">
+        <Playground />
+      </div>
+    </section>
+
+    <section class="block" id="start">
+      <p class="lead reveal">
+        <b>Three lines to glass.</b> Install the package, import the stylesheet once, and put
+        <code>lb</code> on anything.
+      </p>
+      <div class="quick">
+        <div class="reveal" style="--d: 0ms">
+          <p class="quick__step"><b>1</b> Install</p>
+          <div class="code" data-install>
+            <div class="code__bar">
+              <div class="seg" role="group" aria-label="Package manager">
+                <span class="seg__thumb" aria-hidden="true"></span>
+                <button type="button" data-value="pnpm" aria-pressed="true">pnpm</button>
+                <button type="button" data-value="npm" aria-pressed="false">npm</button>
+                <button type="button" data-value="yarn" aria-pressed="false">yarn</button>
+                <button type="button" data-value="bun" aria-pressed="false">bun</button>
+              </div>
+            </div>
+            <pre><code><span class="tk-cmd">pnpm</span> add liquid-blur</code></pre>
+            <button class="code__copy" type="button" data-copy aria-label="Copy command">
+              <Icon name="copy" class="is-idle" />
+              <Icon name="check" class="is-done" />
+            </button>
+          </div>
+        </div>
+        <div class="reveal" style="--d: 80ms">
+          <p class="quick__step"><b>2</b> Import the stylesheet</p>
+          <CodeBlock code={`import "liquid-blur/liquid-blur.css";`} lang="ts" />
+        </div>
+        <div class="reveal" style="--d: 160ms">
+          <p class="quick__step"><b>3</b> Add the class</p>
+          <CodeBlock code={`<button class="lb">Glass</button>`} lang="html" />
+        </div>
+      </div>
+      <ul class="topics">
+        {
+          topics.map(([href, title, text], i) => (
+            <li class="reveal" style={`--d: ${(i % 3) * 80}ms`}>
+              <a href={href}>
+                <b>
+                  {title}
+                  <Icon name="arrow" size={16} />
+                </b>
+                <span>{text}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="end">
+      <div class="mark mark--hero mark--on-reveal" style="--s: 3"><span class="lb"></span></div>
+      <p class="lead reveal">
+        <b>Glass for the web,</b> in twelve kilobytes of CSS. Free and open source, under the MIT license.
+      </p>
+      <div class="actions reveal">
+        <a class="button button--ink breathe" href="/docs">Read the docs</a>
+        <a class="button button--wash" href={GITHUB}><Icon name="github" size={18} />GitHub</a>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Base>
