@@ -48,7 +48,8 @@ import {
  *
  * Everything takes its values from the material's custom properties (the root is `.lb`), so theme,
  * transparency, depth and colors work as on any glass. Children are measured with their
- * transforms; the root must not be scaled itself.
+ * transforms, in the root's own pixels: a scaled root or ancestor (even mid-animation) is fine,
+ * a rotated one isn't.
  */
 
 /** Distance below which children start to merge, px, unless --lb-merge says otherwise */
@@ -436,21 +437,32 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
 
   /*
    * CSS transitions and animations of the children move them without touching their style
-   * attribute: from the first event one starts, follow them every frame until none runs. The
-   * events bubble from deeper too; those cost a frame's check, then the loop stops.
+   * attribute: follow them every frame until none runs. Checked on creation (an animation may have
+   * started before the script ran, and an infinite one sends no further start), on their events
+   * and on coming back on screen. The events bubble from deeper too; those cost a frame's check,
+   * then the loop stops. Off screen the loop stops as well.
    */
   let follow = 0;
   const running = () =>
     items().some((el) => el.getAnimations?.().some((a) => a.pending || a.playState === "running"));
   const followFrame = () => {
     follow = 0;
+    if (!visible) return;
     schedule();
     if (running()) follow = win.requestAnimationFrame(followFrame);
   };
   const animate = () => {
     if (!follow) follow = win.requestAnimationFrame(followFrame);
   };
-  const animationEvents = ["transitionrun", "animationstart", "transitionend", "transitioncancel", "animationend", "animationcancel"];
+  const animationEvents = [
+    "transitionrun",
+    "transitionend",
+    "transitioncancel",
+    "animationstart",
+    "animationiteration",
+    "animationend",
+    "animationcancel",
+  ];
   for (const type of animationEvents) root.addEventListener(type, animate);
 
   /*
@@ -464,7 +476,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     const now = performance.now();
     const moving = now - lastDraw < 100;
     lastDraw = now;
-    clearTimeout(settle);
+    win.clearTimeout(settle);
     if (moving) {
       settle = win.setTimeout(() => {
         lastDraw = 0;
@@ -503,9 +515,16 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
       table = falloffTable(look.focus);
     }
 
+    /*
+     * Boxes on screen carry every transform above them: an ancestor scaled by an animation (or the
+     * root itself) would put the outline off by that scale, drawn in the root's own pixels. So
+     * everything is measured in those pixels: screen distances divided by the root's scale on
+     * screen. Rounded to a hundredth of a pixel, so the division's noise doesn't count as a move.
+     */
     const origin = root.getBoundingClientRect();
-    const ox = origin.left + root.clientLeft;
-    const oy = origin.top + root.clientTop;
+    const sx = root.offsetWidth && origin.width ? origin.width / root.offsetWidth : 1;
+    const sy = root.offsetHeight && origin.height ? origin.height / root.offsetHeight : 1;
+    const local = (v: number, s: number) => Math.round((v / s) * 100) / 100;
     const shapes: Shape[] = [];
     let glassy = true;
     for (const el of items()) {
@@ -517,9 +536,16 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
         radius = parseFloat(win.getComputedStyle(el).borderTopLeftRadius) || 0;
         radii.set(el, radius);
       }
+      const width = local(box.width, sx);
       // A scaled child keeps its radius in proportion
-      const scale = el.offsetWidth ? box.width / el.offsetWidth : 1;
-      shapes.push({ x: box.left - ox, y: box.top - oy, width: box.width, height: box.height, radius: radius * scale });
+      const scale = el.offsetWidth ? width / el.offsetWidth : 1;
+      shapes.push({
+        x: local(box.left - origin.left, sx) - root.clientLeft,
+        y: local(box.top - origin.top, sy) - root.clientTop,
+        width,
+        height: local(box.height, sy),
+        radius: local(radius * scale, 1),
+      });
     }
 
     const key = `${forced}|${merge}|${win.devicePixelRatio}|${shapes.map((s) => `${s.x},${s.y},${s.width},${s.height},${s.radius}`).join(";")}`;
@@ -711,13 +737,16 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   const sight = new IntersectionObserver(
     ([entry]) => {
       visible = entry.isIntersecting;
-      if (visible) restyle();
+      if (!visible) return;
+      restyle();
+      animate();
     },
     { rootMargin: `${SLACK}px` },
   );
   sight.observe(root);
   observe();
   update();
+  animate();
 
   const group: GlassGroup = {
     update,

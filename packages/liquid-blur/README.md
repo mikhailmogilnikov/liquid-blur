@@ -25,7 +25,8 @@ import "liquid-blur/liquid-blur.css";
 <button class="lb">Glass</button>
 ```
 
-If you use press behaviors (`lb-highlight`, `lb-swell`, `lb-stretch`), install the script once:
+If you use press behaviors (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`), install the
+script once:
 
 ```js
 import { installLiquidBlur } from "liquid-blur";
@@ -69,11 +70,13 @@ once, before both imports:
 | `lb-highlight` | Lights up where it's pressed and follows the pointer.                                |
 | `lb-swell`     | Grows while pressed, on a spring: small glass more, big glass barely.                |
 | `lb-stretch`   | Pulls toward the finger with rubber-band resistance and stretches along the drag.    |
+| `lb-interactive` | All three press behaviors at once: the usual set for a button, chip or icon.       |
 
-Press behaviors are independent and combine freely:
+Press behaviors are independent and combine freely; `lb-interactive` is all three:
 
 ```html
-<button class="lb lb-highlight lb-swell lb-stretch">Press me</button>
+<button class="lb lb-interactive">Press me</button>
+<div class="lb lb-highlight lb-stretch">A bar: lights and stretches, doesn't swell</div>
 <button class="lb lb-tinted lb-highlight">Tinted</button>
 <div class="lb lb-clear">Over a photo</div>
 ```
@@ -200,7 +203,8 @@ next-themes with `attribute="class"`), daisyUI theme names, anything:
 - `data-lb-material="solid"` on any ancestor makes glass inside it opaque.
 - `prefers-reduced-transparency: reduce` — glass becomes opaque, no backdrop filter.
 - `prefers-contrast: more` — opaque, with a stronger edge.
-- `forced-colors: active` — an outline replaces the dropped backgrounds and shadows.
+- `forced-colors: active` — an outline replaces the dropped backgrounds and shadows. A melted
+  glass group gets one outline around the whole shape.
 - `prefers-reduced-motion: reduce` — no swell, no stretch.
 - Enter and Space on a focused glass element press it until that key is released.
 
@@ -232,6 +236,64 @@ next-themes with `attribute="class"`), daisyUI theme names, anything:
 - Press behaviors are for single controls, not containers: highlight lights the whole element on
   any press inside it, and stretch blocks scrolling and text selection in its whole subtree.
 
+## Glass groups
+
+Glass that melts between shapes when they come close, like drops of liquid: put the pieces in one
+`.lb-group` and they share a single surface, one backdrop clipped to the merged outline, so nothing
+blurs twice. Groups live in their own entry, `liquid-blur/group`, so they cost nothing to pages
+that don't use them.
+
+```html
+<div class="lb-group">
+  <div class="lb">…</div>
+  <button class="lb lb-interactive">…</button>
+</div>
+```
+
+```js
+import { installGlassGroups } from "liquid-blur/group";
+
+installGlassGroups();
+```
+
+- **Children are glass** (`.lb`) and stay exactly that while none of them are close: the group
+  draws nothing and only watches. Without the script they're plain glass too.
+- **Merging** starts at `--lb-merge` (default `24px`) between two children; set it on the group.
+- **Motion is followed on its own**: springs, `lb-stretch` and `lb-swell`, any inline style or
+  class change of a child, its size, and CSS transitions and animations on the children. Moved
+  some other way (layout from outside the group), call `update()` on it.
+- **Theme and material** come from the same variables as any glass; the group root is `.lb`.
+  Children are measured with their transforms; scaling the group or an ancestor is fine,
+  rotating it isn't.
+- The root gets `data-lb-melted` while it draws for the children. The shared glass takes the
+  root's material; a `lb-tinted` child keeps its tint on top of it.
+
+### Server rendering
+
+`liquid-blur/group` is safe to import on the server, and `installGlassGroups()` does nothing
+there. Rendered without the script, the children are plain glass; close ones melt once it runs.
+With a framework that hydrates (React, Vue, Svelte):
+
+- **Install after hydration**, in an effect: the group adds its own elements to the root, and
+  doing that before hydration makes the DOM differ from the server's markup.
+- **Write `lb lb-group` in the markup**, not just `lb-group`: the script adds `lb` if it's missing,
+  but a re-render that sets the class would drop it again.
+
+```tsx
+import { useEffect } from "react";
+import { installGlassGroups } from "liquid-blur/group";
+
+export function Toolbar() {
+  useEffect(() => installGlassGroups(), []);
+  return (
+    <div className="lb lb-group">
+      <div className="lb">…</div>
+      <button className="lb lb-interactive">…</button>
+    </div>
+  );
+}
+```
+
 ## API
 
 ### `installLiquidBlur(root?: Document): () => void`
@@ -245,6 +307,29 @@ iframe. Without a DOM it returns a no-op.
 const uninstall = installLiquidBlur();
 // later
 uninstall();
+```
+
+### `installGlassGroups(root?: Document): () => void`
+
+From `liquid-blur/group`. Makes every `.lb-group` in the document a glass group, including ones
+mounted later, and lets go of a group once its root leaves the document. Installing twice returns
+the first install's cleanup; the cleanup destroys the groups it made. Without a DOM it returns a
+no-op.
+
+### `createGlassGroup(root: HTMLElement): GlassGroup`
+
+From `liquid-blur/group`. One group by hand, for an element you manage yourself. Adds `lb` and
+`lb-group` to the root if missing. Returns `{ update(), destroy() }`; creating a group for the same
+root twice returns the first.
+
+```ts
+import { createGlassGroup } from "liquid-blur/group";
+
+const group = createGlassGroup(toolbar);
+// a child moved by something the group can't see
+group.update();
+// later
+group.destroy();
 ```
 
 ### `SpringAnimator`

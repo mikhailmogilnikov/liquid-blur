@@ -27,6 +27,10 @@
       "types": "./dist/auto.d.ts",
       "default": "./dist/auto.js"
     },
+    "./group": {
+      "types": "./dist/group.d.ts",
+      "default": "./dist/group.js"
+    },
     "./liquid-blur.css": "./dist/liquid-blur.css",
     "./package.json": "./package.json"
   },

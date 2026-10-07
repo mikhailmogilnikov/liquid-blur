@@ -1,7 +1,8 @@
 import { SpringAnimator, type SpringParams } from "./springAnimator";
 
 /**
- * Press behaviors for glass: `.lb-highlight`, `.lb-swell`, `.lb-stretch`, in any combination.
+ * Press behaviors for glass: `.lb-highlight`, `.lb-swell`, `.lb-stretch`, in any combination, or
+ * `.lb-interactive` for all three.
  * One delegated listener for the whole document, so the material stays plain classes and elements
  * mounted later work without registration. Installing twice returns the first install.
  *
@@ -40,7 +41,10 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * it does nothing. Returns a cleanup function.
  */
 
-const SELECTOR = ".lb-highlight, .lb-swell, .lb-stretch";
+const SELECTOR = ".lb-highlight, .lb-swell, .lb-stretch, .lb-interactive";
+/** Whether a behavior is on: its own class, or `lb-interactive`, which is all of them */
+const has = (el: Element, behavior: "highlight" | "swell" | "stretch") =>
+  el.classList.contains(`lb-${behavior}`) || el.classList.contains("lb-interactive");
 const PRESSED = "data-lb-pressed";
 const TOUCH_DELAY = 70;
 /** How long a tap shorter than TOUCH_DELAY stays lit, ms */
@@ -261,8 +265,8 @@ export function installLiquidBlur(root?: Document): () => void {
   const feedbackFor = (el: HTMLElement): Feedback | null => {
     const running = feedback.get(el);
     if (running) return running;
-    const light = el.classList.contains("lb-highlight");
-    const swell = el.classList.contains("lb-swell") && !reducedMotion.matches;
+    const light = has(el, "highlight");
+    const swell = has(el, "swell") && !reducedMotion.matches;
     if (!light && !swell) return null;
 
     const style = win.getComputedStyle(el);
@@ -413,7 +417,7 @@ export function installLiquidBlur(root?: Document): () => void {
     suppressClick = null;
 
     const strength =
-      el.classList.contains("lb-stretch") && !reducedMotion.matches
+      has(el, "stretch") && !reducedMotion.matches
         ? Number.parseFloat(win.getComputedStyle(el).getPropertyValue("--lb-stretch")) || 0
         : 0;
     const stretch = strength > 0 ? stretchFor(el) : null;
@@ -429,7 +433,7 @@ export function installLiquidBlur(root?: Document): () => void {
       startY: event.clientY,
       inside: true,
       shown: false,
-      light: el.classList.contains("lb-highlight"),
+      light: has(el, "highlight"),
       maxOffset: MAX_OFFSET * strength * give,
       ...springsFor(give),
       stretch,
@@ -496,7 +500,7 @@ export function installLiquidBlur(root?: Document): () => void {
     if (!el || event.composedPath()[0] !== el) return;
     release(true);
     endKeyPress();
-    if (el.classList.contains("lb-highlight")) {
+    if (has(el, "highlight")) {
       el.style.setProperty("--lb-press-x", "50%");
       el.style.setProperty("--lb-press-y", "50%");
       el.style.setProperty("--_lb-press-r", `${lightReachOf(el).toFixed(1)}px`);

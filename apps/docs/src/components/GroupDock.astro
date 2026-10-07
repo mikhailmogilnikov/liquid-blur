@@ -1,0 +1,76 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * A glass group to play with: a player bar and a search button that splits off and docks back.
+ * The button moves on a plain CSS transition; the group follows it on its own. Fills its parent,
+ * which should be positioned and have a backdrop behind it.
+ */
+---
+
+<div class="lb lb-group dock-demo">
+  <div class="lb lb-stretch dock-demo__bar">
+    <button type="button" aria-label="Back"><Icon name="back" size={20} /></button>
+    <button type="button" aria-label="Play"><Icon name="play" size={20} /></button>
+    <button type="button" aria-label="Next"><Icon name="next" size={20} /></button>
+  </div>
+  <button
+    class="lb lb-interactive dock-demo__orb"
+    type="button"
+    aria-label="Search"
+    aria-pressed="false"
+    data-dock-orb
+  >
+    <Icon name="search" size={20} />
+  </button>
+</div>
+
+<style>
+  .dock-demo.lb.lb-group {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .dock-demo .dock-demo__bar.lb {
+    display: flex;
+    align-items: center;
+    height: 52px;
+    padding: 0 6px;
+  }
+  .dock-demo__bar button {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+  }
+  .dock-demo .dock-demo__orb.lb {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    /* A plain CSS transition: the group follows it on its own */
+    transition: translate 0.55s cubic-bezier(0.3, 1.45, 0.5, 1);
+  }
+  .dock-demo .dock-demo__orb.lb[aria-pressed="true"] { translate: 58px -40px; }
+  @media (prefers-reduced-motion: reduce) {
+    .dock-demo .dock-demo__orb.lb { transition: none; }
+  }
+</style>
+
+<script>
+  import { installGlassGroups } from "liquid-blur/group";
+
+  installGlassGroups();
+
+  for (const orb of document.querySelectorAll<HTMLButtonElement>("[data-dock-orb]")) {
+    orb.addEventListener("click", () => {
+      orb.setAttribute("aria-pressed", String(orb.getAttribute("aria-pressed") !== "true"));
+    });
+  }
+</script>

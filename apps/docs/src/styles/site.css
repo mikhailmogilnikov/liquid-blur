@@ -562,11 +562,14 @@ code {
 .feed {
   position: absolute;
   inset: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  overscroll-behavior: contain;
+  /*
+   * Moved by the script only: a wheel or a finger over it scrolls the page. Never an anchor for
+   * the page's scroll, since it moves on its own.
+   */
+  overflow: hidden;
+  overflow-anchor: none;
 }
-.feed::-webkit-scrollbar { display: none; }
+.feed__track { will-change: transform; }
 
 .feed__loop { padding: 84px clamp(16px, 3vw, 32px) 24px; }
 
@@ -808,7 +811,7 @@ code {
 .sample-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 }
 .sample-button {
   height: 52px;
@@ -1251,11 +1254,33 @@ code {
   .grid--doc { grid-template-columns: 1fr; }
 }
 
-/* The generated markup wraps instead of scrolling under the copy button */
-.play__code pre code {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+/*
+ * The generated markup: one line per element, scrolling sideways rather than wrapping, and room
+ * for the longest version (with a group), so switching never changes the block's height or,
+ * through the grid row, the preview's
+ */
+.play__code pre {
+  min-height: calc(6 * 1.7em + 36px);
 }
+/* As wide as the longest line, so a marked line's band runs under all of it when scrolled */
+.play__code pre code {
+  display: inline-block;
+  min-width: 100%;
+}
+.play__code .ln {
+  display: inline-block;
+  min-width: 100%;
+}
+/* Lines the group adds */
+.play__code .ln--add {
+  margin: 0 -64px 0 -20px;
+  padding: 0 64px 0 18px;
+  min-width: calc(100% + 84px);
+  border-left: 2px solid #0a84ff;
+  background: color-mix(in srgb, #0a84ff 10%, transparent);
+}
+/* The note under it keeps two lines' room whatever it says */
+.play__note { min-height: 2lh; }
 
 .dot {
   display: inline-block;

@@ -13,7 +13,7 @@ const art =
 
   <main class="lab">
     <p class="lead">
-      <b>Glass group, experimental.</b> Children of one group share a single piece of glass that melts between
+      <b>Glass group.</b> Children of one group share a single piece of glass that melts between
       them when they come close. One backdrop, clipped to the merged outline, so nothing blurs twice.
     </p>
 
@@ -25,7 +25,7 @@ const art =
     <section class="scene" aria-label="Docking">
       <div class="scene__art" style={`background: ${art}`}></div>
       <p class="scene__words" aria-hidden="true">Surface tension</p>
-      <div class="dock" data-dock>
+      <div class="dock lb-group" data-dock>
         <div class="bar lb">
           <button type="button" aria-label="Back"><Icon name="back" size={20} /></button>
           <button type="button" aria-label="Play"><Icon name="play" size={20} /></button>
@@ -41,15 +41,15 @@ const art =
     <section class="scene" aria-label="Stretching">
       <div class="scene__art" style={`background: ${art}; filter: hue-rotate(260deg)`}></div>
       <p class="scene__words" aria-hidden="true">Pull it</p>
-      <div class="toolbar" data-toolbar>
+      <div class="toolbar lb-group" data-toolbar>
         <div class="tb tb--seg lb lb-stretch">
           <button type="button">Albums</button>
           <button type="button">Songs</button>
         </div>
-        <button class="tb tb--round lb lb-stretch lb-swell" type="button" aria-label="Add">
+        <button class="tb tb--round lb lb-interactive" type="button" aria-label="Add">
           <Icon name="plus" size={20} />
         </button>
-        <button class="tb tb--round tb--far lb lb-stretch lb-swell" type="button" aria-label="More">
+        <button class="tb tb--round tb--far lb lb-interactive" type="button" aria-label="More">
           <Icon name="more" size={20} />
         </button>
       </div>
@@ -59,7 +59,7 @@ const art =
     <section class="scene" aria-label="Dragging">
       <div class="scene__art" style={`background: ${art}; filter: hue-rotate(140deg)`}></div>
       <p class="scene__words" aria-hidden="true">Drag the drop</p>
-      <div class="field" data-field>
+      <div class="field lb-group" data-field>
         <div class="pill lb">Liquid Blur</div>
         <div class="drop lb" data-drop aria-label="Draggable drop"><Icon name="heart" size={20} /></div>
         <div class="drop drop--small lb" data-drop aria-label="Draggable drop"></div>
@@ -68,21 +68,6 @@ const art =
     </section>
   </main>
 
-  <aside class="hud" aria-label="Profiling">
-    <div class="hud__stats">
-      <span><b data-fps>–</b> fps</span>
-      <span>worst <b data-worst>–</b> ms</span>
-      <span>JS <b data-js>–</b> ms</span>
-      <span>volume <b data-volume>–</b> ms</span>
-    </div>
-    <label><input type="checkbox" data-loop /> Animate by itself</label>
-    <label><input type="checkbox" data-light /> Press light on "Pull it"</label>
-    <label><input type="checkbox" data-debug="no-art" /> No rims, edge, shadow</label>
-    <label><input type="checkbox" data-debug="no-volume" /> No volume</label>
-    <label><input type="checkbox" data-debug="no-clip" /> No clip-path (rectangle)</label>
-    <label><input type="checkbox" data-debug="no-blur" /> No backdrop blur</label>
-    <label><input type="checkbox" data-debug="fixed-box" /> Fixed glass box</label>
-  </aside>
 </Base>
 
 <style>
@@ -204,35 +189,6 @@ const art =
   .tb--round { left: 206px; width: 56px; }
   .tb--far { left: 284px; }
 
-  .hud {
-    position: fixed;
-    left: 12px;
-    bottom: 12px;
-    z-index: 100;
-    display: grid;
-    gap: 6px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: var(--ground);
-    color: var(--ink);
-    box-shadow: 0 0 0 1px var(--hair), 0 8px 24px rgb(0 0 0 / 0.15);
-    font-size: 13px;
-    line-height: 1.3;
-  }
-  .hud__stats {
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 260px;
-    gap: 4px 12px;
-    font-variant-numeric: tabular-nums;
-    padding-bottom: 4px;
-  }
-  .hud label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   .field {
     position: absolute;
     inset: 0;
@@ -272,22 +228,20 @@ const art =
 </style>
 
 <script>
-  import { createGlassGroup, SpringAnimator, type GlassGroup } from "liquid-blur";
+  import { SpringAnimator } from "liquid-blur";
+  import { installGlassGroups } from "liquid-blur/group";
 
-  const groups: GlassGroup[] = [];
-  const dock = document.querySelector<HTMLElement>("[data-dock]")!;
-  const field = document.querySelector<HTMLElement>("[data-field]")!;
-  const toolbar = document.querySelector<HTMLElement>("[data-toolbar]")!;
-  // Springs and lb-stretch move the children through their style: the groups follow on their own
-  groups.push(createGlassGroup(dock), createGlassGroup(field), createGlassGroup(toolbar));
+  // Every .lb-group on the page; springs and lb-stretch move the children through their style,
+  // and the groups follow on their own
+  installGlassGroups();
+  const groups = [...document.querySelectorAll<HTMLElement>(".lb-group")];
 
   // Merge distance, live
   const merge = document.querySelector<HTMLInputElement>("[data-merge]")!;
   const mergeOut = document.querySelector<HTMLOutputElement>("[data-merge-out]")!;
   merge.addEventListener("input", () => {
-    for (const el of [dock, field, toolbar]) el.style.setProperty("--lb-merge", `${merge.value}px`);
+    for (const el of groups) el.style.setProperty("--lb-merge", `${merge.value}px`);
     mergeOut.value = `${merge.value}px`;
-    for (const g of groups) g.update();
   });
 
   // Docking: the orb slides away from the bar and back on a bouncy spring
@@ -303,68 +257,6 @@ const art =
     const out = orb.getAttribute("aria-pressed") !== "true";
     orb.setAttribute("aria-pressed", String(out));
     slide.to(out ? { x: 56, y: -40 } : { x: 0, y: 0 });
-  });
-
-  // Profiling: frame rate, the worst frame and our script time over the last second
-  const fpsOut = document.querySelector<HTMLElement>("[data-fps]")!;
-  const worstOut = document.querySelector<HTMLElement>("[data-worst]")!;
-  const jsOut = document.querySelector<HTMLElement>("[data-js]")!;
-  const volumeOut = document.querySelector<HTMLElement>("[data-volume]")!;
-  let frames = 0;
-  let worst = 0;
-  let windowStart = performance.now();
-  let lastFrame = windowStart;
-  const meter = (now: number) => {
-    frames++;
-    worst = Math.max(worst, now - lastFrame);
-    lastFrame = now;
-    if (now - windowStart >= 1000) {
-      fpsOut.textContent = String(Math.round((frames * 1000) / (now - windowStart)));
-      worstOut.textContent = worst.toFixed(0);
-      jsOut.textContent = groups.reduce((sum, g) => sum + g.ms, 0).toFixed(2);
-      volumeOut.textContent = groups.reduce((sum, g) => sum + g.volumeMs, 0).toFixed(2);
-      frames = 0;
-      worst = 0;
-      windowStart = now;
-    }
-    requestAnimationFrame(meter);
-  };
-  requestAnimationFrame(meter);
-
-  const debugBoxes = [...document.querySelectorAll<HTMLInputElement>("[data-debug]")];
-  for (const box of debugBoxes) {
-    box.addEventListener("change", () => {
-      const tokens = debugBoxes.filter((b) => b.checked).map((b) => b.dataset.debug);
-      for (const el of [dock, field, toolbar]) el.dataset.lbDebug = tokens.join(" ");
-      for (const g of groups) g.update();
-    });
-  }
-
-  // Press light on the toolbar's pieces, off by default to keep runs comparable
-  const lightBox = document.querySelector<HTMLInputElement>("[data-light]")!;
-  lightBox.addEventListener("change", () => {
-    for (const el of toolbar.querySelectorAll(".tb")) el.classList.toggle("lb-highlight", lightBox.checked);
-  });
-
-  // Animate by itself: the orb docks and undocks, the small drop circles into the pill and out
-  const loopBox = document.querySelector<HTMLInputElement>("[data-loop]")!;
-  const smallDrop = document.querySelector<HTMLElement>(".drop--small")!;
-  let loopFrame = 0;
-  let loopTimer = 0;
-  const loop = (now: number) => {
-    const t = now / 1000;
-    smallDrop.style.transform = `translate(${70 + 60 * Math.sin(t * 2)}px, ${-40 + 30 * Math.cos(t * 2)}px)`;
-    loopFrame = requestAnimationFrame(loop);
-  };
-  loopBox.addEventListener("change", () => {
-    cancelAnimationFrame(loopFrame);
-    clearInterval(loopTimer);
-    if (!loopBox.checked) {
-      smallDrop.style.transform = "";
-      return;
-    }
-    loopFrame = requestAnimationFrame(loop);
-    loopTimer = window.setInterval(() => orb.click(), 900);
   });
 
   // Dragging: a drop follows the pointer and springs home on release

@@ -22,6 +22,7 @@
  *   lb-swell      grows while pressed, more the smaller it is
  *   lb-stretch    pulls toward the finger and stretches along the drag, less the bigger it is;
  *                 also blocks touch scrolling and text selection on the element
+ *   lb-interactive all three at once: the usual set for a button, chip or icon
  * With the script, highlight and swell animate on springs written to the element's inline `scale`
  * and a private property, so your own `transition` stays yours; the swell multiplies your `scale`
  * rather than replacing it. Stretch appends to the element's transform during the gesture and
@@ -307,7 +308,7 @@
 
   /* ── Press behaviors ── */
 
-  :is(.lb, .lb-group > *):is(.lb-highlight, .lb-swell, .lb-stretch) {
+  :is(.lb, .lb-group > *):is(.lb-highlight, .lb-swell, .lb-stretch, .lb-interactive) {
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -317,12 +318,12 @@
    * the swell follows the spring. With the script (data-lb-interaction on the root) both run on
    * JS springs instead and no transition is set.
    */
-  :root:not([data-lb-interaction]) .lb:is(.lb-highlight, .lb-swell) {
+  :root:not([data-lb-interaction]) .lb:is(.lb-highlight, .lb-swell, .lb-interactive) {
     transition:
       scale var(--_lb-spring-duration) var(--_lb-spring),
       --_lb-pressed 420ms ease-out;
   }
-  :root:not([data-lb-interaction]) .lb:is(.lb-highlight, .lb-swell):active {
+  :root:not([data-lb-interaction]) .lb:is(.lb-highlight, .lb-swell, .lb-interactive):active {
     --_lb-pressed: 1;
     transition:
       scale var(--_lb-spring-duration) var(--_lb-spring),
@@ -336,7 +337,7 @@
    * rather than a disc with a rim. At --lb-press-x / --lb-press-y, clamped to the element by the
    * script.
    */
-  .lb.lb-highlight {
+  .lb:is(.lb-highlight, .lb-interactive) {
     --_h: calc(var(--_lb-press) * var(--_lb-pressed, 0));
     /* Share of the light spread over the whole surface */
     --_w: 0.25;
@@ -358,13 +359,13 @@
   }
 
   /* Swell, without the script */
-  :root:not([data-lb-interaction]) .lb.lb-swell:active { scale: var(--lb-swell); }
+  :root:not([data-lb-interaction]) .lb:is(.lb-swell, .lb-interactive):active { scale: var(--lb-swell); }
 
   /*
    * Stretch: the transform is written by the script. The drag belongs to the glass, so the
    * browser must not start a scroll or a text selection from it.
    */
-  :is(.lb, .lb-group > *).lb-stretch {
+  :is(.lb, .lb-group > *):is(.lb-stretch, .lb-interactive) {
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
@@ -372,7 +373,7 @@
   }
 
   /*
-   * Group (experimental, driven by createGlassGroup() from group.ts): children that are glass
+   * Group (driven by `liquid-blur/group`: installGlassGroups() or createGlassGroup()): children that are glass
    * (`.lb`) and melt together where they come close. Apart, they're plain glass and the group draws
    * nothing. Melted (`data-lb-melted` on the root), their own glass steps aside, keeping only the
    * press light, for one surface the group draws behind them: a clipped element with backdrop,
@@ -418,8 +419,15 @@
     backdrop-filter: none;
     box-shadow: none;
   }
-  .lb-group[data-lb-melted] > .lb.lb-highlight {
+  .lb-group[data-lb-melted] > .lb:is(.lb-highlight, .lb-interactive) {
     background: var(--_highlight);
+  }
+  /* A tinted child keeps its tint, laid over the shared glass */
+  .lb-group[data-lb-melted] > .lb.lb-tinted {
+    background: var(--_fill);
+  }
+  .lb-group[data-lb-melted] > .lb.lb-tinted:is(.lb-highlight, .lb-interactive) {
+    background: var(--_highlight), var(--_fill);
   }
 
   /* ── Accessibility ── */
@@ -451,9 +459,16 @@
       outline: 1px solid CanvasText;
       outline-offset: -1px;
     }
+    /* Melted, the group strokes one outline around them all; the shading canvas would keep its colors */
+    .lb-group[data-lb-melted] > .lb {
+      outline: none;
+    }
+    .lb-group__glass > .lb-group__volume {
+      display: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :root:not([data-lb-interaction]) .lb.lb-swell:active { scale: 1; }
+    :root:not([data-lb-interaction]) .lb:is(.lb-swell, .lb-interactive):active { scale: 1; }
   }
 }

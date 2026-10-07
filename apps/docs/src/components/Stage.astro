@@ -48,7 +48,8 @@ const features = [
 <section class="stage" aria-label="Live demo">
   <div class="stage__panel">
     <div class="screen">
-      <div class="feed" data-feed tabindex="0" aria-label="Scrollable demo content">
+      <div class="feed" data-feed>
+        <div class="feed__track" data-feed-track>
         {
           [0, 1].map((copy) => (
             <div class="feed__loop" aria-hidden={copy === 1 ? "true" : undefined}>
@@ -88,10 +89,11 @@ const features = [
             </div>
           ))
         }
+        </div>
       </div>
 
       <div class="screen__top">
-        <button class="lb lb-highlight lb-swell lb-stretch round" type="button" aria-label="Back">
+        <button class="lb lb-interactive round" type="button" aria-label="Back">
           <Icon name="back" size={20} />
         </button>
         <div class="screen__seg lb lb-highlight lb-stretch">
@@ -108,7 +110,7 @@ const features = [
         </div>
       </div>
 
-      <div class="screen__bottom">
+      <div class="screen__bottom lb lb-group">
         <div class="player lb lb-highlight lb-stretch">
           <span class="player__art" style={`background: ${albums[0].art}`}></span>
           <span class="player__meta">
@@ -121,17 +123,21 @@ const features = [
           </button>
           <button class="player__next" type="button" aria-label="Next"><Icon name="next" size={20} /></button>
         </div>
-        <button class="lb lb-tinted lb-highlight lb-swell lb-stretch round" type="button" aria-label="Like">
+        <button class="lb lb-interactive round" type="button" aria-label="Like">
           <Icon name="heart" size={22} />
         </button>
       </div>
     </div>
   </div>
-  <p class="stage__hint">It's live: scroll under the glass, press it, drag it.</p>
+  <p class="stage__hint">It's live: press the glass, drag it.</p>
 </section>
 
 <script>
+  import { installGlassGroups } from "liquid-blur/group";
   import { segmented } from "../scripts/segmented";
+
+  // The player and the like button share one piece of glass
+  installGlassGroups();
 
   const feed = document.querySelector<HTMLElement>("[data-feed]");
   const seg = document.querySelector<HTMLElement>("[data-demo-seg]");
@@ -146,37 +152,27 @@ const features = [
   });
 
   /*
-   * The feed drifts on its own so the glass always has something moving under it. Two copies of
-   * the content make the loop seamless; any touch, wheel or key hands it to the reader for a while.
+   * The feed drifts on its own so the glass always has something moving under it; it can't be
+   * scrolled by hand. Two copies of the content make the loop seamless. It moves by transform, not
+   * by scrolling: the compositor's work, and nothing the page's scroll anchoring could latch onto.
    */
-  if (feed && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const track = document.querySelector<HTMLElement>("[data-feed-track]");
+  if (feed && track && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
     const SPEED = 26; // px per second
     let pos = 0;
     let last = 0;
-    let pausedUntil = 0;
 
-    const loop = () => (feed.firstElementChild as HTMLElement).offsetHeight;
-    const hold = () => {
-      pausedUntil = performance.now() + 3500;
-    };
-    for (const type of ["wheel", "touchstart", "pointerdown", "keydown"]) {
-      feed.addEventListener(type, hold, { passive: true });
-    }
-    feed.addEventListener("scroll", () => {
-      if (performance.now() < pausedUntil) pos = feed.scrollTop;
-    });
+    const loop = () => (track.firstElementChild as HTMLElement).offsetHeight;
 
     // The loop runs only while the feed is on screen, so an idle page costs nothing
     let frame = 0;
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (now >= pausedUntil) {
-        const height = loop();
-        pos += SPEED * dt;
-        if (pos >= height) pos -= height;
-        feed.scrollTop = pos;
-      }
+      const height = loop();
+      pos += SPEED * dt;
+      if (pos >= height) pos -= height;
+      track.style.transform = `translate3d(0, ${-pos}px, 0)`;
       frame = requestAnimationFrame(tick);
     };
     new IntersectionObserver(([entry]) => {

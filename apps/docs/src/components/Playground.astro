@@ -22,7 +22,7 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
     <div class="bd bd-dots" data-bd="dots" hidden></div>
 
     <div class="play__samples">
-      <div class="sample-row">
+      <div class="sample-row lb lb-group" data-group>
         <button class="lb lb-highlight lb-swell sample-button" type="button" data-sample>Continue</button>
         <button class="lb lb-highlight lb-swell sample-round" type="button" data-sample aria-label="Play">
           <Icon name="play" size={20} />
@@ -85,7 +85,13 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
         <div class="control__body" role="group" aria-label="Press behaviors">
           <button class="chip" type="button" data-behavior="highlight" aria-pressed="true">Highlight</button>
           <button class="chip" type="button" data-behavior="swell" aria-pressed="true">Swell</button>
-          <button class="chip" type="button" data-behavior="stretch" aria-pressed="false">Stretch</button>
+          <button class="chip" type="button" data-behavior="stretch" aria-pressed="true">Stretch</button>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control__label">Group</span>
+        <div class="control__body">
+          <button class="chip" type="button" data-melt aria-pressed="true">Melt</button>
         </div>
       </div>
       <div class="control">
@@ -125,7 +131,10 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
 </div>
 
 <script>
+  import { installGlassGroups } from "liquid-blur/group";
   import { segmented } from "../scripts/segmented";
+
+  installGlassGroups();
 
   const root = document.querySelector<HTMLElement>("[data-playground]");
   if (root) {
@@ -133,15 +142,17 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
     const samples = [...root.querySelectorAll<HTMLElement>("[data-sample]")];
     const codeOut = root.querySelector<HTMLElement>("[data-play-code]")!;
     const note = root.querySelector<HTMLElement>("[data-play-note]")!;
+    const group = root.querySelector<HTMLElement>("[data-group]")!;
 
     const state = {
       transparency: 0.5,
       depth: 0.5,
       variant: "regular",
       tint: "#007aff",
-      behaviors: new Set(["highlight", "swell"]),
+      behaviors: new Set(["highlight", "swell", "stretch"]),
       theme: "auto",
       backdrop: "aurora",
+      melt: true,
     };
 
     const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -151,7 +162,9 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
     const render = () => {
       const classes = ["lb"];
       if (state.variant !== "regular") classes.push(`lb-${state.variant}`);
-      for (const b of ["highlight", "swell", "stretch"]) if (state.behaviors.has(b)) classes.push(`lb-${b}`);
+      // All three are one class
+      if (state.behaviors.size === 3) classes.push("lb-interactive");
+      else for (const b of ["highlight", "swell", "stretch"]) if (state.behaviors.has(b)) classes.push(`lb-${b}`);
 
       const vars: string[] = [];
       if (state.transparency !== 0.5) vars.push(`--lb-transparency: ${state.transparency}`);
@@ -169,18 +182,53 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
         el.className = [...classes, ...keep].join(" ");
       }
       for (const bd of stage.querySelectorAll<HTMLElement>("[data-bd]")) bd.hidden = bd.dataset.bd !== state.backdrop;
+      /*
+       * The group draws the shared glass from its own values, and only watches its own style and
+       * attributes: the material, the knobs and the theme go on it too
+       */
+      group.className = state.melt
+        ? ["sample-row", "lb", "lb-group", ...(state.variant !== "regular" ? [`lb-${state.variant}`] : [])].join(" ")
+        : "sample-row";
+      for (const name of ["--lb-transparency", "--lb-depth", "--lb-tint"]) {
+        group.style.setProperty(name, stage.style.getPropertyValue(name));
+      }
+      if (state.theme === "auto") delete group.dataset.theme;
+      else group.dataset.theme = state.theme;
 
-      // The code for it
-      let html = `<span class="tk-mute">&lt;</span><span class="tk-tag">button</span>`;
-      html += attr("class", classes.join(" "));
-      if (vars.length) html += attr("style", vars.join("; "));
-      if (state.theme !== "auto") html += attr("data-theme", state.theme);
-      html += `<span class="tk-mute">&gt;</span>Continue<span class="tk-mute">&lt;/</span><span class="tk-tag">button</span><span class="tk-mute">&gt;</span>`;
-      codeOut.innerHTML = html;
+      /*
+       * The code for it: both buttons, as on the stage. Shared values go on the group, or on each
+       * button without one. Lines the group adds are marked. One line per element, never wrapped,
+       * so the block keeps its height: see .play__code.
+       */
+      const open = (name: string, attrs: string) =>
+        `<span class="tk-mute">&lt;</span><span class="tk-tag">${name}</span>${attrs}<span class="tk-mute">&gt;</span>`;
+      const close = (name: string) =>
+        `<span class="tk-mute">&lt;/</span><span class="tk-tag">${name}</span><span class="tk-mute">&gt;</span>`;
+      let shared = "";
+      if (vars.length) shared += attr("style", vars.join("; "));
+      if (state.theme !== "auto") shared += attr("data-theme", state.theme);
+      const own = attr("class", classes.join(" ")) + (state.melt ? "" : shared);
+      const pad = state.melt ? "  " : "";
+      const lines: [string, boolean?][] = [
+        [`${pad}${open("button", own)}Continue${close("button")}`],
+        [`${pad}${open("button", own)}`],
+        [`${pad}  ${open("svg", "")}<span class="tk-mute">…</span>${close("svg")}`],
+        [`${pad}${close("button")}`],
+      ];
+      if (state.melt) {
+        const groupClasses = ["lb", "lb-group", ...(state.variant !== "regular" ? [`lb-${state.variant}`] : [])];
+        lines.unshift([open("div", attr("class", groupClasses.join(" ")) + shared), true]);
+        lines.push([close("div"), true]);
+      }
+      codeOut.innerHTML = lines
+        .map(([line, added]) => `<span class="ln${added ? " ln--add" : ""}">${line}</span>`)
+        .join("\n");
 
-      note.innerHTML = state.behaviors.size
-        ? "Press behaviors need <code>installLiquidBlur()</code> once on the page."
-        : "Plain CSS. No script needed.";
+      const needs = [
+        ...(state.behaviors.size ? ["<code>installLiquidBlur()</code>"] : []),
+        ...(state.melt ? ['<code>installGlassGroups()</code> from <code>liquid-blur/group</code>'] : []),
+      ];
+      note.innerHTML = needs.length ? `Needs ${needs.join(" and ")}, once on the page.` : "Plain CSS. No script needed.";
     };
 
     for (const input of root.querySelectorAll<HTMLInputElement>("[data-range]")) {
@@ -212,6 +260,13 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
         render();
       });
     }
+
+    const melt = root.querySelector<HTMLButtonElement>("[data-melt]")!;
+    melt.addEventListener("click", () => {
+      state.melt = !state.melt;
+      melt.setAttribute("aria-pressed", String(state.melt));
+      render();
+    });
 
     for (const chip of root.querySelectorAll<HTMLButtonElement>("[data-behavior]")) {
       chip.addEventListener("click", () => {

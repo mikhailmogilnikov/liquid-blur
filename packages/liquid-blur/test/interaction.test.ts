@@ -273,6 +273,19 @@ describe("installLiquidBlur", () => {
     expect(reach(44, 160, "key")).toBeCloseTo(92.3, 0);
   });
 
+  it("lights, swells and stretches with lb-interactive alone", () => {
+    const el = glass("lb-interactive");
+    el.style.setProperty("--lb-stretch", "2");
+    pointer(el, "pointerdown", 25, 10);
+    pointer(el, "pointermove", 125, 10);
+    vi.advanceTimersByTime(300);
+    expect(pressed(el)).toBe(true);
+    expect(Number(el.style.getPropertyValue("--_lb-pressed"))).toBeGreaterThan(0.5);
+    expect(el.style.scale).not.toBe("");
+    expect(el.style.transform).toMatch(/translate\(\d/);
+    pointer(el, "pointerup", 125, 10);
+  });
+
   it("stretches toward the drag and restores the transform", () => {
     const el = glass("lb-stretch");
     el.style.setProperty("--lb-stretch", "2");

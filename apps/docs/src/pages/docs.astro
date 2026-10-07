@@ -4,6 +4,7 @@ import Nav from "../components/Nav.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import Icon from "../components/Icon.astro";
 import Footer from "../components/Footer.astro";
+import GroupDock from "../components/GroupDock.astro";
 
 
 const toc = [
@@ -15,6 +16,7 @@ const toc = [
   ["tailwind", "Tailwind & layers"],
   ["accessibility", "Accessibility"],
   ["behaviors", "Press behaviors"],
+  ["groups", "Glass groups"],
   ["api", "API"],
   ["support", "Browser support"],
   ["faq", "FAQ"],
@@ -57,6 +59,12 @@ const classes = [
     sample: "lb lb-stretch lb-highlight",
     bd: "bd-stripes",
   },
+  {
+    name: "lb-interactive",
+    text: "All three at once, the usual set for a button, chip or icon. Press it, drag it.",
+    sample: "lb lb-interactive",
+    bd: "bd-aurora",
+  },
 ];
 
 const vars = [
@@ -96,7 +104,7 @@ const vars = [
 const a11y = [
   ["eye", "Reduced transparency", "With the system setting on, glass turns opaque and the backdrop filter goes away."],
   ["contrast", "Increased contrast", "Opaque glass with a stronger edge, so every control keeps its outline."],
-  ["frame", "Forced colors", "Windows High Contrast drops backgrounds and shadows; an outline takes their place."],
+  ["frame", "Forced colors", "Windows High Contrast drops backgrounds and shadows; an outline takes their place, one around a melted group."],
   ["motion", "Reduced motion", "No swell, no stretch. Presses still light up, without anything moving."],
   ["keyboard", "Keyboard", "Enter and Space on a focused glass press it, until that same key comes up."],
   ["layers", "Solid material", 'data-lb-material="solid" on any ancestor makes all glass inside it opaque.'],
@@ -176,6 +184,39 @@ spring.to({ width: 240, radius: 24 });`,
   },
   ({ opacity, scale }) => { /* … */ },
 );`,
+  group: `<div class="lb-group">
+  <div class="lb">…</div>
+  <button class="lb lb-interactive">…</button>
+</div>
+
+<script type="module">
+  import { installGlassGroups } from "liquid-blur/group";
+
+  installGlassGroups();
+</script>`,
+  groupManual: `import { createGlassGroup } from "liquid-blur/group";
+
+const group = createGlassGroup(toolbar);
+
+// A child moved by something the group can't see
+group.update();
+
+// Later
+group.destroy();`,
+  groupReact: `import { useEffect } from "react";
+import { installGlassGroups } from "liquid-blur/group";
+
+export function Toolbar() {
+  // After hydration: the group adds its own elements to the root
+  useEffect(() => installGlassGroups(), []);
+  return (
+    // "lb" in the markup too, so a re-render keeps it
+    <div className="lb lb-group">
+      <div className="lb">…</div>
+      <button className="lb lb-interactive">…</button>
+    </div>
+  );
+}`,
   react: `import { useEffect } from "react";
 import { installLiquidBlur } from "liquid-blur";
 
@@ -265,8 +306,8 @@ export function App() {
 
         <section class="doc" id="classes">
           <p class="lead reveal">
-            <a class="anchor" href="#classes"><b>Six classes.</b></a> One for the material, two for its
-            character, three for how it answers a touch. They combine freely.
+            <a class="anchor" href="#classes"><b>Seven classes.</b></a> One for the material, two for its
+            character, three for how it answers a touch, and one for all three. They combine freely.
           </p>
           <div class="rows">
             {
@@ -411,6 +452,101 @@ export function App() {
           </div>
         </section>
 
+        <section class="doc" id="groups">
+          <p class="lead reveal">
+            <a class="anchor" href="#groups"><b>Glass that melts.</b></a> Pieces of one group share a single
+            surface that flows between them when they come close, like drops of liquid. One backdrop, clipped
+            to the merged outline, so nothing blurs twice. More in the <a href="/lab">lab</a>.
+          </p>
+          <div class="rows">
+            <div class="row reveal">
+              <p>
+                <b>Split and dock</b>
+                Press the search button. It moves with a plain CSS <code>transition</code>, and the glass
+                follows it out and back, neck and all.
+              </p>
+              <div class="tile tile--group">
+                <div class="bd bd-aurora"></div>
+                <GroupDock />
+              </div>
+            </div>
+            <div class="row reveal">
+              <p>
+                <b>Pull it</b>
+                Press and drag any piece. Stretch and swell bend the outline between them as they go.
+              </p>
+              <div class="tile tile--group">
+                <div class="bd bd-stripes"></div>
+                <div class="lb lb-group demo-group">
+                  <button class="lb lb-highlight lb-stretch demo-pill" type="button">Library</button>
+                  <button class="lb lb-interactive round" type="button" aria-label="Add">
+                    <Icon name="plus" size={20} />
+                  </button>
+                  <button class="lb lb-interactive round" type="button" aria-label="More">
+                    <Icon name="more" size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="row reveal">
+              <p>
+                <b>Drops</b>
+                A CSS <code>@keyframes</code> animation, nothing else: the drop pulls away from the pill and
+                falls back in. With reduced motion it stays put.
+              </p>
+              <div class="tile tile--group">
+                <div class="bd bd-aurora"></div>
+                <div class="lb lb-group demo-group">
+                  <div class="lb demo-pill">Liquid Blur</div>
+                  <div class="lb demo-drop"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="reveal"><CodeBlock code={code.group} lang="html" /></div>
+          <div class="rows reveal">
+            <div class="row">
+              <p>
+                <b>Pay only when you use it</b>
+                Groups live in their own entry, <code>liquid-blur/group</code>. Apart, the children are
+                plain glass and the group draws nothing; without the script they stay plain glass too.
+              </p>
+              <p>
+                <b>Merge distance</b>
+                Children start to melt <code>--lb-merge</code> apart, <code>24px</code> by default. Set it
+                on the group.
+              </p>
+            </div>
+            <div class="row">
+              <p>
+                <b>Follows on its own</b>
+                Springs, stretch and swell, inline styles and classes, size changes, CSS transitions and
+                animations of the children. Anything else moving them: call <code>update()</code>.
+              </p>
+              <p>
+                <b>Same material</b>
+                Theme, transparency, depth and colors come from the same variables as any glass. The root
+                gets <code>data-lb-melted</code> while it draws for the children.
+              </p>
+            </div>
+          </div>
+          <p class="prose reveal">
+            <b><code>installGlassGroups(root?: Document): () =&gt; void</code></b><br />
+            Turns every <code>.lb-group</code> into a group, including ones mounted later, and lets go of
+            those that leave the page. For an element you manage yourself, there's
+            <code>createGlassGroup()</code>:
+          </p>
+          <div class="reveal"><CodeBlock code={code.groupManual} lang="ts" /></div>
+          <p class="prose reveal" style="margin-top: 40px">
+            <b>Server rendering.</b> The entry is safe to import on the server, and
+            <code>installGlassGroups()</code> does nothing there. Rendered without the script, the children
+            are plain glass; close ones melt once it runs. With React, Vue or Svelte, install after hydration
+            (in an effect), since the group adds its own elements to the root, and write
+            <code>lb lb-group</code> in the markup, so a re-render that sets the class keeps <code>lb</code>.
+          </p>
+          <div class="reveal"><CodeBlock code={code.groupReact} lang="tsx" /></div>
+        </section>
+
         <section class="doc" id="api">
           <p class="lead reveal">
             <a class="anchor" href="#api"><b>Two exports.</b></a> One to turn presses on, and the spring that
@@ -493,3 +629,47 @@ export function App() {
 
   <Footer />
 </Base>
+
+<style>
+  .tile--group { height: 176px; }
+  .tile .demo-group.lb {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .tile .demo-group .round { width: 52px; height: 52px; padding: 0; }
+  .tile .demo-group .lb.demo-pill {
+    display: grid;
+    place-items: center;
+    height: 52px;
+    padding: 0 24px;
+    font-weight: 600;
+  }
+
+
+  .tile .demo-drop.lb {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin-left: -8px;
+    animation: demo-drip 3.6s ease-in-out infinite;
+  }
+  @keyframes demo-drip {
+    0%, 100% { translate: -6px 0; }
+    45%, 55% { translate: 48px -26px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile .demo-drop.lb { animation: none; }
+  }
+</style>
+
+<script>
+  import { installGlassGroups } from "liquid-blur/group";
+
+  installGlassGroups();
+</script>
