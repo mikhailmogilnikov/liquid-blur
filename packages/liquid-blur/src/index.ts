@@ -4,5 +4,5 @@
  * if you use `lb-highlight`, `lb-swell`, `lb-stretch` or `lb-interactive`.
  * Glass groups live in their own entry, `liquid-blur/group`, so they cost nothing unless used.
  */
-export { installLiquidBlur } from "./interaction";
-export { SpringAnimator, type SpringConfig, type SpringParams } from "./springAnimator";
+export { installLiquidBlur } from "./interaction.js";
+export { SpringAnimator, type SpringConfig, type SpringParams } from "./springAnimator.js";

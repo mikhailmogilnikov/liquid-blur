@@ -17,6 +17,7 @@ const toc = [
   ["accessibility", "Accessibility"],
   ["behaviors", "Press behaviors"],
   ["groups", "Glass groups"],
+  ["morph", "Morph"],
   ["api", "API"],
   ["support", "Browser support"],
   ["faq", "FAQ"],
@@ -105,7 +106,7 @@ const a11y = [
   ["eye", "Reduced transparency", "With the system setting on, glass turns opaque and the backdrop filter goes away."],
   ["contrast", "Increased contrast", "Opaque glass with a stronger edge, so every control keeps its outline."],
   ["frame", "Forced colors", "Windows High Contrast drops backgrounds and shadows; an outline takes their place, one around a melted group."],
-  ["motion", "Reduced motion", "No swell, no stretch. Presses still light up, without anything moving."],
+  ["motion", "Reduced motion", "No swell, no stretch; morphs switch immediately. Presses still light up."],
   ["keyboard", "Keyboard", "Enter and Space on a focused glass press it, until that same key comes up."],
   ["layers", "Solid material", 'data-lb-material="solid" on any ancestor makes all glass inside it opaque.'],
 ] as const;
@@ -116,8 +117,8 @@ const code = {
   script: `import { installLiquidBlur } from "liquid-blur";
 
 installLiquidBlur();`,
-  cdn: `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/liquid-blur/dist/liquid-blur.css" />
-<script type="module" src="https://cdn.jsdelivr.net/npm/liquid-blur/dist/auto.js"></script>`,
+  cdn: `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/liquid-blur@1.0.0/dist/liquid-blur.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/liquid-blur@1.0.0/dist/auto.js"></script>`,
   customize: `.toolbar {
   --lb-transparency: 0.8;
   --lb-depth: 0.3;
@@ -217,6 +218,55 @@ export function Toolbar() {
     </div>
   );
 }`,
+  morphLayout: `<div class="morph-scene">
+  <button id="more" class="lb" type="button" aria-controls="panel">More</button>
+  <div id="panel">
+    <p>Panel content</p>
+    <button id="close-panel" type="button">Close</button>
+  </div>
+</div>
+
+<style>
+  .morph-scene { position: relative; min-height: 240px; }
+  #more { width: 88px; height: 44px; border-radius: 22px; }
+  #panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: min(280px, 100%);
+    height: 220px;
+    box-sizing: border-box;
+    padding: 20px;
+    border-radius: 28px;
+    visibility: hidden;
+    z-index: 2;
+  }
+</style>`,
+  morph: `import "liquid-blur/liquid-blur.css";
+import { createMorph } from "liquid-blur/morph";
+
+// After mounting or hydration
+const source = document.getElementById("more")!;
+const content = document.getElementById("panel")!;
+const close = document.getElementById("close-panel")!;
+
+const morph = createMorph({
+  source,
+  content,
+  onRest(open) {
+    (open ? close : source).focus({ preventScroll: true });
+  },
+});
+
+const toggle = () => morph.toggle();
+const dismiss = () => morph.close();
+source.addEventListener("click", toggle);
+close.addEventListener("click", dismiss);
+
+// On unmount:
+// source.removeEventListener("click", toggle);
+// close.removeEventListener("click", dismiss);
+// morph.destroy();`,
   react: `import { useEffect } from "react";
 import { installLiquidBlur } from "liquid-blur";
 
@@ -547,10 +597,51 @@ export function App() {
           <div class="reveal"><CodeBlock code={code.groupReact} lang="tsx" /></div>
         </section>
 
+        <section class="doc" id="morph">
+          <p class="lead reveal">
+            <a class="anchor" href="#morph"><b>A control becomes a panel.</b></a> The same glass grows,
+            moves and changes its corners, then shrinks back. Content arrives magnified and blurred,
+            and settles sharp. Try the different layouts in the <a href="/lab">lab</a>.
+          </p>
+          <p class="prose reveal">
+            Lay out the content at its open position and size. Hide it with <code>visibility: hidden</code>,
+            so it stays measurable. The source supplies the glass; the content does not need <code>lb</code>.
+          </p>
+          <div class="reveal"><CodeBlock code={code.morphLayout} lang="html" /></div>
+          <div class="reveal"><CodeBlock code={code.morph} lang="ts" /></div>
+          <div class="rows reveal">
+            <div class="row">
+              <p>
+                <b>State and completion</b>
+                <code>open()</code>, <code>close()</code> and <code>toggle()</code> can reverse a running
+                animation. <code>isOpen</code> is the requested state; <code>onRest(open)</code> reports
+                when the movement finishes. <code>destroy()</code> removes the copies and restores the content.
+              </p>
+              <p>
+                <b>Springs in each direction</b>
+                Pass <code>{"spring: { open, close }"}</code>, each with <code>x</code>, <code>y</code>,
+                <code>width</code>, <code>height</code> and <code>progress</code> settings.
+                <code>defaultMorphSprings</code> is exported from <code>liquid-blur/morph</code>.
+              </p>
+            </div>
+          </div>
+          <p class="prose reveal">
+            Keep the content above the glass and leave its <code>transform</code>, <code>opacity</code>,
+            <code>filter</code> and <code>clip-path</code> to the morph. Geometry is measured on open and close;
+            scrolling or resizing while open is not tracked. Rotated or scaled ancestors are unsupported.
+            Corner shapes interpolate where <code>corner-shape</code> is supported; otherwise corners stay round.
+          </p>
+          <p class="prose reveal">
+            The source's <code>aria-expanded</code> is managed automatically. Focus, Escape, outside clicks
+            and menu or dialog keyboard behavior belong to your app. With reduced motion, the panel and
+            control swap immediately. Create the morph after mounting or hydration and destroy it on unmount.
+          </p>
+        </section>
+
         <section class="doc" id="api">
           <p class="lead reveal">
-            <a class="anchor" href="#api"><b>Two exports.</b></a> One to turn presses on, and the spring that
-            powers them.
+            <a class="anchor" href="#api"><b>Presses and springs.</b></a> The main entry turns presses on
+            and exports the spring that powers them. Groups and morphs use their own entries above.
           </p>
           <p class="prose reveal">
             <b><code>installLiquidBlur(root?: Document): () =&gt; void</code></b><br />
@@ -568,14 +659,20 @@ export function App() {
           <div class="reveal"><CodeBlock code={code.spring} lang="ts" /></div>
           <p class="prose reveal">Each channel can have a spring of its own:</p>
           <div class="reveal"><CodeBlock code={code.channels} lang="ts" /></div>
+          <p class="prose reveal">
+            <code>SpringParams</code> contains <code>duration</code>, <code>bounce</code> and optional
+            <code>settle</code>. Duration is positive and measured in seconds; it is not a fixed completion
+            deadline. Use bounce below <code>1</code> for a spring that settles. Settle changes bounce
+            after the first reversal and defaults to the original bounce.
+          </p>
         </section>
 
         <section class="doc" id="support">
           <p class="lead reveal">
             <a class="anchor" href="#support"><b>Browser support.</b></a> Anything with
-            <code>backdrop-filter</code>, <code>color-mix()</code> and CSS <code>pow()</code>: Chrome and Edge
-            120+, Safari 16.2+, Firefox 118+. Firefox before 128 skips a few registered properties and still
-            renders the glass.
+            <code>backdrop-filter</code>, <code>color-mix()</code> and CSS <code>pow()</code>.
+            Browsers without <code>@property</code> use fallbacks. Groups also need
+            <code>clip-path: path()</code> and Canvas 2D. JavaScript is ESM targeting ES2022.
           </p>
         </section>
 
@@ -595,8 +692,8 @@ export function App() {
             <details>
               <summary>Does it need JavaScript?<Icon name="plus" /></summary>
               <div class="answer">
-                No. The material is pure CSS. The script only adds press behaviors; without it, highlight and
-                swell fall back to <code>:active</code>.
+                No. The material is pure CSS. Optional scripts add press behaviors, glass groups and morphs.
+                Without them, highlight and swell fall back to <code>:active</code>.
               </div>
             </details>
             <details>

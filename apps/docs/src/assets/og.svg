@@ -1,4 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="ambient" cx="78%" cy="45%" r="65%">
+      <stop stop-color="#14151e"/>
+      <stop offset="1" stop-color="#0a0a0a"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#ambient)"/>
+  <g font-family="Inter, Helvetica Neue, Arial, sans-serif">
+    <text x="74" y="320" fill="#fafafa" font-size="104" font-weight="600" letter-spacing="-5">Liquid Blur</text>
+    <text x="80" y="378" fill="#92929b" font-size="28" font-weight="400" letter-spacing="-.4">Expressive material for the web</text>
+  </g>
+  <svg xmlns="http://www.w3.org/2000/svg" x="642" y="32" width="512" height="512" viewBox="0 0 64 64">
   <defs>
     <g id="colors">
       <circle cx="22.5" cy="28.3" r="15.7" fill="#ff4f81"/>
@@ -31,4 +43,5 @@
     <rect x="4" y="17" width="56" height="31" fill="url(#shade)"/>
   </g>
   <rect x="4.12" y="17.12" width="55.76" height="30.76" rx="15.38" fill="none" stroke="url(#rim)" stroke-width=".24"/>
+</svg>
 </svg>

@@ -7,6 +7,9 @@ renders the same way: no refraction, no SVG filters, no blend modes, no pseudo-e
 sub-pixel hairlines. The material is plain CSS classes; an optional, framework-agnostic script adds
 press behaviors.
 
+ES modules with TypeScript declarations and no runtime dependencies. Glass groups and control-to-panel
+morphs have separate entry points, so they are only loaded when used.
+
 ## Install
 
 ```bash
@@ -41,8 +44,8 @@ during server rendering (it does nothing there).
 Without a build step, link the stylesheet and load the `auto` entry, which installs itself:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/liquid-blur/dist/liquid-blur.css" />
-<script type="module" src="https://cdn.jsdelivr.net/npm/liquid-blur/dist/auto.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/liquid-blur@1.0.0/dist/liquid-blur.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/liquid-blur@1.0.0/dist/auto.js"></script>
 ```
 
 With a bundler, `import "liquid-blur/auto"` does the same.
@@ -296,6 +299,14 @@ export function Toolbar() {
 
 ## API
 
+| Entry point | Exports |
+| --- | --- |
+| `liquid-blur` | `installLiquidBlur`, `SpringAnimator`; types `SpringConfig`, `SpringParams` |
+| `liquid-blur/auto` | Installs press behaviors on import; no named exports |
+| `liquid-blur/group` | `installGlassGroups`, `createGlassGroup`; type `GlassGroup` |
+| `liquid-blur/morph` | `createMorph`, `defaultMorphSprings`; types `Morph`, `MorphOptions`, `MorphSprings` |
+| `liquid-blur/liquid-blur.css` | Stylesheet |
+
 ### `installLiquidBlur(root?: Document): () => void`
 
 Installs press behaviors on a document (default: `document`) and returns a cleanup function.
@@ -332,6 +343,116 @@ group.update();
 group.destroy();
 ```
 
+### `createMorph(options: MorphOptions): Morph`
+
+From `liquid-blur/morph`. A glass control grows into a panel and shrinks back. Give it the control
+(`source`) and the panel's content (`content`), already laid out where the panel should open.
+The glass is copied from the control; the content does not need its own `lb` class.
+
+```html
+<div class="morph-scene">
+  <button id="more" class="lb" type="button" aria-controls="panel">More</button>
+  <div id="panel">
+    <p>Panel content</p>
+    <button id="close-panel" type="button">Close</button>
+  </div>
+</div>
+
+<style>
+  .morph-scene { position: relative; min-height: 240px; }
+  #more { width: 88px; height: 44px; border-radius: 22px; }
+  #panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: min(280px, 100%);
+    height: 220px;
+    box-sizing: border-box;
+    padding: 20px;
+    border-radius: 28px;
+    visibility: hidden;
+    z-index: 2;
+  }
+</style>
+```
+
+Run after the elements mount:
+
+```js
+import "liquid-blur/liquid-blur.css";
+import { createMorph } from "liquid-blur/morph";
+
+const source = document.getElementById("more");
+const content = document.getElementById("panel");
+const close = document.getElementById("close-panel");
+const morph = createMorph({
+  source,
+  content,
+  onRest(open) {
+    (open ? close : source).focus({ preventScroll: true });
+  },
+});
+
+const toggle = () => morph.toggle();
+const dismiss = () => morph.close();
+source.addEventListener("click", toggle);
+close.addEventListener("click", dismiss);
+
+// On unmount:
+// source.removeEventListener("click", toggle);
+// close.removeEventListener("click", dismiss);
+// morph.destroy();
+```
+
+| Option | Meaning |
+| --- | --- |
+| `source: HTMLElement` | The originating control, with a parent in the DOM |
+| `content: HTMLElement` | The panel content, with a measurable open position and size |
+| `spring?: { open: MorphSprings; close: MorphSprings }` | Full spring settings for each direction; defaults to `defaultMorphSprings` |
+| `onRest?: (open: boolean) => void` | Called when the animation settles open or closed |
+
+The returned `Morph` has `open()`, `close()`, `toggle()` and `destroy()`. Its read-only `isOpen`
+is the requested state, updated immediately, rather than an indication that the animation has
+finished. Reversing while moving preserves velocity. `destroy()` stops motion, removes the copies,
+restores the content's saved inline styles, shows the control and removes its `aria-expanded`.
+It does not remove event listeners added by your application.
+
+Each `MorphSprings` set contains `x`, `y`, `width`, `height` and `progress` springs. Change the
+defaults selectively:
+
+```js
+import { createMorph, defaultMorphSprings } from "liquid-blur/morph";
+
+const morph = createMorph({
+  source,
+  content,
+  spring: {
+    open: {
+      ...defaultMorphSprings.open,
+      y: { duration: 0.4, bounce: 0.3, settle: 0.1 },
+    },
+    close: defaultMorphSprings.close,
+  },
+});
+```
+
+Layout and lifecycle:
+
+- Keep the content separate from the glass and above it in stacking order. In a group, a morph
+  that covers a neighbor lifts its glass out of the group; `z-index: 2` keeps the content above it.
+- Hide content with `visibility: hidden`, not `display: none` or the `hidden` attribute: it must
+  remain measurable. Its computed `border-radius` defines the open panel's corners.
+- The morph manages inline `transform`, `opacity`, `filter` and `clip-path` on the content.
+  Avoid competing transitions on these properties. Apply press behaviors to the source only.
+- Source styles should use classes that also match its clone, rather than only its `id`. Inline
+  styles on the source are not copied. The example's measured size and radius are set by the morph.
+- Geometry is measured on open and close, not continuously during scrolling or resizing. Rotated
+  or scaled ancestors are unsupported. Groups merge using round arcs even with squircle children.
+- With reduced motion, the panel and control swap immediately. `aria-expanded` is managed;
+  focus, Escape, outside clicks and any dialog or menu keyboard behavior are your responsibility.
+- Importing the module is safe during server rendering; call `createMorph()` only in the browser,
+  after mounting or hydration, and call `destroy()` on unmount.
+
 ### `SpringAnimator`
 
 The interruptible spring that drives the press behaviors, exported for your own animations.
@@ -367,12 +488,22 @@ new SpringAnimator(
 );
 ```
 
+`SpringParams` is `{ duration: number; bounce: number; settle?: number }`. `duration` is a positive
+perceptual duration in seconds, not a fixed completion deadline. `bounce` ranges from `0` (no
+overshoot) to `1`; use a value below `1` for a spring that settles. `settle` changes the bounce
+after the first reversal and defaults to `bounce`.
+
 ## Browser support
 
 Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. `@property` is used for
 per-element switches and the highlight fade; browsers without it (Firefox < 128) still render the
 glass, with fallbacks.
 
+Glass groups also use `clip-path: path()` and Canvas 2D. Morph corner shapes use `corner-shape`
+where supported and otherwise stay round. JavaScript is shipped as ESM targeting ES2022.
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ## License
 
-MIT © Mikhail Mogilnikov
+MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

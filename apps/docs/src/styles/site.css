@@ -945,12 +945,11 @@ code {
 
 .code {
   position: relative;
+  margin-block: 20px;
   border-radius: 14px;
   background: var(--wash);
   min-width: 0;
 }
-.code + .code,
-.prose .code { margin-top: 16px; }
 .code__bar {
   display: flex;
   align-items: center;

@@ -1,4 +1,4 @@
-import { SpringAnimator, type SpringParams } from "./springAnimator";
+import { SpringAnimator, type SpringParams } from "./springAnimator.js";
 
 /**
  * Morph: a control swells into a panel of the same glass and shrinks back. One piece of glass the

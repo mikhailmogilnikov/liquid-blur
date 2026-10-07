@@ -1,10 +1,19 @@
 {
   "name": "liquid-blur",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A glass material for the web: backdrop blur, fill, rims and springy press behaviors. No refraction.",
   "type": "module",
   "author": "Mikhail Mogilnikov",
   "license": "MIT",
+  "homepage": "https://github.com/mikhailmogilnikov/liquid-blur#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/liquid-blur.git",
+    "directory": "packages/liquid-blur"
+  },
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/liquid-blur/issues"
+  },
   "keywords": [
     "css",
     "glass",
@@ -35,18 +44,23 @@
       "types": "./dist/morph.d.ts",
       "default": "./dist/morph.js"
     },
-    "./liquid-blur.css": "./dist/liquid-blur.css",
+    "./liquid-blur.css": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/liquid-blur.css"
+    },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsup && tsc -p tsconfig.build.json && esbuild src/liquid-blur.css --minify --log-level=warning --outfile=dist/liquid-blur.css",
     "dev": "tsup --watch --onSuccess \"tsc -p tsconfig.build.json && esbuild src/liquid-blur.css --minify --log-level=warning --outfile=dist/liquid-blur.css\"",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
-    "prepublishOnly": "pnpm build"
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
   },
   "publishConfig": {
     "access": "public"
