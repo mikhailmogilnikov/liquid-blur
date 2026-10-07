@@ -104,6 +104,8 @@ body {
 h1, h2, h3, h4, p, figure, ul, ol, dl, dd, pre { margin: 0; }
 h1, h2, h3, h4 { font: inherit; }
 b, strong { font-weight: 500; color: var(--ink); }
+/* On glass, bold text takes the glass's own text color, which can follow a different theme */
+.lb :is(b, strong) { color: inherit; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; border: 0; padding: 0; cursor: pointer; }
 /* Glass buttons keep the material's fill and text color; unlayered rules would beat its layer */
@@ -438,15 +440,32 @@ code {
 }
 .bd[hidden] { display: none; }
 
-.bd-aurora {
+/*
+ * The moving backdrops slide a pre-painted layer with transform, so the compositor does the work
+ * instead of repainting big gradients every frame. Off screen they stand still (see site.ts).
+ */
+.bd-aurora,
+.bd-stripes { contain: strict; }
+.bd-aurora::before,
+.bd-stripes::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+.js .bd:not(.is-live)::before { animation-play-state: paused; }
+
+.bd-aurora { background: #f4ecff; }
+.bd-aurora::before {
+  width: 160%;
+  height: 160%;
   background:
     radial-gradient(38% 55% at 18% 28%, #ff4f81 0, transparent 70%),
     radial-gradient(42% 50% at 78% 22%, #ffb020 0, transparent 70%),
     radial-gradient(48% 60% at 62% 82%, #2f7bff 0, transparent 70%),
     radial-gradient(36% 48% at 14% 86%, #1fd1a5 0, transparent 70%),
-    radial-gradient(30% 40% at 46% 46%, #b45cff 0, transparent 70%),
-    #f4ecff;
-  background-size: 160% 160%;
+    radial-gradient(30% 40% at 46% 46%, #b45cff 0, transparent 70%);
   animation: drift 22s ease-in-out infinite alternate;
 }
 :root[data-theme="dark"] .bd-aurora { background-color: #120a22; }
@@ -454,12 +473,15 @@ code {
   :root:not([data-theme="light"]) .bd-aurora { background-color: #120a22; }
 }
 @keyframes drift {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 30%; }
-  100% { background-position: 40% 100%; }
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-37.5%, -11.25%); }
+  100% { transform: translate(-15%, -37.5%); }
 }
 
-.bd-stripes {
+.bd-stripes::before {
+  left: -400px;
+  width: calc(100% + 400px);
+  height: 100%;
   background: repeating-linear-gradient(
     115deg,
     #ff3b30 0 26px,
@@ -473,7 +495,7 @@ code {
   animation: slide 16s linear infinite;
 }
 @keyframes slide {
-  to { background-position: 400px 0; }
+  to { transform: translateX(400px); }
 }
 
 .bd-type {
@@ -499,8 +521,8 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bd-aurora,
-  .bd-stripes { animation: none; }
+  .bd-aurora::before,
+  .bd-stripes::before { animation: none; }
 }
 
 /* ── Stage: a live app under glass ── */
@@ -673,7 +695,6 @@ code {
   height: 36px;
   border-radius: 999px;
 }
-.pair button:hover { background: var(--hair); }
 
 .screen__seg {
   margin: 0 auto;
@@ -687,6 +708,7 @@ code {
   padding: 0;
 }
 .screen__seg .seg button { height: 36px; padding: 0 16px; }
+.screen__seg .seg button:not([aria-pressed="true"]):hover { color: var(--ink-3); }
 .screen__seg .seg__thumb {
   top: 0;
   bottom: 0;
@@ -712,7 +734,7 @@ code {
   align-items: center;
   gap: 12px;
   height: 56px;
-  padding: 0 8px;
+  padding: 0 8px 0 12px;
   flex: 0 1 440px;
   min-width: 0;
 }
@@ -745,7 +767,6 @@ code {
   height: 40px;
   border-radius: 999px;
 }
-.player button:hover { background: var(--hair); }
 .player [data-play] .is-pause,
 .player [data-play][aria-pressed="true"] .is-play { display: none; }
 .player [data-play][aria-pressed="true"] .is-pause { display: block; }

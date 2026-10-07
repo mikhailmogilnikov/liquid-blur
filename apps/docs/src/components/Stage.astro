@@ -94,7 +94,7 @@ const features = [
         <button class="lb lb-highlight lb-swell lb-stretch round" type="button" aria-label="Back">
           <Icon name="back" size={20} />
         </button>
-        <div class="screen__seg lb lb-stretch">
+        <div class="screen__seg lb lb-highlight lb-stretch">
           <div class="seg" role="group" aria-label="Browse" data-demo-seg>
             <span class="seg__thumb" aria-hidden="true"></span>
             <button type="button" data-value="albums" aria-pressed="true">Albums</button>
@@ -102,7 +102,7 @@ const features = [
             <button type="button" data-value="artists" aria-pressed="false">Artists</button>
           </div>
         </div>
-        <div class="pair lb lb-stretch">
+        <div class="pair lb lb-highlight lb-stretch">
           <button type="button" aria-label="Search"><Icon name="search" /></button>
           <button type="button" aria-label="More"><Icon name="more" /></button>
         </div>
@@ -154,7 +154,6 @@ const features = [
     let pos = 0;
     let last = 0;
     let pausedUntil = 0;
-    let visible = false;
 
     const loop = () => (feed.firstElementChild as HTMLElement).offsetHeight;
     const hold = () => {
@@ -167,21 +166,29 @@ const features = [
       if (performance.now() < pausedUntil) pos = feed.scrollTop;
     });
 
+    // The loop runs only while the feed is on screen, so an idle page costs nothing
+    let frame = 0;
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (visible && now >= pausedUntil) {
+      if (now >= pausedUntil) {
         const height = loop();
         pos += SPEED * dt;
         if (pos >= height) pos -= height;
         feed.scrollTop = pos;
       }
-      requestAnimationFrame(tick);
+      frame = requestAnimationFrame(tick);
     };
-    new IntersectionObserver(([entry]) => (visible = entry.isIntersecting)).observe(feed);
-    requestAnimationFrame((now) => {
-      last = now;
-      tick(now);
-    });
+    new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !frame) {
+        frame = requestAnimationFrame((now) => {
+          last = now;
+          tick(now);
+        });
+      } else if (!entry.isIntersecting && frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+    }).observe(feed);
   }
 </script>

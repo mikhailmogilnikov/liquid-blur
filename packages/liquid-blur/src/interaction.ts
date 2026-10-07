@@ -163,11 +163,22 @@ function springsFor(give: number) {
  * The pressable glass under the event, looking through open shadow roots too. Checks the node
  * type rather than `instanceof HTMLElement`: elements of an iframe come from another realm.
  */
+const CONTROL = "a[href], button, input, select, textarea, label, summary, [role='button'], [role='tab'], [onclick]";
+
 function findGlass(event: Event): HTMLElement | null {
   for (const node of event.composedPath()) {
     if ((node as Node).nodeType === 1 && (node as Element).matches(SELECTOR)) return node as HTMLElement;
   }
   return null;
+}
+
+/** A control between the event target and the glass, such as a button in a glass toolbar. */
+function innerControl(event: Event, glass: HTMLElement): boolean {
+  for (const node of event.composedPath()) {
+    if (node === glass) return false;
+    if ((node as Node).nodeType === 1 && (node as Element).matches(CONTROL)) return true;
+  }
+  return false;
 }
 
 /** The element's own `scale` as x and y factors. */
@@ -423,8 +434,9 @@ export function installLiquidBlur(root?: Document): () => void {
       ...springsFor(give),
       stretch,
     };
-    // Keep getting moves after the mouse leaves the element; touch is captured implicitly
-    if (event.pointerType === "mouse") el.setPointerCapture(event.pointerId);
+    // Keep getting moves after the mouse leaves the element; touch is captured implicitly. Not when
+    // the press is on a control inside the glass: capture would send its click to the glass instead
+    if (event.pointerType === "mouse" && !innerControl(event, el)) el.setPointerCapture(event.pointerId);
     if (press.light) el.style.setProperty("--_lb-press-r", `${lightReachOf(el).toFixed(1)}px`);
 
     lightX = event.clientX;

@@ -68,6 +68,23 @@ describe("installLiquidBlur", () => {
     expect(pressed(el)).toBe(false);
   });
 
+  it("captures the mouse on the glass, but not over a control inside it", () => {
+    const bar = glass("lb-highlight");
+    const capture = vi.fn();
+    bar.setPointerCapture = capture;
+    const inner = document.createElement("button");
+    bar.append(inner);
+
+    pointer(inner, "pointerdown", 50, 20);
+    expect(pressed(bar)).toBe(true);
+    expect(capture).not.toHaveBeenCalled();
+    pointer(inner, "pointerup", 50, 20);
+
+    pointer(bar, "pointerdown", 50, 20);
+    expect(capture).toHaveBeenCalledTimes(1);
+    pointer(bar, "pointerup", 50, 20);
+  });
+
   it("cancels the click when released outside, as on iOS", () => {
     const el = glass("lb-highlight");
     const onClick = vi.fn();
