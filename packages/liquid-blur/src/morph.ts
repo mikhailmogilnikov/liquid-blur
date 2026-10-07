@@ -3,9 +3,11 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
 /**
  * Morph: a control swells into a panel of the same glass and shrinks back. One piece of glass the
  * whole way: it grows from the control's box to the panel's, its corners going from the control's
- * real radius to the panel's (a capsule's `9999px` counts as half its height, as drawn). Opening,
- * width and height run on springs of their own, so it wobbles like jelly rather than scaling;
- * closing, they run together, so it lands exactly on the control. Corners, icon and content follow
+ * real radius to the panel's (a capsule's `9999px` counts as half its height, as drawn): always a
+ * rounded box, never an oval. Where the browser draws `corner-shape`, the corners' shape goes from
+ * the control's to the panel's too (a round button into a squircle panel, say), as a superellipse
+ * along with the radius. Center, width and height run on springs of their own, so it wobbles
+ * like jelly rather than scaling, once each way. Corners, icon and content follow
  * a progress of their own that doesn't bounce: the size may wobble a while longer, the corners
  * stay still. The control's icon fades out as it swells and back in as it shrinks; the panel's
  * content comes in magnified and out of focus and settles sharp.
@@ -34,21 +36,43 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * the glass off from what's behind it. Its computed border-radius is the panel's; its inline
  * transform, opacity, filter and clip-path belong to the morph while it moves.
  *
+ * Where `corner-shape` isn't drawn, corners stay round arcs and the morph leaves it alone. The
+ * content's clip stays a round arc either way (`clip-path` has no corner shapes): inside a squircle
+ * of the same radius, so nothing shows past the glass. In a glass group the melted outline is drawn
+ * from round arcs, so while the copy melts with its neighbors its corners are round.
+ *
  * Boxes are read once per open and close, on screen; each piece is placed from where it sits
  * untransformed. A rotated or scaled ancestor isn't supported. With reduced motion the panel and the control swap at once.
  */
 
-type Channel = "x" | "y" | "w" | "h" | "p";
+/** The shape's center, its size, and a progress for corners, icon and content */
+type Channel = "cx" | "cy" | "w" | "h" | "p";
 
-/** Springs for the width (and left edge), the height (and top edge), and corners, icon and content */
-export type MorphSprings = { width: SpringParams; height: SpringParams; progress: SpringParams };
+/**
+ * One channel's motion: a spring that never swings (critically damped), `duration` seconds as
+ * perceived. With an `overshoot` (a share of the way, 0.1 is 10%) it sets off with a push: it goes
+ * that much past the target once, then comes back smoothly, without swinging again.
+ */
+export type MorphSpring = { duration: number; overshoot?: number };
+
+/**
+ * Springs for the center's travel (`x`, `y`), the size (`width`, `height`), and the progress that
+ * corners, icon and content follow
+ */
+export type MorphSprings = {
+  x: MorphSpring;
+  y: MorphSpring;
+  width: MorphSpring;
+  height: MorphSpring;
+  progress: MorphSpring;
+};
 
 export type MorphOptions = {
   /** The control it opens from */
   source: HTMLElement;
   /** The panel's content, laid out where the panel opens */
   content: HTMLElement;
-  /** Springs one way and the other; progress shouldn't bounce, or the corners will */
+  /** Springs one way and the other */
   spring?: { open: MorphSprings; close: MorphSprings };
   /** Called when a morph comes to rest, open or closed */
   onRest?: (open: boolean) => void;
@@ -62,40 +86,90 @@ export type Morph = {
   destroy(): void;
 };
 
-type Box = { x: number; y: number; width: number; height: number; radius: number };
+/** A box on screen, its corner radius, and its corners' shape as a superellipse exponent */
+type Box = { x: number; y: number; width: number; height: number; radius: number; shape: number };
 type Frame = Record<Channel, number>;
 
-/** The springs a morph runs on unless given others */
+/**
+ * The springs a morph runs on unless given others. Nothing swings like jelly. Opening, the control
+ * heads for the panel's center first and runs a little past it, once (further vertically), then
+ * eases back into place, while it swells evenly all around, slowly at first and catching up as it
+ * arrives. Closing, the shape holds a beat while the content blurs away, then goes, the width
+ * first, the height after, and settles onto the control without going past it.
+ */
 export const defaultMorphSprings: { open: MorphSprings; close: MorphSprings } = {
-  // Height a touch slower and bouncier than width: the wobble
   open: {
-    width: { duration: 0.38, bounce: 0.34 },
-    height: { duration: 0.43, bounce: 0.42 },
-    progress: { duration: 0.32, bounce: 0 },
+    x: { duration: 0.34, overshoot: 0.08 },
+    y: { duration: 0.42, overshoot: 0.2 },
+    width: { duration: 0.4 },
+    height: { duration: 0.4 },
+    progress: { duration: 0.4 },
   },
-  // Together and without a bounce, so it lands round and exactly the control's size
   close: {
-    width: { duration: 0.34, bounce: 0 },
-    height: { duration: 0.34, bounce: 0 },
-    progress: { duration: 0.28, bounce: 0 },
+    x: { duration: 0.28 },
+    y: { duration: 0.34 },
+    width: { duration: 0.26 },
+    height: { duration: 0.32 },
+    progress: { duration: 0.26 },
   },
 };
 /** Where it's done: a quarter of a pixel, and a progress whose last bit moves nothing visible */
-const PRECISION = { x: 0.25, y: 0.25, w: 0.25, h: 0.25, p: 0.002 };
+const PRECISION = { cx: 0.25, cy: 0.25, w: 0.25, h: 0.25, p: 0.002 };
 /** Share of the progress over which the control's icon fades */
-const ICON_SPAN = 0.25;
+const ICON_SPAN = 0.3;
+/** Closing from rest, the shape holds this share of its width spring's duration before it goes */
+const CLOSE_HOLD = 0.12;
 /** Lifted over a group: share of the progress over which the stub left in it shrinks away */
 const STUB_SPAN = 0.35;
 /** Content scale at the start: it comes in magnified */
-const CONTENT_SCALE = 1.25;
+const CONTENT_SCALE = 1.45;
+/**
+ * Where in the progress the content starts coming in (early, while the shape is still small) and
+ * over how much of it it focuses and settles to scale: nearly the whole opening. It's fully opaque
+ * about two thirds of the way.
+ */
+const CONTENT_FROM = 0.08;
+const CONTENT_SPAN = 0.87;
 /** Content blur at the start, px; below a third of a pixel it's dropped */
-const CONTENT_BLUR = 12;
+const CONTENT_BLUR = 14;
 /** Press behaviors stay with the control: the copy only looks like it */
 const BEHAVIORS = ["lb-highlight", "lb-swell", "lb-stretch", "lb-interactive"];
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (t: number) => t * t * (3 - 2 * t);
+
+/**
+ * The push, as a multiple of the spring's angular frequency times the distance, that sends a
+ * critically damped spring `overshoot` (a share of the distance) past its target. Pushed with k,
+ * it peaks (k - 1)·e^(-k / (k - 1)) past: solved for k by bisection, as that only grows with it.
+ */
+const pushFor = (overshoot: number) => {
+  if (!(overshoot > 0)) return 0;
+  const past = (k: number) => (k - 1) * Math.exp(-k / (k - 1));
+  let lo = 1;
+  let hi = 20;
+  for (let i = 0; i < 50; i++) {
+    const k = (lo + hi) / 2;
+    if (past(k) < overshoot) lo = k;
+    else hi = k;
+  }
+  return (lo + hi) / 2;
+};
+/**
+ * `corner-shape` as a superellipse exponent: round 1, squircle 2, bevel 0, scoop -1. Square and
+ * notch are infinite in CSS; a large exponent draws them all but exactly and still interpolates.
+ */
+const CORNER_SHAPES: Record<string, number> = { round: 1, squircle: 2, bevel: 0, scoop: -1, square: 8, notch: -8 };
+const shapeOf = (value: string) => {
+  const v = value.trim().toLowerCase();
+  if (v in CORNER_SHAPES) return CORNER_SHAPES[v];
+  const arg = /^superellipse\(\s*([^)]*?)\s*\)$/.exec(v)?.[1];
+  if (arg === "infinity") return 8;
+  if (arg === "-infinity") return -8;
+  const k = arg === undefined ? NaN : parseFloat(arg);
+  return Number.isFinite(k) ? Math.min(8, Math.max(-8, k)) : 1;
+};
 /** To a hundredth of a pixel, so float noise doesn't reach the style */
 const px = (v: number) => `${Math.round(v * 100) / 100}px`;
 
@@ -105,13 +179,34 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   const doc = parent.ownerDocument;
   const win = doc.defaultView ?? window;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
-  const channels = (s: MorphSprings): Record<Channel, SpringParams> => ({
-    x: s.width,
+  /** Whether corners can have shapes here; if not, they're round and `corner-shape` is left alone */
+  const cornerShapes = win.CSS?.supports?.("corner-shape", "squircle") ?? false;
+  const byChannel = (s: MorphSprings): Record<Channel, MorphSpring> => ({
+    cx: s.x,
+    cy: s.y,
     w: s.width,
-    y: s.height,
     h: s.height,
     p: s.progress,
   });
+  /** Critically damped: nothing swings */
+  const channels = (s: MorphSprings) =>
+    Object.fromEntries(
+      Object.entries(byChannel(s)).map(([key, c]) => [key, { duration: c.duration, bounce: 0 }]),
+    ) as Record<Channel, SpringParams>;
+  /** Heads for `target`; set off from rest, the channels with an overshoot get their push */
+  const head = (target: Frame, springs: MorphSprings, push: boolean) => {
+    if (!motion) return;
+    let velocity: Partial<Frame> | undefined;
+    if (push) {
+      const now = motion.values();
+      velocity = {};
+      for (const [key, c] of Object.entries(byChannel(springs)) as [Channel, MorphSpring][]) {
+        const k = pushFor(c.overshoot ?? 0);
+        if (k) velocity[key] = k * ((2 * Math.PI) / c.duration) * (target[key] - now[key]);
+      }
+    }
+    motion.to(target, channels(springs), velocity);
+  };
 
   /** A copy of the control, pinned out of the flow at its parent's corner, moved by transform */
   const copy = () => {
@@ -119,7 +214,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     el.removeAttribute("id");
     el.style.cssText =
       "position: absolute; left: 0; top: 0; margin: 0; box-sizing: border-box; contain: strict; " +
-      "pointer-events: none; display: none";
+      "overflow: hidden; pointer-events: none; display: none";
     el.setAttribute("aria-hidden", "true");
     el.tabIndex = -1;
     return el;
@@ -136,19 +231,51 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   };
   shape.addEventListener("click", forward);
   let icon: (HTMLElement | SVGElement)[] = [];
-  /** Dresses a copy as the control is now: its label or icon may have changed since */
+  /** Where a child of the control sits on screen; loose text through a range */
+  const spotOf = (node: ChildNode): DOMRect | null => {
+    if (node instanceof Element) return node.getBoundingClientRect();
+    if (node.nodeType !== 3 || !node.textContent?.trim()) return null;
+    const range = doc.createRange();
+    range.selectNodeContents(node);
+    return typeof range.getBoundingClientRect === "function" ? range.getBoundingClientRect() : null;
+  };
+  /**
+   * Dresses a copy as the control is now (its label or icon may have changed since), with each
+   * piece pinned where it sits in the control at rest: however the copy grows, its icon stays on
+   * the control's spot (the copy clips it) instead of riding the middle of the shape.
+   */
   const dress = (el: HTMLElement) => {
     el.className = source.className;
     el.classList.remove(...BEHAVIORS);
-    el.replaceChildren(...(source.cloneNode(true) as HTMLElement).childNodes);
-    // The icon fades on its own, without the glass: loose text gets a box to carry the opacity
-    for (const node of [...el.childNodes]) {
-      if (node.nodeType !== 3 || !node.textContent?.trim()) continue;
-      const span = doc.createElement("span");
-      node.replaceWith(span);
-      span.append(node);
-    }
-    return [...el.children] as (HTMLElement | SVGElement)[];
+    const { transform, scale, translate, rotate } = source.style;
+    source.style.transform = source.style.scale = source.style.translate = source.style.rotate = "none";
+    const box = source.getBoundingClientRect();
+    const spots = [...source.childNodes].map(spotOf);
+    Object.assign(source.style, { transform, scale, translate, rotate });
+    const pieces: (HTMLElement | SVGElement)[] = [];
+    const twin = source.cloneNode(true) as HTMLElement;
+    [...twin.childNodes].forEach((node, i) => {
+      const spot = spots[i];
+      if (!spot) return;
+      let piece: HTMLElement | SVGElement;
+      if (node.nodeType === 3) {
+        // Loose text gets a box to carry its place and opacity
+        piece = doc.createElement("span");
+        piece.style.whiteSpace = "nowrap";
+        piece.append(node);
+      } else {
+        piece = node as HTMLElement | SVGElement;
+        piece.style.width = `${spot.width}px`;
+        piece.style.height = `${spot.height}px`;
+      }
+      piece.style.position = "absolute";
+      piece.style.margin = "0";
+      piece.style.left = `${spot.left - box.left - source.clientLeft}px`;
+      piece.style.top = `${spot.top - box.top - source.clientTop}px`;
+      pieces.push(piece);
+    });
+    el.replaceChildren(...pieces);
+    return pieces;
   };
   icon = dress(shape);
   source.after(stub, shape);
@@ -158,14 +285,26 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   content.style.transformOrigin = "0 0";
 
   let isOpen = false;
-  let from: Box = { x: 0, y: 0, width: 0, height: 0, radius: 0 };
+  let from: Box = { x: 0, y: 0, width: 0, height: 0, radius: 0, shape: 1 };
   let to: Box = from;
 
-  /** An element's box on screen */
+  /** An element's box on screen, with its top-left corner's radius and shape */
   const measure = (el: HTMLElement): Box => {
     const r = el.getBoundingClientRect();
-    const radius = parseFloat(win.getComputedStyle(el).borderTopLeftRadius) || 0;
-    return { x: r.left, y: r.top, width: r.width, height: r.height, radius: Math.min(radius, r.width / 2, r.height / 2) };
+    const style = win.getComputedStyle(el);
+    const radius = parseFloat(style.borderTopLeftRadius) || 0;
+    // The longhand where it's computed; else the shorthand's first corner
+    const corner =
+      style.getPropertyValue("corner-top-left-shape") ||
+      (style.getPropertyValue("corner-shape").trim().match(/^\S+\([^)]*\)|^\S+/)?.[0] ?? "");
+    return {
+      x: r.left,
+      y: r.top,
+      width: r.width,
+      height: r.height,
+      radius: Math.min(radius, r.width / 2, r.height / 2),
+      shape: cornerShapes ? shapeOf(corner || "round") : 1,
+    };
   };
   /**
    * The box an element has at rest: its inline transforms off for the measurement. A control just
@@ -223,12 +362,14 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   const render = (f: Frame) => {
     const w = Math.max(0, f.w);
     const h = Math.max(0, f.h);
-    const { x, y } = f;
+    const x = f.cx - w / 2;
+    const y = f.cy - h / 2;
     const t = clamp01(f.p);
 
     /*
-     * Corners: the control's real radius at the start, the panel's at the end, eased at both ends
-     * so a progress that creeps the last bit of the way moves them by next to nothing. Never more
+     * Corners: the control's real radius (a capsule's `9999px` as drawn, half its height) going to
+     * the panel's, the same on both axes: always a rounded box, never an oval. Driven by the
+     * progress alone, eased at both ends, so a size still wobbling leaves them still. Never more
      * than the box allows, as the browser would draw it.
      */
     const radius = Math.min(w / 2, h / 2, mix(from.radius, to.radius, smooth(t)));
@@ -236,16 +377,25 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     shape.style.width = `${w}px`;
     shape.style.height = `${h}px`;
     shape.style.borderRadius = px(radius);
-    const iconOpacity = String(1 - clamp01(t / ICON_SPAN));
-    for (const el of icon) el.style.opacity = iconOpacity;
+    // The corners' shape along with their size, by the same progress
+    if (from.shape !== 1 || to.shape !== 1) {
+      const k = Math.round(mix(from.shape, to.shape, smooth(t)) * 1000) / 1000;
+      shape.style.setProperty("corner-shape", `superellipse(${k})`);
+    } else shape.style.removeProperty("corner-shape");
+    // The icon stays on the control's spot, fading as the shape leaves it
+    const iconOpacity = String(1 - smooth(clamp01(t / ICON_SPAN)));
+    for (const el of icon) {
+      el.style.translate = `${from.x - x}px ${from.y - y}px`;
+      el.style.opacity = iconOpacity;
+    }
     if (lifted) {
       // The stub shrinks away in the group, under the lifted copy
       const s = 1 - smooth(clamp01(t / STUB_SPAN));
       stub.style.transform = `translate(${from.x - stubOrigin.x}px, ${from.y - stubOrigin.y}px) scale(${s})`;
     }
 
-    // Content: centered on the shape, magnified and blurred early on, clipped to it
-    const c = mix(CONTENT_SCALE, 1, t);
+    // Content: centered on the shape, magnified and blurred as it comes in, clipped to it
+    const c = 1 + (CONTENT_SCALE - 1) * (1 - smooth(clamp01((t - CONTENT_FROM) / CONTENT_SPAN)));
     const dx = x + w / 2 - to.x - (c * to.width) / 2;
     const dy = y + h / 2 - to.y - (c * to.height) / 2;
     content.style.transform = `translate(${dx}px, ${dy}px) scale(${c})`;
@@ -255,8 +405,8 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     const bottom = to.height - (y + h - to.y - dy) / c;
     const right = to.width - (x + w - to.x - dx) / c;
     content.style.clipPath = `inset(${top}px ${right}px ${bottom}px ${left}px round ${px(radius / c)})`;
-    content.style.opacity = String(clamp01((t - 0.3) / 0.5));
-    const blur = CONTENT_BLUR * (1 - t);
+    content.style.opacity = String(smooth(clamp01((t - CONTENT_FROM) / (CONTENT_SPAN * 0.65))));
+    const blur = CONTENT_BLUR * (1 - smooth(clamp01((t - CONTENT_FROM) / CONTENT_SPAN)));
     content.style.filter = blur > 0.33 ? `blur(${blur}px)` : "";
   };
 
@@ -294,7 +444,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     onRest?.(isOpen);
   };
 
-  const at = (b: Box, p: number): Frame => ({ x: b.x, y: b.y, w: b.width, h: b.height, p });
+  const at = (b: Box, p: number): Frame => ({ cx: b.x + b.width / 2, cy: b.y + b.height / 2, w: b.width, h: b.height, p });
 
   let motion: SpringAnimator<Channel> | null = null;
   const rest = () => {
@@ -311,13 +461,19 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
       rest();
       return;
     }
+    // From rest it sets off with its push; under way it turns around keeping its speed
+    const fresh = !motion;
     motion ??= new SpringAnimator(start, channels(springs), render, rest, PRECISION);
-    motion.to(target, channels(springs));
+    head(target, springs, fresh);
   };
+
+  /** Closing from rest: the beat the shape holds before it goes */
+  let hold = 0;
 
   const open = () => {
     if (isOpen) return;
     isOpen = true;
+    win.clearTimeout(hold);
     source.setAttribute("aria-expanded", "true");
     remeasure();
     // Where it goes is settled at rest only: mid-way it turns around where it is
@@ -333,7 +489,16 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     remeasure();
     launch();
     content.style.pointerEvents = "none";
-    run(at(to, 1), at(from, 0), spring.close);
+    const target = at(from, 0);
+    if (motion || reduced.matches) {
+      run(at(to, 1), target, spring.close);
+      return;
+    }
+    // From rest the content goes first: the shape holds a beat where it is, then follows
+    run(at(to, 1), { ...at(to, 1), p: 0 }, spring.close);
+    hold = win.setTimeout(() => {
+      if (!isOpen) head(target, spring.close, true);
+    }, CLOSE_HOLD * spring.close.width.duration * 1000);
   };
 
   source.setAttribute("aria-expanded", "false");
@@ -346,6 +511,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     close,
     toggle: () => (isOpen ? close() : open()),
     destroy() {
+      win.clearTimeout(hold);
       motion?.stop();
       motion = null;
       shape.removeEventListener("click", forward);

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMorph } from "../src/morph";
 
 /** A parent with the control, and the panel's content */
@@ -19,9 +19,11 @@ function scene() {
 }
 
 const quick = {
-  width: { duration: 0.05, bounce: 0 },
-  height: { duration: 0.06, bounce: 0 },
-  progress: { duration: 0.05, bounce: 0 },
+  x: { duration: 0.05 },
+  y: { duration: 0.05 },
+  width: { duration: 0.05 },
+  height: { duration: 0.06 },
+  progress: { duration: 0.05 },
 };
 const fast = { open: quick, close: quick };
 
@@ -76,9 +78,11 @@ describe("createMorph", () => {
   it("keeps the corners still while the size still wobbles", async () => {
     const { parent, source, content } = scene();
     const wobbly = {
-      width: { duration: 0.4, bounce: 0.7 },
-      height: { duration: 0.45, bounce: 0.7 },
-      progress: { duration: 0.05, bounce: 0 },
+      x: { duration: 0.05 },
+      y: { duration: 0.05 },
+      width: { duration: 0.4, overshoot: 0.3 },
+      height: { duration: 0.45, overshoot: 0.3 },
+      progress: { duration: 0.05 },
     };
     createMorph({ source, content, spring: { open: wobbly, close: wobbly } }).open();
     const shape = parent.children[2] as HTMLElement;
@@ -96,15 +100,17 @@ describe("createMorph", () => {
     expect([...seen]).toEqual(["28px"]);
   });
 
-  it("goes from the control's real corners to the panel's, never rounder", async () => {
+  it("goes from the control's real corners to the panel's, never an oval", async () => {
     const { parent, source, content } = scene();
     // A capsule written the usual way: drawn as half its height
     source.style.borderRadius = "9999px";
     source.getBoundingClientRect = () => new DOMRect(20, 20, 120, 44);
     const slow = {
-      width: { duration: 0.2, bounce: 0.3 },
-      height: { duration: 0.2, bounce: 0.3 },
-      progress: { duration: 0.2, bounce: 0 },
+      x: { duration: 0.2 },
+      y: { duration: 0.2 },
+      width: { duration: 0.2, overshoot: 0.1 },
+      height: { duration: 0.2, overshoot: 0.1 },
+      progress: { duration: 0.2 },
     };
     const radii: number[] = [];
     let done = false;
@@ -126,9 +132,70 @@ describe("createMorph", () => {
       };
       watch();
     });
+    // A capsule at the start, not 9999px; one radius on both axes all the way (an `rx / ry`
+    // pair wouldn't parse here); the panel's corners exactly at rest
     expect(radii[0]).toBe(22);
-    expect(Math.min(...radii)).toBeGreaterThanOrEqual(22);
-    expect(Math.max(...radii)).toBeLessThanOrEqual(28);
+    expect(radii.every((r) => r >= 22 && r <= 28)).toBe(true);
+    expect((parent.children[2] as HTMLElement).style.borderRadius).toBe("28px");
+  });
+
+  it("closing from rest, holds the shape a beat while the content goes", async () => {
+    const { parent, source, content } = scene();
+    const lazy = { ...quick, width: { duration: 1 } };
+    let rest: (open: boolean) => void = () => {};
+    const morph = createMorph({ source, content, spring: { open: quick, close: lazy }, onRest: (open) => rest(open) });
+    await new Promise<boolean>((resolve) => {
+      rest = resolve;
+      morph.open();
+    });
+    morph.close();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const shape = parent.children[2] as HTMLElement;
+    // Well inside the 120ms hold: the panel's size still, the content already on its way out
+    expect(shape.style.width).toBe("240px");
+    expect(Number(content.style.opacity)).toBeLessThan(1);
+    morph.destroy();
+  });
+
+  it("runs past the target once, then eases back without swinging", async () => {
+    const { parent, source, content } = scene();
+    // The panel's center is right of the control's: x has 158px to go
+    content.getBoundingClientRect = () => new DOMRect(100, 20, 160, 44);
+    const springs = {
+      ...quick,
+      x: { duration: 0.3, overshoot: 0.2 },
+      width: { duration: 0.3 },
+      progress: { duration: 0.3 },
+    };
+    const xs: number[] = [];
+    let done = false;
+    await new Promise<void>((resolve) => {
+      const morph = createMorph({
+        source,
+        content,
+        spring: { open: springs, close: springs },
+        onRest: () => {
+          done = true;
+          resolve();
+        },
+      });
+      morph.open();
+      const shape = parent.children[2] as HTMLElement;
+      const watch = () => {
+        const tx = parseFloat(shape.style.transform.slice("translate(".length));
+        xs.push(tx + parseFloat(shape.style.width) / 2);
+        if (!done) requestAnimationFrame(watch);
+      };
+      watch();
+    });
+    const target = 180;
+    const peak = Math.max(...xs);
+    // Past it by about a fifth of the way, once
+    expect(peak - target).toBeGreaterThan(158 * 0.15);
+    expect(peak - target).toBeLessThan(158 * 0.25);
+    const after = xs.slice(xs.indexOf(peak));
+    expect(after.every((x, i) => i === 0 || x <= after[i - 1] + 1e-6)).toBe(true);
+    expect(Math.min(...after)).toBeGreaterThanOrEqual(target - 0.25);
   });
 
   it("turns around midway and gives the control back at rest", async () => {
@@ -167,8 +234,11 @@ describe("createMorph", () => {
     source.textContent = "Oldest";
     morph.open();
     const shape = parent.children[2] as HTMLElement;
-    // Loose text is boxed, so it can fade
-    expect(shape.innerHTML).toBe('<span style="opacity: 1;">Oldest</span>');
+    // Loose text is boxed, so it can fade and stay on its spot
+    const label = shape.firstElementChild as HTMLElement;
+    expect(label.tagName).toBe("SPAN");
+    expect(label.textContent).toBe("Oldest");
+    expect(label.style.position).toBe("absolute");
     morph.destroy();
   });
 
@@ -224,6 +294,32 @@ describe("createMorph", () => {
     expect(await rested).toBe(true);
     expect(shape.style.opacity).toBe("");
     expect(stub.style.display).toBe("none");
+  });
+
+  it("turns a round control's corners into a squircle panel's, where corner-shape is drawn", async () => {
+    vi.spyOn(window, "CSS", "get").mockReturnValue({ supports: (property: string) => property === "corner-shape" } as unknown as typeof CSS);
+    const { parent, source, content } = scene();
+    content.style.setProperty("corner-shape", "squircle");
+    const shapes: string[] = [];
+    await new Promise<void>((resolve) => {
+      const morph = createMorph({ source, content, spring: fast, onRest: () => resolve() });
+      morph.open();
+      shapes.push((parent.children[2] as HTMLElement).style.getPropertyValue("corner-shape"));
+    });
+    const shape = parent.children[2] as HTMLElement;
+    // Round to start with, the panel's squircle at rest
+    expect(shapes[0]).toBe("superellipse(1)");
+    expect(shape.style.getPropertyValue("corner-shape")).toBe("superellipse(2)");
+    vi.restoreAllMocks();
+  });
+
+  it("leaves corner-shape alone where the browser doesn't draw it", async () => {
+    vi.spyOn(window, "CSS", "get").mockReturnValue({ supports: () => false } as unknown as typeof CSS);
+    const { parent, source, content } = scene();
+    content.style.setProperty("corner-shape", "squircle");
+    await new Promise<void>((resolve) => createMorph({ source, content, spring: fast, onRest: () => resolve() }).open());
+    expect((parent.children[2] as HTMLElement).style.getPropertyValue("corner-shape")).toBe("");
+    vi.restoreAllMocks();
   });
 
   it("puts everything back on destroy", () => {

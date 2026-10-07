@@ -1,6 +1,28 @@
 /** SwiftUI-style spring: perceptual duration in seconds, bounce 0 (no overshoot) to 1. */
 export type SpringParams = { duration: number; bounce: number };
 
+/**
+ * Moves a spring `dt` seconds on, solved exactly rather than stepped: right at any frame rate,
+ * stable at any stiffness, and a push (a starting velocity) carries as far as it should.
+ * `zeta` is the damping ratio, 0 (swings forever) to 1 (critically damped, no swing).
+ */
+function step(s: { x: number; v: number }, goal: number, omega: number, zeta: number, dt: number) {
+  const e = s.x - goal;
+  const v = s.v;
+  const decay = Math.exp(-zeta * omega * dt);
+  if (zeta >= 1) {
+    const b = v + omega * e;
+    s.x = goal + (e + b * dt) * decay;
+    s.v = (v - omega * b * dt) * decay;
+    return;
+  }
+  const wd = omega * Math.sqrt(1 - zeta * zeta);
+  const cos = Math.cos(wd * dt);
+  const sin = Math.sin(wd * dt);
+  s.x = goal + decay * (e * cos + ((v + zeta * omega * e) / wd) * sin);
+  s.v = decay * (v * cos - ((zeta * omega * v + omega * omega * e) / wd) * sin);
+}
+
 /** One spring for every channel, or one per channel. */
 export type SpringConfig<K extends string> = SpringParams | Record<K, SpringParams>;
 
@@ -39,9 +61,20 @@ export class SpringAnimator<K extends string> {
     >;
   }
 
-  to(target: Record<K, number>, params?: SpringConfig<K>) {
+  /**
+   * Heads for `target`, keeping the current velocity. `velocity` (units per second, per channel)
+   * replaces it where given: a push toward the target makes even an overdamped spring overshoot
+   * once, then come back without swinging.
+   */
+  to(target: Record<K, number>, params?: SpringConfig<K>, velocity?: Partial<Record<K, number>>) {
     this.target = { ...target };
     if (params) this.params = params;
+    if (velocity) {
+      for (const key of Object.keys(velocity) as K[]) {
+        const v = velocity[key];
+        if (v !== undefined && this.state[key]) this.state[key].v = v;
+      }
+    }
     if (!this.frame) {
       this.last = performance.now();
       this.frame = requestAnimationFrame(this.tick);
@@ -65,23 +98,14 @@ export class SpringAnimator<K extends string> {
     const dt = Math.min((now - this.last) / 1000, 1 / 30);
     this.last = now;
 
-    // Fixed substeps keep stiff springs stable regardless of frame rate
-    const steps = Math.max(1, Math.ceil(dt / (1 / 240)));
-    const h = dt / steps;
     let resting = true;
 
     for (const key of Object.keys(this.state) as K[]) {
       const { duration, bounce } = this.paramsOf(key);
       const omega = (2 * Math.PI) / duration;
-      const stiffness = omega * omega;
-      const damping = 2 * Math.max(0, 1 - bounce) * omega;
       const s = this.state[key];
       const goal = this.target[key];
-      for (let i = 0; i < steps; i++) {
-        const a = -stiffness * (s.x - goal) - damping * s.v;
-        s.v += a * h;
-        s.x += s.v * h;
-      }
+      step(s, goal, omega, Math.min(1, Math.max(0, 1 - bounce)), dt);
       // How far it would still swing: the distance left and the speed as a distance
       const precision = typeof this.precision === "number" ? this.precision : (this.precision[key] ?? 0.01);
       if (Math.hypot(s.x - goal, s.v / omega) > precision) resting = false;

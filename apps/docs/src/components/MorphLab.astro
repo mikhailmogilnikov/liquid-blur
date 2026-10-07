@@ -152,6 +152,31 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <p class="ms__hint"><b>Over the group.</b> Covers the bar: lifts out as its own glass, the bar blurred beneath.</p>
   </section>
 
+  <!-- 5c. Squircles: corner-shape goes along with the radius, round into squircle too -->
+  <section class="ms" data-scene="squircle">
+    <div class="ms__art" style={hue(90)}></div>
+    <p class="ms__words" aria-hidden="true">Squircle</p>
+    <div class="ms__layer">
+      <button class="src src--sq lb lb-interactive" type="button" aria-label="Apps" aria-controls="m-sq" data-morph-source>
+        <Icon name="layers" size={22} />
+      </button>
+      <button class="src src--sq-round lb lb-interactive" type="button" aria-label="Create" aria-controls="m-sq-round" data-morph-source>
+        <Icon name="plus" size={22} />
+      </button>
+    </div>
+    <div class="panel panel--sq" id="m-sq" role="menu">
+      <button type="button" role="menuitem" data-close><Icon name="frame" size={18} />Widgets</button>
+      <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Stacks</button>
+      <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Duplicate</button>
+    </div>
+    <div class="panel panel--sq-round" id="m-sq-round" role="menu">
+      <button type="button" role="menuitem" data-close><Icon name="plus" size={18} />New Post</button>
+      <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Drafts</button>
+      <button type="button" role="menuitem" data-close><Icon name="motion" size={18} />Scheduled</button>
+    </div>
+    <p class="ms__hint"><b>Squircles.</b> Left: squircle into squircle. Right: round into squircle. Round where corner-shape isn't drawn.</p>
+  </section>
+
   <!-- 6. Far away, no overlap: a long flight, clip and content far from their boxes -->
   <section class="ms" data-scene="far">
     <div class="ms__art" style={hue(160)}></div>
@@ -294,6 +319,8 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
   .src--far { left: calc(50% - 24px); bottom: 24px; width: 48px; height: 48px; border-radius: 24px; }
   .src--tiny { left: 20px; top: 56px; height: 44px; padding: 0 20px; border-radius: 22px; font-weight: 600; }
   .src--tall { right: 20px; top: 56px; width: 48px; height: 48px; border-radius: 24px; }
+  .src--sq { left: 20px; top: 56px; width: 52px; height: 52px; border-radius: 14px; }
+  .src--sq-round { right: 20px; top: 56px; width: 52px; height: 52px; border-radius: 26px; }
 
   .dock {
     position: absolute;
@@ -407,6 +434,19 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
   .panel--far { left: calc(50% - 140px); top: 56px; width: 280px; }
   .panel--tiny { left: 20px; top: 56px; width: 150px; padding: 12px 20px; border-radius: 22px; }
   .panel--tall { right: 20px; top: 56px; width: 180px; }
+  .panel--sq { left: 20px; top: 56px; width: 200px; border-radius: 24px; }
+  .panel--sq-round { right: 20px; top: 56px; width: 200px; border-radius: 24px; }
+
+  /*
+   * Continuous corners where the browser draws them: a squircle bends later than an arc, so radii
+   * grow by ~1.5x to keep the corner's visual size. The circle stays round; the morph carries
+   * corner-shape from the control's to the panel's.
+   */
+  @supports (corner-shape: squircle) {
+    .src--sq { border-radius: 20px; corner-shape: squircle; }
+    .panel--sq,
+    .panel--sq-round { border-radius: 36px; corner-shape: squircle; }
+  }
 
   .player {
     display: flex;
@@ -498,11 +538,10 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
 
   // Slow motion stretches every spring; changing it rebuilds the morphs
   const slowed = (factor: number): { open: MorphSprings; close: MorphSprings } => {
-    const scale = (s: MorphSprings): MorphSprings => ({
-      width: { ...s.width, duration: s.width.duration * factor },
-      height: { ...s.height, duration: s.height.duration * factor },
-      progress: { ...s.progress, duration: s.progress.duration * factor },
-    });
+    const scale = (s: MorphSprings) =>
+      Object.fromEntries(
+        Object.entries(s).map(([key, p]) => [key, { ...p, duration: p.duration * factor }]),
+      ) as MorphSprings;
     return { open: scale(defaultMorphSprings.open), close: scale(defaultMorphSprings.close) };
   };
   const build = (factor: number) => {

@@ -46,6 +46,20 @@ describe("SpringAnimator", () => {
     expect(restsAfter(0.25)).toBeLessThan(restsAfter() - 10);
   });
 
+  it("overshoots once when pushed, even without bounce, and swings back no more", () => {
+    const frames: number[] = [];
+    const spring = new SpringAnimator({ x: 0 }, { duration: 0.4, bounce: 0 }, (v) => frames.push(v.x));
+    // A push toward the target, twice the spring's frequency times the distance: ~13.5% past
+    spring.to({ x: 100 }, undefined, { x: 2 * ((2 * Math.PI) / 0.4) * 100 });
+    vi.advanceTimersByTime(3000);
+    const peak = Math.max(...frames);
+    expect(peak).toBeGreaterThan(110);
+    expect(peak).toBeLessThan(116);
+    const after = frames.slice(frames.indexOf(peak));
+    expect(after.every((x, i) => i === 0 || x <= after[i - 1])).toBe(true);
+    expect(frames.at(-1)).toBe(100);
+  });
+
   it("doesn't overshoot without bounce, does with it", () => {
     const max = (bounce: number) => {
       const frames: { x: number }[] = [];
