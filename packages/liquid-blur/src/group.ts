@@ -19,7 +19,7 @@ import {
  * children and their CSS transitions and animations are picked up on their own: anything that
  * moves them through `style` (a spring, `lb-stretch`, `lb-swell`) or CSS just works. Moved some
  * other way (layout changes from outside the group, a script animating an ancestor's child list),
- * call `update()`.
+ * call `update()`. A child with `visibility: hidden` makes no glass.
  *
  * The children are glass themselves (`.lb`), and while none of them melt they stay exactly that:
  * the group draws nothing and costs a few dozen microseconds a frame to watch them. Without the
@@ -42,7 +42,7 @@ import {
  * appears zero thick, so the switch from the children's glass to the group's shows nothing.
  *
  * Per frame the group reads the children's boxes and nothing else: the material's values, the
- * merge distance and the children's radii are cached until something that could change them does.
+ * merge distance and the children's radii and visibility are cached until something that could change them does.
  * It redraws at most once a frame, after every script, and not at all while off screen. The glass
  * element and the canvas grow in steps and shrink lazily, so most frames resize nothing.
  *
@@ -374,7 +374,8 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   let look: Look | null = null;
   let table: Float32Array | null = null;
   let merge: number | null = null;
-  const radii = new WeakMap<Element, number>();
+  /** Each child's radius and whether it's hidden: read once, again after its style or size changes */
+  const traits = new WeakMap<Element, { radius: number; hidden: boolean }>();
 
   /** Where the glass element and the canvas are, in the root's coordinates, and the canvas's scale */
   let frameBox: Bounds = { x: 0, y: 0, width: 0, height: 0 };
@@ -530,12 +531,15 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     for (const el of items()) {
       const box = el.getBoundingClientRect();
       if (!box.width || !box.height) continue;
-      glassy &&= el.classList.contains("lb");
-      let radius = radii.get(el);
-      if (radius === undefined) {
-        radius = parseFloat(win.getComputedStyle(el).borderTopLeftRadius) || 0;
-        radii.set(el, radius);
+      let trait = traits.get(el);
+      if (!trait) {
+        const style = win.getComputedStyle(el);
+        trait = { radius: parseFloat(style.borderTopLeftRadius) || 0, hidden: style.visibility === "hidden" };
+        traits.set(el, trait);
       }
+      if (trait.hidden) continue;
+      glassy &&= el.classList.contains("lb");
+      const { radius } = trait;
       const width = local(box.width, sx);
       // A scaled child keeps its radius in proportion
       const scale = el.offsetWidth ? width / el.offsetWidth : 1;
@@ -691,12 +695,12 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   };
 
   const resize = new ResizeObserver((entries) => {
-    for (const entry of entries) radii.delete(entry.target);
+    for (const entry of entries) traits.delete(entry.target);
     schedule();
   });
-  // A child's inline style or class changed: redraw in this frame
+  // A child's inline style or class changed (its radius or visibility may have too): redraw in this frame
   const moves = new MutationObserver((records) => {
-    for (const r of records) if (r.attributeName === "class") radii.delete(r.target as Element);
+    for (const r of records) traits.delete(r.target as Element);
     schedule();
   });
   const observe = () => {

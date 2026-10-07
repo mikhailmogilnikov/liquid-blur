@@ -23,6 +23,29 @@ describe("SpringAnimator", () => {
     expect(onRest).toHaveBeenCalledTimes(1);
   });
 
+  it("rests sooner with a coarser precision, still exactly on the target", () => {
+    const restsAfter = (precision?: number) => {
+      let frames = 0;
+      let last = 0;
+      let rested = -1;
+      const spring = new SpringAnimator(
+        { x: 0 },
+        { duration: 0.5, bounce: 0.3 },
+        (v) => {
+          frames++;
+          last = v.x;
+        },
+        () => (rested = frames),
+        precision,
+      );
+      spring.to({ x: 300 });
+      vi.advanceTimersByTime(5000);
+      expect(last).toBe(300);
+      return rested;
+    };
+    expect(restsAfter(0.25)).toBeLessThan(restsAfter() - 10);
+  });
+
   it("doesn't overshoot without bounce, does with it", () => {
     const max = (bounce: number) => {
       const frames: { x: number }[] = [];

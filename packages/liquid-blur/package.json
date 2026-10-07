@@ -31,6 +31,10 @@
       "types": "./dist/group.d.ts",
       "default": "./dist/group.js"
     },
+    "./morph": {
+      "types": "./dist/morph.d.ts",
+      "default": "./dist/morph.js"
+    },
     "./liquid-blur.css": "./dist/liquid-blur.css",
     "./package.json": "./package.json"
   },

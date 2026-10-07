@@ -9,6 +9,8 @@ export type SpringConfig<K extends string> = SpringParams | Record<K, SpringPara
  * Retargeting keeps the current velocity, so reversing mid-flight stays smooth —
  * which CSS transitions can't do. Values are pushed to `onUpdate` every frame;
  * write them straight to `element.style`. Channels can share one spring or each have their own.
+ * A channel rests once what's left of its motion, distance and speed together, is within its
+ * precision (0.01 unless given): for pixels a quarter of a pixel is plenty and rests far sooner.
  */
 export class SpringAnimator<K extends string> {
   private state: Record<K, { x: number; v: number }>;
@@ -21,6 +23,7 @@ export class SpringAnimator<K extends string> {
     private params: SpringConfig<K>,
     private onUpdate: (values: Record<K, number>) => void,
     private onRest?: () => void,
+    private precision: number | Partial<Record<K, number>> = 0.01,
   ) {
     this.state = Object.fromEntries(
       Object.entries(initial).map(([key, x]) => [key, { x: x as number, v: 0 }]),
@@ -79,7 +82,9 @@ export class SpringAnimator<K extends string> {
         s.v += a * h;
         s.x += s.v * h;
       }
-      if (Math.abs(s.x - goal) > 0.01 || Math.abs(s.v) > 0.01) resting = false;
+      // How far it would still swing: the distance left and the speed as a distance
+      const precision = typeof this.precision === "number" ? this.precision : (this.precision[key] ?? 0.01);
+      if (Math.hypot(s.x - goal, s.v / omega) > precision) resting = false;
     }
 
     if (resting) {

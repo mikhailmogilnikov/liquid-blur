@@ -1423,3 +1423,30 @@ code {
   .mark--hero::before,
   .mark--hero::after { animation: none; }
 }
+
+/* ── Corners ── */
+
+/*
+ * Continuous corners, as on Apple platforms, where the browser can draw them. A squircle bends
+ * later than an arc of the same radius, so radii grow by ~1.5x to keep the corner's visual size.
+ * Capsules and circles stay round, like Apple's; so do group children, whose melted outline is
+ * drawn from circular arcs.
+ */
+@supports (corner-shape: squircle) {
+  :root { --radius: 26px; }
+
+  code,
+  .track__art { border-radius: 9px; }
+  .stage__panel,
+  .play__stage { border-radius: var(--radius); }
+  .screen { border-radius: 24px; }
+  .feature,
+  .code,
+  .tile { border-radius: 20px; }
+  .cover__art { border-radius: 15px; }
+  .player__art { border-radius: 12px; }
+  .sample-card { border-radius: 34px; }
+
+  :is(code, .stage__panel, .screen, .feature, .cover__art, .track__art, .player__art,
+    .play__stage, .sample-card, .code, .tile) { corner-shape: squircle; }
+}
