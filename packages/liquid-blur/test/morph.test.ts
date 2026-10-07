@@ -19,11 +19,11 @@ function scene() {
 }
 
 const quick = {
-  x: { duration: 0.05 },
-  y: { duration: 0.05 },
-  width: { duration: 0.05 },
-  height: { duration: 0.06 },
-  progress: { duration: 0.05 },
+  x: { duration: 0.05, bounce: 0 },
+  y: { duration: 0.05, bounce: 0 },
+  width: { duration: 0.05, bounce: 0 },
+  height: { duration: 0.06, bounce: 0 },
+  progress: { duration: 0.05, bounce: 0 },
 };
 const fast = { open: quick, close: quick };
 
@@ -78,11 +78,11 @@ describe("createMorph", () => {
   it("keeps the corners still while the size still wobbles", async () => {
     const { parent, source, content } = scene();
     const wobbly = {
-      x: { duration: 0.05 },
-      y: { duration: 0.05 },
-      width: { duration: 0.4, overshoot: 0.3 },
-      height: { duration: 0.45, overshoot: 0.3 },
-      progress: { duration: 0.05 },
+      x: { duration: 0.05, bounce: 0 },
+      y: { duration: 0.05, bounce: 0 },
+      width: { duration: 0.4, bounce: 0.7 },
+      height: { duration: 0.45, bounce: 0.7 },
+      progress: { duration: 0.05, bounce: 0 },
     };
     createMorph({ source, content, spring: { open: wobbly, close: wobbly } }).open();
     const shape = parent.children[2] as HTMLElement;
@@ -106,11 +106,11 @@ describe("createMorph", () => {
     source.style.borderRadius = "9999px";
     source.getBoundingClientRect = () => new DOMRect(20, 20, 120, 44);
     const slow = {
-      x: { duration: 0.2 },
-      y: { duration: 0.2 },
-      width: { duration: 0.2, overshoot: 0.1 },
-      height: { duration: 0.2, overshoot: 0.1 },
-      progress: { duration: 0.2 },
+      x: { duration: 0.2, bounce: 0 },
+      y: { duration: 0.2, bounce: 0 },
+      width: { duration: 0.2, bounce: 0.3 },
+      height: { duration: 0.2, bounce: 0.3 },
+      progress: { duration: 0.2, bounce: 0 },
     };
     const radii: number[] = [];
     let done = false;
@@ -141,7 +141,7 @@ describe("createMorph", () => {
 
   it("closing from rest, holds the shape a beat while the content goes", async () => {
     const { parent, source, content } = scene();
-    const lazy = { ...quick, width: { duration: 1 } };
+    const lazy = { ...quick, width: { duration: 1, bounce: 0 } };
     let rest: (open: boolean) => void = () => {};
     const morph = createMorph({ source, content, spring: { open: quick, close: lazy }, onRest: (open) => rest(open) });
     await new Promise<boolean>((resolve) => {
@@ -161,11 +161,11 @@ describe("createMorph", () => {
     const { parent, source, content } = scene();
     // The panel's center is right of the control's: x has 158px to go
     content.getBoundingClientRect = () => new DOMRect(100, 20, 160, 44);
-    const springs = {
+    const set = {
       ...quick,
-      x: { duration: 0.3, overshoot: 0.2 },
-      width: { duration: 0.3 },
-      progress: { duration: 0.3 },
+      x: { duration: 0.3, bounce: 0.5, settle: 0 },
+      width: { duration: 0.3, bounce: 0 },
+      progress: { duration: 0.3, bounce: 0 },
     };
     const xs: number[] = [];
     let done = false;
@@ -173,7 +173,7 @@ describe("createMorph", () => {
       const morph = createMorph({
         source,
         content,
-        spring: { open: springs, close: springs },
+        spring: { open: set, close: set },
         onRest: () => {
           done = true;
           resolve();
@@ -190,9 +190,9 @@ describe("createMorph", () => {
     });
     const target = 180;
     const peak = Math.max(...xs);
-    // Past it by about a fifth of the way, once
-    expect(peak - target).toBeGreaterThan(158 * 0.15);
-    expect(peak - target).toBeLessThan(158 * 0.25);
+    // Past it by about a sixth of the way (a 0.5 bounce), once
+    expect(peak - target).toBeGreaterThan(158 * 0.12);
+    expect(peak - target).toBeLessThan(158 * 0.2);
     const after = xs.slice(xs.indexOf(peak));
     expect(after.every((x, i) => i === 0 || x <= after[i - 1] + 1e-6)).toBe(true);
     expect(Math.min(...after)).toBeGreaterThanOrEqual(target - 0.25);

@@ -538,9 +538,9 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
 
   // Slow motion stretches every spring; changing it rebuilds the morphs
   const slowed = (factor: number): { open: MorphSprings; close: MorphSprings } => {
-    const scale = (s: MorphSprings) =>
+    const scale = (set: MorphSprings) =>
       Object.fromEntries(
-        Object.entries(s).map(([key, p]) => [key, { ...p, duration: p.duration * factor }]),
+        Object.entries(set).map(([key, s]) => [key, { ...s, duration: s.duration * factor }]),
       ) as MorphSprings;
     return { open: scale(defaultMorphSprings.open), close: scale(defaultMorphSprings.close) };
   };

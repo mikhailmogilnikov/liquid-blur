@@ -60,6 +60,25 @@ describe("SpringAnimator", () => {
     expect(frames.at(-1)).toBe(100);
   });
 
+  it("overshoots once with a bouncy spring that settles at no bounce", () => {
+    const run = (settle?: number) => {
+      const frames: number[] = [];
+      new SpringAnimator({ x: 0 }, { duration: 0.3, bounce: 0.6, settle }, (v) => frames.push(v.x)).to({ x: 100 });
+      vi.advanceTimersByTime(3000);
+      return frames;
+    };
+    // Bouncy throughout: past, back under, past again
+    const swinging = run();
+    const peak = Math.max(...swinging);
+    expect(Math.min(...swinging.slice(swinging.indexOf(peak)))).toBeLessThan(99);
+    // Settling: the same way out, then straight home
+    const settling = run(0);
+    expect(Math.max(...settling)).toBeCloseTo(peak, 0);
+    const after = settling.slice(settling.indexOf(Math.max(...settling)));
+    expect(after.every((x, i) => i === 0 || x <= after[i - 1])).toBe(true);
+    expect(settling.at(-1)).toBe(100);
+  });
+
   it("doesn't overshoot without bounce, does with it", () => {
     const max = (bounce: number) => {
       const frames: { x: number }[] = [];

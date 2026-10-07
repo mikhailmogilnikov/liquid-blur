@@ -933,7 +933,7 @@ code {
 .play__note { margin-top: 12px; color: var(--ink-3); font-size: 14px; }
 
 @media (max-width: 980px) {
-  .play { grid-template-columns: 1fr; }
+  .play { grid-template-columns: minmax(0, 1fr); }
   .play__stage,
   .play__samples { min-height: 420px; }
 }

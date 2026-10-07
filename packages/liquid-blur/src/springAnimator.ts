@@ -1,5 +1,10 @@
-/** SwiftUI-style spring: perceptual duration in seconds, bounce 0 (no overshoot) to 1. */
-export type SpringParams = { duration: number; bounce: number };
+/**
+ * SwiftUI-style spring: perceptual duration in seconds, bounce 0 (no overshoot) to 1. `settle`
+ * is the bounce once it has turned for the first time (past its target and back, or reversed):
+ * a bouncy spring that settles at a low one overshoots once and comes back without swinging again.
+ * Unless given, it's the bounce throughout.
+ */
+export type SpringParams = { duration: number; bounce: number; settle?: number };
 
 /**
  * Moves a spring `dt` seconds on, solved exactly rather than stepped: right at any frame rate,
@@ -35,21 +40,23 @@ export type SpringConfig<K extends string> = SpringParams | Record<K, SpringPara
  * precision (0.01 unless given): for pixels a quarter of a pixel is plenty and rests far sooner.
  */
 export class SpringAnimator<K extends string> {
-  private state: Record<K, { x: number; v: number }>;
+  /** Each channel's position, velocity, and whether it has turned since it last set off */
+  private state: Record<K, { x: number; v: number; turned: boolean }>;
   private target: Record<K, number>;
   private frame = 0;
   private last = 0;
 
   constructor(
     initial: Record<K, number>,
-    private params: SpringConfig<K>,
+    // The channels come from `initial`, never from the springs' own keys
+    private params: SpringConfig<NoInfer<K>>,
     private onUpdate: (values: Record<K, number>) => void,
     private onRest?: () => void,
     private precision: number | Partial<Record<K, number>> = 0.01,
   ) {
     this.state = Object.fromEntries(
-      Object.entries(initial).map(([key, x]) => [key, { x: x as number, v: 0 }]),
-    ) as Record<K, { x: number; v: number }>;
+      Object.entries(initial).map(([key, x]) => [key, { x: x as number, v: 0, turned: false }]),
+    ) as Record<K, { x: number; v: number; turned: boolean }>;
     this.target = { ...initial };
     onUpdate(this.values());
   }
@@ -69,6 +76,8 @@ export class SpringAnimator<K extends string> {
   to(target: Record<K, number>, params?: SpringConfig<K>, velocity?: Partial<Record<K, number>>) {
     this.target = { ...target };
     if (params) this.params = params;
+    // A new target is a new flight: bouncy again until it turns
+    for (const s of Object.values(this.state) as { turned: boolean }[]) s.turned = false;
     if (velocity) {
       for (const key of Object.keys(velocity) as K[]) {
         const v = velocity[key];
@@ -101,11 +110,14 @@ export class SpringAnimator<K extends string> {
     let resting = true;
 
     for (const key of Object.keys(this.state) as K[]) {
-      const { duration, bounce } = this.paramsOf(key);
+      const { duration, bounce, settle = bounce } = this.paramsOf(key);
       const omega = (2 * Math.PI) / duration;
       const s = this.state[key];
       const goal = this.target[key];
-      step(s, goal, omega, Math.min(1, Math.max(0, 1 - bounce)), dt);
+      const before = s.v;
+      step(s, goal, omega, Math.min(1, Math.max(0, 1 - (s.turned ? settle : bounce))), dt);
+      // Turned: it was moving and now moves the other way
+      if (!s.turned && before !== 0 && Math.sign(s.v) !== Math.sign(before)) s.turned = true;
       // How far it would still swing: the distance left and the speed as a distance
       const precision = typeof this.precision === "number" ? this.precision : (this.precision[key] ?? 0.01);
       if (Math.hypot(s.x - goal, s.v / omega) > precision) resting = false;

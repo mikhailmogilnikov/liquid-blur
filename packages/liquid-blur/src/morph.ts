@@ -6,10 +6,9 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * real radius to the panel's (a capsule's `9999px` counts as half its height, as drawn): always a
  * rounded box, never an oval. Where the browser draws `corner-shape`, the corners' shape goes from
  * the control's to the panel's too (a round button into a squircle panel, say), as a superellipse
- * along with the radius. Center, width and height run on springs of their own, so it wobbles
- * like jelly rather than scaling, once each way. Corners, icon and content follow
- * a progress of their own that doesn't bounce: the size may wobble a while longer, the corners
- * stay still. The control's icon fades out as it swells and back in as it shrinks; the panel's
+ * along with the radius. Center, width and height move on springs of their own that set off from
+ * a standstill, overshoot at most once and settle without swinging again: lively, never jelly.
+ * Corners, icon and content follow a progress of their own that doesn't overshoot. The control's icon fades out as it swells and back in as it shrinks; the panel's
  * content comes in magnified and out of focus and settles sharp.
  *
  * The control (`source`) stays where it is, hidden (`visibility: hidden`) while the morph is
@@ -42,29 +41,24 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * from round arcs, so while the copy melts with its neighbors its corners are round.
  *
  * Boxes are read once per open and close, on screen; each piece is placed from where it sits
- * untransformed. A rotated or scaled ancestor isn't supported. With reduced motion the panel and the control swap at once.
+ * untransformed. A rotated or scaled ancestor isn't supported. With reduced motion the panel and
+ * the control swap at once.
  */
 
 /** The shape's center, its size, and a progress for corners, icon and content */
 type Channel = "cx" | "cy" | "w" | "h" | "p";
 
 /**
- * One channel's motion: a spring that never swings (critically damped), `duration` seconds as
- * perceived. With an `overshoot` (a share of the way, 0.1 is 10%) it sets off with a push: it goes
- * that much past the target once, then comes back smoothly, without swinging again.
- */
-export type MorphSpring = { duration: number; overshoot?: number };
-
-/**
  * Springs for the center's travel (`x`, `y`), the size (`width`, `height`), and the progress that
- * corners, icon and content follow
+ * corners, icon and content follow. A spring's `bounce` is how far it overshoots, its `settle` how
+ * it comes back after: low, and it overshoots once and no more.
  */
 export type MorphSprings = {
-  x: MorphSpring;
-  y: MorphSpring;
-  width: MorphSpring;
-  height: MorphSpring;
-  progress: MorphSpring;
+  x: SpringParams;
+  y: SpringParams;
+  width: SpringParams;
+  height: SpringParams;
+  progress: SpringParams;
 };
 
 export type MorphOptions = {
@@ -91,33 +85,34 @@ type Box = { x: number; y: number; width: number; height: number; radius: number
 type Frame = Record<Channel, number>;
 
 /**
- * The springs a morph runs on unless given others. Nothing swings like jelly. Opening, the control
- * heads for the panel's center first and runs a little past it, once (further vertically), then
- * eases back into place, while it swells evenly all around, slowly at first and catching up as it
- * arrives. Closing, the shape holds a beat while the content blurs away, then goes, the width
- * first, the height after, and settles onto the control without going past it.
+ * The springs a morph runs on unless given others. Opening, the control heads for the panel's
+ * center first, runs past it once (further vertically) and settles back into place, while it
+ * swells evenly all around, slower, catching up as it arrives. Closing, the shape holds a beat while
+ * the content blurs away, then goes, the width first, the height after, and settles onto the
+ * control without going past it.
  */
 export const defaultMorphSprings: { open: MorphSprings; close: MorphSprings } = {
   open: {
-    x: { duration: 0.34, overshoot: 0.08 },
-    y: { duration: 0.42, overshoot: 0.2 },
-    width: { duration: 0.4 },
-    height: { duration: 0.4 },
-    progress: { duration: 0.4 },
+    // Bouncy out (7% past, 17% vertically), then back without a second swing
+    x: { duration: 0.19, bounce: 0.35, settle: 0.15 },
+    y: { duration: 0.25, bounce: 0.53, settle: 0.15 },
+    width: { duration: 0.34, bounce: 0.12 },
+    height: { duration: 0.34, bounce: 0.12 },
+    progress: { duration: 0.3, bounce: 0.1 },
   },
   close: {
-    x: { duration: 0.28 },
-    y: { duration: 0.34 },
-    width: { duration: 0.26 },
-    height: { duration: 0.32 },
-    progress: { duration: 0.26 },
+    x: { duration: 0.26, bounce: 0.1 },
+    y: { duration: 0.3, bounce: 0.1 },
+    width: { duration: 0.24, bounce: 0.1 },
+    height: { duration: 0.28, bounce: 0.1 },
+    progress: { duration: 0.22, bounce: 0.1 },
   },
 };
 /** Where it's done: a quarter of a pixel, and a progress whose last bit moves nothing visible */
 const PRECISION = { cx: 0.25, cy: 0.25, w: 0.25, h: 0.25, p: 0.002 };
 /** Share of the progress over which the control's icon fades */
 const ICON_SPAN = 0.3;
-/** Closing from rest, the shape holds this share of its width spring's duration before it goes */
+/** Closing from rest, the shape holds this share of its width's duration before it goes */
 const CLOSE_HOLD = 0.12;
 /** Lifted over a group: share of the progress over which the stub left in it shrinks away */
 const STUB_SPAN = 0.35;
@@ -139,23 +134,6 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
-/**
- * The push, as a multiple of the spring's angular frequency times the distance, that sends a
- * critically damped spring `overshoot` (a share of the distance) past its target. Pushed with k,
- * it peaks (k - 1)·e^(-k / (k - 1)) past: solved for k by bisection, as that only grows with it.
- */
-const pushFor = (overshoot: number) => {
-  if (!(overshoot > 0)) return 0;
-  const past = (k: number) => (k - 1) * Math.exp(-k / (k - 1));
-  let lo = 1;
-  let hi = 20;
-  for (let i = 0; i < 50; i++) {
-    const k = (lo + hi) / 2;
-    if (past(k) < overshoot) lo = k;
-    else hi = k;
-  }
-  return (lo + hi) / 2;
-};
 /**
  * `corner-shape` as a superellipse exponent: round 1, squircle 2, bevel 0, scoop -1. Square and
  * notch are infinite in CSS; a large exponent draws them all but exactly and still interpolates.
@@ -181,32 +159,13 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
   /** Whether corners can have shapes here; if not, they're round and `corner-shape` is left alone */
   const cornerShapes = win.CSS?.supports?.("corner-shape", "squircle") ?? false;
-  const byChannel = (s: MorphSprings): Record<Channel, MorphSpring> => ({
-    cx: s.x,
-    cy: s.y,
-    w: s.width,
-    h: s.height,
-    p: s.progress,
+  const channels = (set: MorphSprings): Record<Channel, SpringParams> => ({
+    cx: set.x,
+    cy: set.y,
+    w: set.width,
+    h: set.height,
+    p: set.progress,
   });
-  /** Critically damped: nothing swings */
-  const channels = (s: MorphSprings) =>
-    Object.fromEntries(
-      Object.entries(byChannel(s)).map(([key, c]) => [key, { duration: c.duration, bounce: 0 }]),
-    ) as Record<Channel, SpringParams>;
-  /** Heads for `target`; set off from rest, the channels with an overshoot get their push */
-  const head = (target: Frame, springs: MorphSprings, push: boolean) => {
-    if (!motion) return;
-    let velocity: Partial<Frame> | undefined;
-    if (push) {
-      const now = motion.values();
-      velocity = {};
-      for (const [key, c] of Object.entries(byChannel(springs)) as [Channel, MorphSpring][]) {
-        const k = pushFor(c.overshoot ?? 0);
-        if (k) velocity[key] = k * ((2 * Math.PI) / c.duration) * (target[key] - now[key]);
-      }
-    }
-    motion.to(target, channels(springs), velocity);
-  };
 
   /** A copy of the control, pinned out of the flow at its parent's corner, moved by transform */
   const copy = () => {
@@ -453,7 +412,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     settle();
   };
   /** Morphs from `start` to `target`; one under way turns around, keeping its speed */
-  const run = (start: Frame, target: Frame, springs: MorphSprings) => {
+  const run = (start: Frame, target: Frame, set: MorphSprings) => {
     if (reduced.matches) {
       motion?.stop();
       motion = null;
@@ -461,10 +420,8 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
       rest();
       return;
     }
-    // From rest it sets off with its push; under way it turns around keeping its speed
-    const fresh = !motion;
-    motion ??= new SpringAnimator(start, channels(springs), render, rest, PRECISION);
-    head(target, springs, fresh);
+    motion ??= new SpringAnimator(start, channels(set), render, rest, PRECISION);
+    motion.to(target, channels(set));
   };
 
   /** Closing from rest: the beat the shape holds before it goes */
@@ -497,7 +454,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     // From rest the content goes first: the shape holds a beat where it is, then follows
     run(at(to, 1), { ...at(to, 1), p: 0 }, spring.close);
     hold = win.setTimeout(() => {
-      if (!isOpen) head(target, spring.close, true);
+      if (!isOpen) motion?.to(target, channels(spring.close));
     }, CLOSE_HOLD * spring.close.width.duration * 1000);
   };
 
