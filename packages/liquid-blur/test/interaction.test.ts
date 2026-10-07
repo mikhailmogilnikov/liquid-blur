@@ -142,6 +142,7 @@ describe("installLiquidBlur", () => {
     vi.advanceTimersByTime(2000);
     expect(el.style.getPropertyValue("--_lb-pressed")).toBe("");
     expect(el.style.getPropertyValue("--lb-press-x")).toBe("");
+    expect(el.style.getPropertyValue("--_lb-press-r")).toBe("");
   });
 
   it("swells and gives the element its own scale back", () => {
@@ -235,6 +236,24 @@ describe("installLiquidBlur", () => {
     expect(card).toBeLessThan(1.1);
     expect(panel).toBeLessThan(card);
     expect(panel).toBeGreaterThan(1);
+  });
+
+  it("sizes the light to the element, within limits", () => {
+    const reach = (width: number, height: number, via: "pointer" | "key" = "pointer") => {
+      const el = glass("lb-highlight");
+      el.getBoundingClientRect = () => new DOMRect(0, 0, width, height);
+      if (via === "pointer") pointer(el, "pointerdown", 5, 5);
+      else key(el, "keydown", "Enter");
+      const r = Number.parseFloat(el.style.getPropertyValue("--_lb-press-r"));
+      if (via === "pointer") pointer(el, "pointerup", 5, 5);
+      else key(el, "keyup", "Enter");
+      return r;
+    };
+    expect(reach(44, 44)).toBe(48.4);
+    expect(reach(44, 160)).toBeCloseTo(92.3, 0);
+    expect(reach(600, 400)).toBe(220);
+    expect(reach(20, 20)).toBe(48);
+    expect(reach(44, 160, "key")).toBeCloseTo(92.3, 0);
   });
 
   it("stretches toward the drag and restores the transform", () => {

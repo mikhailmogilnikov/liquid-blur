@@ -117,7 +117,7 @@ values — and every glass inside picks them up.
 | `--lb-tint-text`        | `#ffffff`          | Text color on `lb-tinted` glass.                           |
 | `--lb-shade-color`      | `#000000`          | The dark parts: volume shading, edge, drop shadow.         |
 | `--lb-shine-color`      | `#ffffff`          | The light parts: rims, glow, press highlight.              |
-| `--lb-highlight-size`   | `90px`             | Radius of the press highlight.                             |
+| `--lb-highlight-size`   | `1`                | Reach of the press highlight, as a multiplier on its size-based default. |
 | `--lb-swell`            | `1.1`              | Pressed scale at button size; smaller grows more, bigger less. |
 | `--lb-stretch`          | `2`                | Stretch strength; `0` turns it off.                        |
 
@@ -210,6 +210,8 @@ next-themes with `attribute="class"`), daisyUI theme names, anything:
   style too. On touch it appears after a short delay, so a finger that lands to scroll doesn't
   flash it; a quick tap still gets a brief flash on release. Without `installLiquidBlur()`,
   highlight and swell fall back to `:active`, centered.
+- **Highlight** is a soft glow with no edge, sized to the element: about the size of a small
+  button, broad on a card, capped on a panel so it never floods it. `--lb-highlight-size` scales it.
 - **Highlight and swell** run on springs, interruptible mid-flight. The script writes them
   inline — the light's strength and `scale` — and removes them once they come to rest, together
   with the press point `--lb-press-x` / `--lb-press-y`. No `transition` is set, so yours stays

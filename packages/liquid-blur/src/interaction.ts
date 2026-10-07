@@ -16,7 +16,8 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  *
  * Highlight also gets the press point as `--lb-press-x` / `--lb-press-y` (percent of its box,
  * registered as non-inherited, so moving it restyles only the element), at most once per frame,
- * clamped to the box.
+ * clamped to the box. Its reach follows the element's size, written once per press as
+ * `--_lb-press-r`: a small button fills with light, a big card gets a broad glow, never a flood.
  *
  * Stretch: dragging pulls the glass toward the finger with rubber-band resistance and stretches it
  * along the drag, keeping its area; on release it springs back. Per frame only `transform` is
@@ -65,6 +66,10 @@ const MAX_GIVE = 1.4;
 /** The swell leans on size harder: a small icon grows a lot, a big card hardly at all */
 const MIN_SWELL_GIVE = 0.15;
 const MAX_SWELL_GIVE = 2.2;
+/** Highlight reach: this many times the element's size (geometric mean of its sides), within px */
+const LIGHT_REACH = 1.1;
+const MIN_LIGHT_REACH = 48;
+const MAX_LIGHT_REACH = 220;
 /** The light comes on fast and fades slowly; the swell is the same spring both ways */
 const SWELL_SPRING: SpringParams = { duration: 0.42, bounce: 0.22 };
 const LIGHT_IN: SpringParams = { duration: 0.12, bounce: 0 };
@@ -128,6 +133,16 @@ function giveOf(box: { width: number; height: number }) {
 /** How much a swell grows relative to the reference: the size ratio itself, not its root. */
 function swellGiveOf(box: { width: number; height: number }) {
   return Math.min(MAX_SWELL_GIVE, Math.max(MIN_SWELL_GIVE, sizeRatio(box)));
+}
+
+/**
+ * Reach of the highlight for this element, px. From the layout size, not the box on screen: the
+ * gradient is drawn before any scale applies, so a scaled element would otherwise count it twice.
+ */
+function lightReachOf(el: HTMLElement) {
+  const r = el.getBoundingClientRect();
+  const size = Math.sqrt((el.offsetWidth || r.width) * (el.offsetHeight || r.height));
+  return Math.min(MAX_LIGHT_REACH, Math.max(MIN_LIGHT_REACH, LIGHT_REACH * size));
 }
 
 /** Reference size over the element's, as the geometric mean of its sides. */
@@ -228,6 +243,7 @@ export function installLiquidBlur(root?: Document): () => void {
     el.style.removeProperty("--_lb-pressed");
     el.style.removeProperty("--lb-press-x");
     el.style.removeProperty("--lb-press-y");
+    el.style.removeProperty("--_lb-press-r");
     el.style.scale = inlineScale;
   };
 
@@ -409,6 +425,7 @@ export function installLiquidBlur(root?: Document): () => void {
     };
     // Keep getting moves after the mouse leaves the element; touch is captured implicitly
     if (event.pointerType === "mouse") el.setPointerCapture(event.pointerId);
+    if (press.light) el.style.setProperty("--_lb-press-r", `${lightReachOf(el).toFixed(1)}px`);
 
     lightX = event.clientX;
     lightY = event.clientY;
@@ -470,6 +487,7 @@ export function installLiquidBlur(root?: Document): () => void {
     if (el.classList.contains("lb-highlight")) {
       el.style.setProperty("--lb-press-x", "50%");
       el.style.setProperty("--lb-press-y", "50%");
+      el.style.setProperty("--_lb-press-r", `${lightReachOf(el).toFixed(1)}px`);
     }
     keyPress = { el, key: event.key };
     setPressed(el, true);

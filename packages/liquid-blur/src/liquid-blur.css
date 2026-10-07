@@ -44,7 +44,8 @@
  *   --lb-tint-text      text color on tinted glass.
  *   --lb-shade-color    the dark parts: volume shading, edge, drop shadow.
  *   --lb-shine-color    the light parts: rims, glow, press highlight.
- *   --lb-highlight-size radius of the press highlight.
+ *   --lb-highlight-size reach of the press highlight, as a multiplier: 1 = default. The script
+ *                       sizes the light to the element; without it the reach is 130px.
  *   --lb-swell          scale of a pressed swell at button size; the script scales it by size.
  *   --lb-stretch        stretch strength: 0 = off, 2 = default.
  * Everything resolves on the glass itself, so it can be set on any ancestor.
@@ -76,6 +77,12 @@
   inherits: false;
   initial-value: 50%;
 }
+/* Reach of the highlight for this element's size, written by the script once per press */
+@property --_lb-press-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 130px;
+}
 @property --lb-press-y {
   syntax: "<percentage>";
   inherits: false;
@@ -106,7 +113,7 @@
     --lb-text-dark: #ffffff;
     --lb-shade-color: #000000;
     --lb-shine-color: #ffffff;
-    --lb-highlight-size: 90px;
+    --lb-highlight-size: 1;
     --lb-swell: 1.1;
     /*
      * Easing of the swell without the script: the script's spring (duration 0.42, bounce 0.22)
@@ -133,7 +140,7 @@
     --_lb-light-shade-focus: 0.65;
     --_lb-light-glow: 0.2;
     --_lb-light-glow-size: 12px;
-    --_lb-light-press: 0.45;
+    --_lb-light-press: 0.8;
 
     --_lb-dark-alpha: 0.62;
     --_lb-dark-alpha-clear: 0.25;
@@ -323,19 +330,29 @@
   }
 
   /*
-   * Highlight: one more background layer, a soft white spot (smoothstep falloff, so no visible
-   * ring) at --lb-press-x / --lb-press-y, clamped to the element by the script.
+   * Highlight: one more background layer, light the way a finger lifts glass — a broad glow with
+   * no edge. A Gaussian falloff sampled at 11 stops (fewer read as concentric bands), sitting on a
+   * wash that lifts the whole surface a little, so the spot is the brightest part of a lit pane
+   * rather than a disc with a rim. At --lb-press-x / --lb-press-y, clamped to the element by the
+   * script.
    */
   .lb.lb-highlight {
     --_h: calc(var(--_lb-press) * var(--_lb-pressed, 0));
+    /* Share of the light spread over the whole surface */
+    --_w: 0.25;
     --_highlight: radial-gradient(
-      circle var(--lb-highlight-size) at var(--lb-press-x, 50%) var(--lb-press-y, 50%),
-      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * 100%), transparent) 0,
-      color-mix(in srgb, var(--lb-shine-color) calc((var(--_h) * 0.896) * 100%), transparent) 20%,
-      color-mix(in srgb, var(--lb-shine-color) calc((var(--_h) * 0.648) * 100%), transparent) 40%,
-      color-mix(in srgb, var(--lb-shine-color) calc((var(--_h) * 0.352) * 100%), transparent) 60%,
-      color-mix(in srgb, var(--lb-shine-color) calc((var(--_h) * 0.104) * 100%), transparent) 80%,
-      transparent 100%
+      circle calc(var(--_lb-press-r, 130px) * var(--lb-highlight-size)) at var(--lb-press-x, 50%) var(--lb-press-y, 50%),
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 1.000) * 100%), transparent) 0%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.956) * 100%), transparent) 10%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.833) * 100%), transparent) 20%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.663) * 100%), transparent) 30%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.481) * 100%), transparent) 40%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.317) * 100%), transparent) 50%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.189) * 100%), transparent) 60%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.100) * 100%), transparent) 70%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.046) * 100%), transparent) 80%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.015) * 100%), transparent) 90%,
+      color-mix(in srgb, var(--lb-shine-color) calc(var(--_h) * (var(--_w) + (1 - var(--_w)) * 0.000) * 100%), transparent) 100%
     );
     background: var(--_highlight), var(--_glow), var(--_ends), var(--_rows), var(--_fill);
   }
