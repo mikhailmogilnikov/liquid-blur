@@ -307,7 +307,7 @@
 
   /* ── Press behaviors ── */
 
-  .lb:is(.lb-highlight, .lb-swell, .lb-stretch) {
+  :is(.lb, .lb-group > *):is(.lb-highlight, .lb-swell, .lb-stretch) {
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -364,23 +364,74 @@
    * Stretch: the transform is written by the script. The drag belongs to the glass, so the
    * browser must not start a scroll or a text selection from it.
    */
-  .lb.lb-stretch {
+  :is(.lb, .lb-group > *).lb-stretch {
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
   }
 
+  /*
+   * Group (experimental, driven by createGlassGroup() from group.ts): children that are glass
+   * (`.lb`) and melt together where they come close. Apart, they're plain glass and the group draws
+   * nothing. Melted (`data-lb-melted` on the root), their own glass steps aside, keeping only the
+   * press light, for one surface the group draws behind them: a clipped element with backdrop,
+   * fill and a stretched canvas of volume, and a canvas with rims, edge and shadow. The root keeps
+   * the material's values for them but draws nothing itself.
+   */
+  .lb.lb-group {
+    --lb-merge: 24px;
+    position: relative;
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .lb-group > .lb-group__glass {
+    position: absolute;
+    pointer-events: none;
+    background: var(--_fill);
+    -webkit-backdrop-filter: var(--_backdrop);
+    backdrop-filter: var(--_backdrop);
+  }
+  .lb-group > .lb-group__paint {
+    position: absolute;
+    pointer-events: none;
+  }
+  .lb-group__glass > .lb-group__volume {
+    position: absolute;
+    pointer-events: none;
+    /* Its own layer, so stretching it is the compositor's job, not a repaint of the glass */
+    will-change: transform;
+  }
+  .lb-group:not([data-lb-melted]) > :is(.lb-group__glass, .lb-group__paint) {
+    visibility: hidden;
+  }
+  .lb-group > :not(.lb-group__glass, .lb-group__paint) {
+    position: relative;
+    z-index: 1;
+  }
+  .lb-group[data-lb-melted] > .lb {
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  .lb-group[data-lb-melted] > .lb.lb-highlight {
+    background: var(--_highlight);
+  }
+
   /* ── Accessibility ── */
 
-  [data-lb-material="solid"] .lb {
+  [data-lb-material="solid"] :is(.lb, .lb-group__glass) {
     --_lb-solid: 1;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 
   @media (prefers-reduced-transparency: reduce) {
-    .lb {
+    :is(.lb, .lb-group__glass) {
       --_lb-solid: 1;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
@@ -396,7 +447,7 @@
 
   /* Windows High Contrast drops backgrounds and shadows; keep an outline */
   @media (forced-colors: active) {
-    .lb {
+    .lb:not(.lb-group) {
       outline: 1px solid CanvasText;
       outline-offset: -1px;
     }

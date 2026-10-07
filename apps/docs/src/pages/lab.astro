@@ -1,0 +1,393 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Icon from "../components/Icon.astro";
+
+/** Something colorful for the glass to blur */
+const art =
+  "radial-gradient(circle at 20% 25%, #ffd36e 0, transparent 40%), radial-gradient(circle at 80% 30%, #2f7bff 0, transparent 45%), radial-gradient(circle at 60% 85%, #1fd1a5 0, transparent 45%), radial-gradient(circle at 15% 90%, #ff4f81 0, transparent 40%), linear-gradient(135deg, #b5179e, #3a0ca3)";
+---
+
+<Base title="Lab — Liquid Blur" description="Experiments: glass that melts between shapes.">
+  <Nav current="home" />
+
+  <main class="lab">
+    <p class="lead">
+      <b>Glass group, experimental.</b> Children of one group share a single piece of glass that melts between
+      them when they come close. One backdrop, clipped to the merged outline, so nothing blurs twice.
+    </p>
+
+    <label class="lab__knob">
+      Merge distance <output data-merge-out>24px</output>
+      <input type="range" min="0" max="56" value="24" data-merge />
+    </label>
+
+    <section class="scene" aria-label="Docking">
+      <div class="scene__art" style={`background: ${art}`}></div>
+      <p class="scene__words" aria-hidden="true">Surface tension</p>
+      <div class="dock" data-dock>
+        <div class="bar lb">
+          <button type="button" aria-label="Back"><Icon name="back" size={20} /></button>
+          <button type="button" aria-label="Play"><Icon name="play" size={20} /></button>
+          <button type="button" aria-label="Next"><Icon name="next" size={20} /></button>
+        </div>
+        <button class="orb lb" type="button" data-orb aria-label="Search" aria-pressed="false">
+          <Icon name="search" size={20} />
+        </button>
+      </div>
+      <p class="scene__hint">Press the search button: it splits off and docks back.</p>
+    </section>
+
+    <section class="scene" aria-label="Stretching">
+      <div class="scene__art" style={`background: ${art}; filter: hue-rotate(260deg)`}></div>
+      <p class="scene__words" aria-hidden="true">Pull it</p>
+      <div class="toolbar" data-toolbar>
+        <div class="tb tb--seg lb lb-stretch">
+          <button type="button">Albums</button>
+          <button type="button">Songs</button>
+        </div>
+        <button class="tb tb--round lb lb-stretch lb-swell" type="button" aria-label="Add">
+          <Icon name="plus" size={20} />
+        </button>
+        <button class="tb tb--round tb--far lb lb-stretch lb-swell" type="button" aria-label="More">
+          <Icon name="more" size={20} />
+        </button>
+      </div>
+      <p class="scene__hint">Press and drag any piece: the glass stretches along, necks and all.</p>
+    </section>
+
+    <section class="scene" aria-label="Dragging">
+      <div class="scene__art" style={`background: ${art}; filter: hue-rotate(140deg)`}></div>
+      <p class="scene__words" aria-hidden="true">Drag the drop</p>
+      <div class="field" data-field>
+        <div class="pill lb">Liquid Blur</div>
+        <div class="drop lb" data-drop aria-label="Draggable drop"><Icon name="heart" size={20} /></div>
+        <div class="drop drop--small lb" data-drop aria-label="Draggable drop"></div>
+      </div>
+      <p class="scene__hint">Drag a drop toward the pill, let go and it springs home.</p>
+    </section>
+  </main>
+
+  <aside class="hud" aria-label="Profiling">
+    <div class="hud__stats">
+      <span><b data-fps>–</b> fps</span>
+      <span>worst <b data-worst>–</b> ms</span>
+      <span>JS <b data-js>–</b> ms</span>
+      <span>volume <b data-volume>–</b> ms</span>
+    </div>
+    <label><input type="checkbox" data-loop /> Animate by itself</label>
+    <label><input type="checkbox" data-light /> Press light on "Pull it"</label>
+    <label><input type="checkbox" data-debug="no-art" /> No rims, edge, shadow</label>
+    <label><input type="checkbox" data-debug="no-volume" /> No volume</label>
+    <label><input type="checkbox" data-debug="no-clip" /> No clip-path (rectangle)</label>
+    <label><input type="checkbox" data-debug="no-blur" /> No backdrop blur</label>
+    <label><input type="checkbox" data-debug="fixed-box" /> Fixed glass box</label>
+  </aside>
+</Base>
+
+<style>
+  .lab {
+    padding: 120px var(--edge) 80px;
+    display: grid;
+    gap: 32px;
+  }
+  .lab__knob {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink-2);
+  }
+  .lab__knob output {
+    color: var(--ink);
+    min-width: 3em;
+    font-variant-numeric: tabular-nums;
+  }
+  .lab__knob input { width: 200px; }
+
+  .scene {
+    position: relative;
+    height: 420px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    touch-action: none;
+  }
+  .scene__art {
+    position: absolute;
+    inset: -20%;
+    background-size: 100% 100%;
+  }
+  .scene__words {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    font-size: clamp(48px, 10vw, 120px);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    color: rgb(255 255 255 / 0.85);
+    text-align: center;
+    line-height: 1;
+  }
+  .scene__hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 16px;
+    margin: 0;
+    text-align: center;
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  button:not(.lb) { all: unset; cursor: pointer; display: grid; place-items: center; }
+  button.lb {
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .dock {
+    position: absolute;
+    left: 50%;
+    bottom: 40px;
+    width: 240px;
+    height: 56px;
+    margin-left: -120px;
+  }
+  .bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 176px;
+    height: 56px;
+    border-radius: 28px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .bar button { width: 48px; height: 48px; }
+  .orb {
+    position: absolute;
+    left: 184px;
+    top: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+  }
+
+  .toolbar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 340px;
+    height: 56px;
+    margin: -28px 0 0 -170px;
+  }
+  .tb {
+    position: absolute;
+    top: 0;
+    height: 56px;
+    border-radius: 28px;
+  }
+  .tb--seg {
+    left: 0;
+    width: 200px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    font-weight: 600;
+  }
+  .tb--seg button { padding: 0 12px; height: 44px; }
+  .tb--round { left: 206px; width: 56px; }
+  .tb--far { left: 284px; }
+
+  .hud {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 100;
+    display: grid;
+    gap: 6px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--ground);
+    color: var(--ink);
+    box-shadow: 0 0 0 1px var(--hair), 0 8px 24px rgb(0 0 0 / 0.15);
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .hud__stats {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 260px;
+    gap: 4px 12px;
+    font-variant-numeric: tabular-nums;
+    padding-bottom: 4px;
+  }
+  .hud label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field {
+    position: absolute;
+    inset: 0;
+  }
+  .pill {
+    position: absolute;
+    left: calc(50% - 110px);
+    top: calc(50% - 28px);
+    width: 220px;
+    height: 56px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+  }
+  .drop {
+    position: absolute;
+    left: calc(50% + 150px);
+    top: calc(50% - 28px);
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .drop--small {
+    left: calc(50% - 210px);
+    top: calc(50% + 50px);
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+  }
+  .drop:active { cursor: grabbing; }
+</style>
+
+<script>
+  import { createGlassGroup, SpringAnimator, type GlassGroup } from "liquid-blur";
+
+  const groups: GlassGroup[] = [];
+  const dock = document.querySelector<HTMLElement>("[data-dock]")!;
+  const field = document.querySelector<HTMLElement>("[data-field]")!;
+  const toolbar = document.querySelector<HTMLElement>("[data-toolbar]")!;
+  // Springs and lb-stretch move the children through their style: the groups follow on their own
+  groups.push(createGlassGroup(dock), createGlassGroup(field), createGlassGroup(toolbar));
+
+  // Merge distance, live
+  const merge = document.querySelector<HTMLInputElement>("[data-merge]")!;
+  const mergeOut = document.querySelector<HTMLOutputElement>("[data-merge-out]")!;
+  merge.addEventListener("input", () => {
+    for (const el of [dock, field, toolbar]) el.style.setProperty("--lb-merge", `${merge.value}px`);
+    mergeOut.value = `${merge.value}px`;
+    for (const g of groups) g.update();
+  });
+
+  // Docking: the orb slides away from the bar and back on a bouncy spring
+  const orb = document.querySelector<HTMLButtonElement>("[data-orb]")!;
+  const slide = new SpringAnimator(
+    { x: 0, y: 0 },
+    { duration: 0.6, bounce: 0.3 },
+    ({ x, y }) => {
+      orb.style.transform = `translate(${x}px, ${y}px)`;
+    },
+  );
+  orb.addEventListener("click", () => {
+    const out = orb.getAttribute("aria-pressed") !== "true";
+    orb.setAttribute("aria-pressed", String(out));
+    slide.to(out ? { x: 56, y: -40 } : { x: 0, y: 0 });
+  });
+
+  // Profiling: frame rate, the worst frame and our script time over the last second
+  const fpsOut = document.querySelector<HTMLElement>("[data-fps]")!;
+  const worstOut = document.querySelector<HTMLElement>("[data-worst]")!;
+  const jsOut = document.querySelector<HTMLElement>("[data-js]")!;
+  const volumeOut = document.querySelector<HTMLElement>("[data-volume]")!;
+  let frames = 0;
+  let worst = 0;
+  let windowStart = performance.now();
+  let lastFrame = windowStart;
+  const meter = (now: number) => {
+    frames++;
+    worst = Math.max(worst, now - lastFrame);
+    lastFrame = now;
+    if (now - windowStart >= 1000) {
+      fpsOut.textContent = String(Math.round((frames * 1000) / (now - windowStart)));
+      worstOut.textContent = worst.toFixed(0);
+      jsOut.textContent = groups.reduce((sum, g) => sum + g.ms, 0).toFixed(2);
+      volumeOut.textContent = groups.reduce((sum, g) => sum + g.volumeMs, 0).toFixed(2);
+      frames = 0;
+      worst = 0;
+      windowStart = now;
+    }
+    requestAnimationFrame(meter);
+  };
+  requestAnimationFrame(meter);
+
+  const debugBoxes = [...document.querySelectorAll<HTMLInputElement>("[data-debug]")];
+  for (const box of debugBoxes) {
+    box.addEventListener("change", () => {
+      const tokens = debugBoxes.filter((b) => b.checked).map((b) => b.dataset.debug);
+      for (const el of [dock, field, toolbar]) el.dataset.lbDebug = tokens.join(" ");
+      for (const g of groups) g.update();
+    });
+  }
+
+  // Press light on the toolbar's pieces, off by default to keep runs comparable
+  const lightBox = document.querySelector<HTMLInputElement>("[data-light]")!;
+  lightBox.addEventListener("change", () => {
+    for (const el of toolbar.querySelectorAll(".tb")) el.classList.toggle("lb-highlight", lightBox.checked);
+  });
+
+  // Animate by itself: the orb docks and undocks, the small drop circles into the pill and out
+  const loopBox = document.querySelector<HTMLInputElement>("[data-loop]")!;
+  const smallDrop = document.querySelector<HTMLElement>(".drop--small")!;
+  let loopFrame = 0;
+  let loopTimer = 0;
+  const loop = (now: number) => {
+    const t = now / 1000;
+    smallDrop.style.transform = `translate(${70 + 60 * Math.sin(t * 2)}px, ${-40 + 30 * Math.cos(t * 2)}px)`;
+    loopFrame = requestAnimationFrame(loop);
+  };
+  loopBox.addEventListener("change", () => {
+    cancelAnimationFrame(loopFrame);
+    clearInterval(loopTimer);
+    if (!loopBox.checked) {
+      smallDrop.style.transform = "";
+      return;
+    }
+    loopFrame = requestAnimationFrame(loop);
+    loopTimer = window.setInterval(() => orb.click(), 900);
+  });
+
+  // Dragging: a drop follows the pointer and springs home on release
+  for (const drop of document.querySelectorAll<HTMLElement>("[data-drop]")) {
+    const spring = new SpringAnimator({ x: 0, y: 0 }, { duration: 0.5, bounce: 0.35 }, ({ x, y }) => {
+      drop.style.transform = `translate(${x}px, ${y}px)`;
+    });
+    let start: { x: number; y: number; px: number; py: number } | null = null;
+    drop.addEventListener("pointerdown", (e) => {
+      drop.setPointerCapture(e.pointerId);
+      const { x, y } = spring.values();
+      start = { x, y, px: e.clientX, py: e.clientY };
+    });
+    drop.addEventListener("pointermove", (e) => {
+      if (!start) return;
+      spring.to({ x: start.x + e.clientX - start.px, y: start.y + e.clientY - start.py }, { duration: 0.12, bounce: 0 });
+    });
+    const release = () => {
+      if (!start) return;
+      start = null;
+      spring.to({ x: 0, y: 0 }, { duration: 0.5, bounce: 0.35 });
+    };
+    drop.addEventListener("pointerup", release);
+    drop.addEventListener("pointercancel", release);
+  }
+</script>

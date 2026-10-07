@@ -5,3 +5,4 @@
  */
 export { installLiquidBlur } from "./interaction";
 export { SpringAnimator, type SpringConfig, type SpringParams } from "./springAnimator";
+export { createGlassGroup, type GlassGroup } from "./group";
