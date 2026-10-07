@@ -128,6 +128,30 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <p class="ms__hint"><b>In a group.</b> Melted to the bar: pours up out of the dock, parts from it, and back.</p>
   </section>
 
+  <!-- 5b. Over its neighbours in a group: lifted out as glass of its own, the bar blurred under it -->
+  <section class="ms" data-scene="group-over">
+    <div class="ms__art" style={hue(330)}></div>
+    <p class="ms__words" aria-hidden="true">Lifted</p>
+    <div class="ms__layer">
+      <div class="dock lb-group">
+        <div class="dock__bar lb">
+          <button type="button" aria-label="Back"><Icon name="back" size={20} /></button>
+          <button type="button" aria-label="Play"><Icon name="play" size={20} /></button>
+          <button type="button" aria-label="Next"><Icon name="next" size={20} /></button>
+        </div>
+        <button class="dock__more lb lb-interactive" type="button" aria-label="More" aria-controls="m-group-over" data-morph-source>
+          <Icon name="more" size={20} />
+        </button>
+      </div>
+    </div>
+    <div class="panel panel--group-over" id="m-group-over" role="menu">
+      <button type="button" role="menuitem" data-close><Icon name="heart" size={18} />Love</button>
+      <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Add to Queue</button>
+      <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Copy Link</button>
+    </div>
+    <p class="ms__hint"><b>Over the group.</b> Covers the bar: lifts out as its own glass, the bar blurred beneath.</p>
+  </section>
+
   <!-- 6. Far away, no overlap: a long flight, clip and content far from their boxes -->
   <section class="ms" data-scene="far">
     <div class="ms__art" style={hue(160)}></div>
@@ -246,7 +270,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     pointer-events: none;
   }
   /* The scenes whose controls sit at the bottom carry the hint at the top */
-  :is([data-scene="fab"], [data-scene="group"], [data-scene="far"]) .ms__hint {
+  :is([data-scene="fab"], [data-scene="group"], [data-scene="group-over"], [data-scene="far"]) .ms__hint {
     top: 14px;
     bottom: auto;
   }
@@ -378,6 +402,8 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
    * it pours out of the dock on the way and stands on its own at rest.
    */
   .panel--group { right: calc(50% - 120px); bottom: 116px; width: 220px; }
+  /* Over the dock, from the button's corner: the morph lifts out of the group for it */
+  .panel--group-over { right: calc(50% - 120px); bottom: 32px; width: 220px; }
   .panel--far { left: calc(50% - 140px); top: 56px; width: 280px; }
   .panel--tiny { left: 20px; top: 56px; width: 150px; padding: 12px 20px; border-radius: 22px; }
   .panel--tall { right: 20px; top: 56px; width: 180px; }

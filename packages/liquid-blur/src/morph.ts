@@ -7,18 +7,26 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * width and height run on springs of their own, so it wobbles like jelly rather than scaling;
  * closing, they run together, so it lands exactly on the control. Corners, icon and content follow
  * a progress of their own that doesn't bounce: the size may wobble a while longer, the corners
- * stay still. The control's icon fades out as it swells and back in as it shrinks; the panel's content comes in magnified and out of focus and
- * settles sharp.
+ * stay still. The control's icon fades out as it swells and back in as it shrinks; the panel's
+ * content comes in magnified and out of focus and settles sharp.
  *
  * The control (`source`) stays where it is, hidden (`visibility: hidden`) while the morph is
  * anywhere but closed and at rest. Its stand-in, the shape that morphs, is a copy of it (icon and
  * all, without press behaviors: the control's transform and scale belong to those) placed next to
  * it in the same parent. Only the copy's translate, size and radius change: a contained box with
  * an icon in it, so its layout costs next to nothing. While it shrinks back a click on it goes to
- * the control, so the panel can be opened again before it's all the way home. In a glass group (`.lb-group`) the copy melts
- * with the control's neighbors as anything else there does, and the group leaves the hidden
- * control out. Open the panel beside its neighbors there, not over them: the group's glass is one
- * surface behind all its children, so the ones under the panel would show through it.
+ * the control, so the panel can be opened again before it's all the way home.
+ *
+ * In a glass group (`.lb-group`) the group leaves the hidden control out, and how the copy goes
+ * depends on where the panel opens:
+ *   - beside the control's neighbors: the copy stays in the group and melts with them on the way,
+ *     as anything there does
+ *   - over any of them: the group's glass is one surface behind all its children, so they'd show
+ *     through a panel in it. The copy is lifted out instead, right after the group, as glass of its
+ *     own above it, blurring what it covers. A second copy stays in the group where the control
+ *     was, melted with its neighbors, and shrinks away under the lifted one (closing, grows back
+ *     under it), so the neck to the neighbors comes and goes with the flight, not all at once.
+ * The panel's content has to stack above the lifted copy (it gets `z-index: 1`).
  *
  * The panel's `content` is laid out once where and as big as the open panel, and moves only
  * through transform, opacity, filter and clip-path, so its text never reflows. It's a sibling of
@@ -26,8 +34,8 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * the glass off from what's behind it. Its computed border-radius is the panel's; its inline
  * transform, opacity, filter and clip-path belong to the morph while it moves.
  *
- * Boxes are read once per open and close, relative to the control's parent: a rotated or scaled
- * ancestor isn't supported. With reduced motion the panel and the control swap at once.
+ * Boxes are read once per open and close, on screen; each piece is placed from where it sits
+ * untransformed. A rotated or scaled ancestor isn't supported. With reduced motion the panel and the control swap at once.
  */
 
 type Channel = "x" | "y" | "w" | "h" | "p";
@@ -76,6 +84,8 @@ export const defaultMorphSprings: { open: MorphSprings; close: MorphSprings } = 
 const PRECISION = { x: 0.25, y: 0.25, w: 0.25, h: 0.25, p: 0.002 };
 /** Share of the progress over which the control's icon fades */
 const ICON_SPAN = 0.25;
+/** Lifted over a group: share of the progress over which the stub left in it shrinks away */
+const STUB_SPAN = 0.35;
 /** Content scale at the start: it comes in magnified */
 const CONTENT_SCALE = 1.25;
 /** Content blur at the start, px; below a third of a pixel it's dropped */
@@ -103,14 +113,22 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     p: s.progress,
   });
 
-  const shape = source.cloneNode(true) as HTMLElement;
-  shape.removeAttribute("id");
-  shape.classList.remove(...BEHAVIORS);
-  shape.style.cssText =
-    "position: absolute; left: 0; top: 0; margin: 0; box-sizing: border-box; contain: strict; " +
-    "pointer-events: none; display: none";
-  shape.setAttribute("aria-hidden", "true");
-  shape.tabIndex = -1;
+  /** A copy of the control, pinned out of the flow at its parent's corner, moved by transform */
+  const copy = () => {
+    const el = source.cloneNode(false) as HTMLElement;
+    el.removeAttribute("id");
+    el.style.cssText =
+      "position: absolute; left: 0; top: 0; margin: 0; box-sizing: border-box; contain: strict; " +
+      "pointer-events: none; display: none";
+    el.setAttribute("aria-hidden", "true");
+    el.tabIndex = -1;
+    return el;
+  };
+  /** The one that morphs */
+  const shape = copy();
+  /** Lifted over a group: the one that stays in it, where the control was */
+  const stub = copy();
+  stub.inert = true;
   // While it shrinks back the control is hidden: a press on it is a press on the control
   const forward = (e: MouseEvent) => {
     e.stopPropagation();
@@ -118,22 +136,22 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   };
   shape.addEventListener("click", forward);
   let icon: (HTMLElement | SVGElement)[] = [];
-  /** Dresses the copy as the control is now: its label or icon may have changed since */
-  const dress = () => {
-    shape.className = source.className;
-    shape.classList.remove(...BEHAVIORS);
-    shape.replaceChildren(...(source.cloneNode(true) as HTMLElement).childNodes);
+  /** Dresses a copy as the control is now: its label or icon may have changed since */
+  const dress = (el: HTMLElement) => {
+    el.className = source.className;
+    el.classList.remove(...BEHAVIORS);
+    el.replaceChildren(...(source.cloneNode(true) as HTMLElement).childNodes);
     // The icon fades on its own, without the glass: loose text gets a box to carry the opacity
-    for (const node of [...shape.childNodes]) {
+    for (const node of [...el.childNodes]) {
       if (node.nodeType !== 3 || !node.textContent?.trim()) continue;
       const span = doc.createElement("span");
       node.replaceWith(span);
       span.append(node);
     }
-    icon = [...shape.children] as (HTMLElement | SVGElement)[];
+    return [...el.children] as (HTMLElement | SVGElement)[];
   };
-  dress();
-  source.after(shape);
+  icon = dress(shape);
+  source.after(stub, shape);
 
   const savedContent = content.style.cssText;
   content.style.visibility = "hidden";
@@ -143,17 +161,11 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   let from: Box = { x: 0, y: 0, width: 0, height: 0, radius: 0 };
   let to: Box = from;
 
-  /** An element's box relative to the parent's padding box, without the transform we put on it */
-  const measure = (el: HTMLElement, origin: DOMRect): Box => {
+  /** An element's box on screen */
+  const measure = (el: HTMLElement): Box => {
     const r = el.getBoundingClientRect();
     const radius = parseFloat(win.getComputedStyle(el).borderTopLeftRadius) || 0;
-    return {
-      x: r.left - origin.left - parent.clientLeft,
-      y: r.top - origin.top - parent.clientTop,
-      width: r.width,
-      height: r.height,
-      radius: Math.min(radius, r.width / 2, r.height / 2),
-    };
+    return { x: r.left, y: r.top, width: r.width, height: r.height, radius: Math.min(radius, r.width / 2, r.height / 2) };
   };
   /**
    * The box an element has at rest: its inline transforms off for the measurement. A control just
@@ -161,18 +173,51 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
    * measured as is, the panel would close into a box bigger than the control and off its corners.
    * Put back in the same task, so nothing in between is ever painted.
    */
-  const atRest = (el: HTMLElement, origin: DOMRect): Box => {
+  const atRest = (el: HTMLElement): Box => {
     const { transform, scale, translate, rotate } = el.style;
     el.style.transform = el.style.scale = el.style.translate = el.style.rotate = "none";
-    const box = measure(el, origin);
+    const box = measure(el);
     Object.assign(el.style, { transform, scale, translate, rotate });
     return box;
   };
   const remeasure = () => {
-    const origin = parent.getBoundingClientRect();
-    to = atRest(content, origin);
+    to = atRest(content);
     // Only while the control is in place: once away, the box it left is the one to come back to
-    if (source.style.visibility !== "hidden") from = atRest(source, origin);
+    if (source.style.visibility !== "hidden") from = atRest(source);
+  };
+
+  /** Whether the panel would cover any of the control's neighbors in a group */
+  const covers = (panel: Box) =>
+    parent.classList.contains("lb-group") &&
+    [...parent.children].some((el) => {
+      if (el === source || el === shape || el === stub || !(el instanceof HTMLElement)) return false;
+      if (el.classList.contains("lb-group__glass") || el.classList.contains("lb-group__paint")) return false;
+      if (win.getComputedStyle(el).visibility === "hidden") return false;
+      const r = el.getBoundingClientRect();
+      return (
+        r.width > 0 &&
+        r.height > 0 &&
+        r.left < panel.x + panel.width &&
+        r.right > panel.x &&
+        r.top < panel.y + panel.height &&
+        r.bottom > panel.y
+      );
+    });
+  let lifted = false;
+  /** Out of the group and over it, or in it next to the control */
+  const lift = (on: boolean) => {
+    lifted = on;
+    if (on) parent.after(shape);
+    else stub.after(shape);
+    shape.style.zIndex = on ? "1" : "";
+  };
+
+  /** Where each copy's untransformed corner is on screen: its translate is measured from there */
+  let shapeOrigin = { x: 0, y: 0 };
+  let stubOrigin = { x: 0, y: 0 };
+  const originOf = (el: HTMLElement) => {
+    const { x, y } = atRest(el);
+    return { x, y };
   };
 
   const render = (f: Frame) => {
@@ -187,12 +232,17 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
      * than the box allows, as the browser would draw it.
      */
     const radius = Math.min(w / 2, h / 2, mix(from.radius, to.radius, smooth(t)));
-    shape.style.transform = `translate(${x}px, ${y}px)`;
+    shape.style.transform = `translate(${x - shapeOrigin.x}px, ${y - shapeOrigin.y}px)`;
     shape.style.width = `${w}px`;
     shape.style.height = `${h}px`;
     shape.style.borderRadius = px(radius);
     const iconOpacity = String(1 - clamp01(t / ICON_SPAN));
     for (const el of icon) el.style.opacity = iconOpacity;
+    if (lifted) {
+      // The stub shrinks away in the group, under the lifted copy
+      const s = 1 - smooth(clamp01(t / STUB_SPAN));
+      stub.style.transform = `translate(${from.x - stubOrigin.x}px, ${from.y - stubOrigin.y}px) scale(${s})`;
+    }
 
     // Content: centered on the shape, magnified and blurred early on, clipped to it
     const c = mix(CONTENT_SCALE, 1, t);
@@ -211,8 +261,16 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   };
 
   const launch = () => {
-    dress();
+    icon = dress(shape);
     shape.style.display = "";
+    shapeOrigin = originOf(shape);
+    if (lifted) {
+      dress(stub);
+      stub.style.width = `${from.width}px`;
+      stub.style.height = `${from.height}px`;
+      stub.style.display = "";
+      stubOrigin = originOf(stub);
+    }
     shape.style.pointerEvents = isOpen ? "none" : "";
     source.style.visibility = "hidden";
     // Explicitly: a panel kept hidden by its stylesheet until the script runs still shows
@@ -220,6 +278,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
   };
 
   const settle = () => {
+    stub.style.display = "none";
     if (isOpen) {
       // At rest the content is itself again: nothing clipped, filtered or composited
       content.style.transform = "";
@@ -261,6 +320,8 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
     isOpen = true;
     source.setAttribute("aria-expanded", "true");
     remeasure();
+    // Where it goes is settled at rest only: mid-way it turns around where it is
+    if (!motion) lift(covers(to));
     launch();
     run(at(from, 0), at(to, 1), spring.open);
   };
@@ -289,6 +350,7 @@ export function createMorph({ source, content, spring = defaultMorphSprings, onR
       motion = null;
       shape.removeEventListener("click", forward);
       shape.remove();
+      stub.remove();
       source.style.visibility = "";
       source.removeAttribute("aria-expanded");
       content.style.cssText = savedContent;

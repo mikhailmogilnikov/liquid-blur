@@ -38,8 +38,9 @@ describe("createMorph", () => {
   it("puts a copy of the control next to it, hidden at rest", () => {
     const { parent, source, content } = scene();
     createMorph({ source, content });
-    const shape = parent.children[1] as HTMLElement;
-    expect(parent.children).toHaveLength(2);
+    const shape = parent.children[2] as HTMLElement;
+    // The control, the stub (for a lift over a group) and the shape
+    expect(parent.children).toHaveLength(3);
     // The control's look and icon, without its behaviors, id or focus
     expect(shape.className).toBe("lb lb-clear");
     expect(shape.id).toBe("");
@@ -59,7 +60,7 @@ describe("createMorph", () => {
       expect(source.style.visibility).toBe("hidden");
       expect(source.getAttribute("aria-expanded")).toBe("true");
     });
-    const shape = parent.children[1] as HTMLElement;
+    const shape = parent.children[2] as HTMLElement;
     expect(source.style.visibility).toBe("hidden");
     expect(shape.style.transform).toBe("translate(20px, 20px)");
     expect(shape.style.width).toBe("240px");
@@ -80,7 +81,7 @@ describe("createMorph", () => {
       progress: { duration: 0.05, bounce: 0 },
     };
     createMorph({ source, content, spring: { open: wobbly, close: wobbly } }).open();
-    const shape = parent.children[1] as HTMLElement;
+    const shape = parent.children[2] as HTMLElement;
     const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
     // Long after the progress is done, well before the size is
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -118,7 +119,7 @@ describe("createMorph", () => {
         },
       });
       morph.open();
-      const shape = parent.children[1] as HTMLElement;
+      const shape = parent.children[2] as HTMLElement;
       const watch = () => {
         radii.push(parseFloat(shape.style.borderRadius));
         if (!done) requestAnimationFrame(watch);
@@ -138,7 +139,7 @@ describe("createMorph", () => {
     const rested = new Promise<boolean>((resolve) => (rest = resolve));
     morph.close();
     expect(await rested).toBe(false);
-    const shape = parent.children[1] as HTMLElement;
+    const shape = parent.children[2] as HTMLElement;
     expect(source.style.visibility).toBe("");
     expect(shape.style.display).toBe("none");
     expect(content.style.visibility).toBe("hidden");
@@ -152,7 +153,7 @@ describe("createMorph", () => {
       source.style.scale === "none" ? new DOMRect(20, 20, 44, 44) : new DOMRect(15.6, 15.6, 52.8, 52.8);
     const morph = createMorph({ source, content, spring: fast });
     morph.open();
-    const shape = parent.children[1] as HTMLElement;
+    const shape = parent.children[2] as HTMLElement;
     // The shape starts as the control at rest, and the press is left as it was
     expect(shape.style.width).toBe("44px");
     expect(shape.style.transform).toBe("translate(20px, 20px)");
@@ -165,7 +166,7 @@ describe("createMorph", () => {
     const morph = createMorph({ source, content, spring: fast });
     source.textContent = "Oldest";
     morph.open();
-    const shape = parent.children[1] as HTMLElement;
+    const shape = parent.children[2] as HTMLElement;
     // Loose text is boxed, so it can fade
     expect(shape.innerHTML).toBe('<span style="opacity: 1;">Oldest</span>');
     morph.destroy();
@@ -174,7 +175,7 @@ describe("createMorph", () => {
   it("passes a click on the shrinking shape to the control", () => {
     const { parent, source, content } = scene();
     const morph = createMorph({ source, content });
-    const shape = parent.children[1] as HTMLElement;
+    const shape = parent.children[2] as HTMLElement;
     let clicks = 0;
     source.addEventListener("click", () => clicks++);
     morph.open();
@@ -186,10 +187,50 @@ describe("createMorph", () => {
     expect(clicks).toBe(1);
   });
 
+  it("stays in a group when the panel opens beside the neighbors", () => {
+    const { parent, source, content } = scene();
+    parent.className = "lb-group";
+    const bar = document.createElement("div");
+    bar.getBoundingClientRect = () => new DOMRect(300, 20, 80, 44);
+    parent.prepend(bar);
+    const morph = createMorph({ source, content, spring: fast });
+    morph.open();
+    const shape = parent.lastElementChild as HTMLElement;
+    expect(shape.parentElement).toBe(parent);
+    expect(shape.style.zIndex).toBe("");
+    morph.destroy();
+  });
+
+  it("lifts out over a group when the panel covers a neighbor, leaving a stub in it", async () => {
+    const { parent, source, content } = scene();
+    parent.className = "lb-group";
+    const bar = document.createElement("div");
+    bar.getBoundingClientRect = () => new DOMRect(70, 120, 160, 44);
+    parent.prepend(bar);
+    const rested = new Promise<boolean>((resolve) => {
+      const morph = createMorph({ source, content, spring: fast, onRest: resolve });
+      morph.open();
+    });
+    const stub = source.nextElementSibling as HTMLElement;
+    const shape = parent.nextElementSibling as HTMLElement;
+    // Out of the group, right after it and above it; the stub in the group where the control was
+    expect(shape.getAttribute("aria-hidden")).toBe("true");
+    expect(shape.style.zIndex).toBe("1");
+    expect(stub.style.display).toBe("");
+    expect(stub.style.width).toBe("44px");
+    // First frame: the stub whole under the lifted copy, which never fades
+    expect(stub.style.transform).toBe("translate(20px, 20px) scale(1)");
+    expect(shape.style.opacity).toBe("");
+    expect(await rested).toBe(true);
+    expect(shape.style.opacity).toBe("");
+    expect(stub.style.display).toBe("none");
+  });
+
   it("puts everything back on destroy", () => {
     const { parent, source, content } = scene();
     createMorph({ source, content }).destroy();
     expect(parent.children).toHaveLength(1);
+    expect(parent.nextElementSibling).toBe(content);
     expect(content.getAttribute("style")).toBe("border-radius: 28px;");
     expect(source.hasAttribute("aria-expanded")).toBe(false);
   });
