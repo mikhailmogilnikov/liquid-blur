@@ -1,0 +1,51 @@
+{
+  "name": "@liquid-web/core",
+  "version": "1.0.0",
+  "description": "Shared ground of the liquid-web packages: an interruptible, velocity-keeping spring, and the DOM contract they meet by.",
+  "keywords": [
+    "animation",
+    "liquid-web",
+    "spring"
+  ],
+  "homepage": "https://github.com/mikhailmogilnikov/liquid-web/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/liquid-web/issues"
+  },
+  "license": "MIT",
+  "author": "Mikhail Mogilnikov",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/liquid-web.git",
+    "directory": "packages/core"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "check-types": "tsc --noEmit",
+    "test": "vp test run",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.5",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.1.0"
+  }
+}

@@ -9,8 +9,10 @@
     "check-types": "astro check"
   },
   "dependencies": {
-    "astro": "^7.3.6",
-    "liquid-blur": "workspace:*"
+    "@liquid-web/blur": "workspace:*",
+    "@liquid-web/core": "workspace:*",
+    "@liquid-web/morph": "workspace:*",
+    "astro": "^7.3.6"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

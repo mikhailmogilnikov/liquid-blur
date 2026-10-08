@@ -114,13 +114,14 @@ const a11y = [
 ] as const;
 
 const code = {
-  css: `import "liquid-blur/liquid-blur.css";`,
+  css: `import "@liquid-web/blur/style.css";`,
   html: `<button class="lb">Glass</button>`,
-  script: `import { installPress } from "liquid-blur/press";
+  script: `import { installPress } from "@liquid-web/blur/press";
 
 installPress();`,
-  cdn: `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/liquid-blur@1.0.0/dist/liquid-blur.css" />
-<script type="module" src="https://cdn.jsdelivr.net/npm/liquid-blur@1.0.0/dist/auto.js"></script>`,
+  cdn: `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@liquid-web/blur@1/dist/style.css" />
+<!-- /+esm resolves its import of @liquid-web/core -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@liquid-web/blur@1/dist/auto.js/+esm"></script>`,
   customize: `.toolbar {
   --lb-transparency: 0.8;
   --lb-depth: 0.3;
@@ -159,7 +160,7 @@ installPress();`,
 [data-theme="dracula"] { --lb-dark: 1; }`,
   tailwind: `@layer liquid-blur, theme, base, components, utilities;
 @import "tailwindcss";
-@import "liquid-blur/liquid-blur.css";`,
+@import "@liquid-web/blur/style.css";`,
   install: `const uninstall = installPress();
 
 // An iframe has its own document
@@ -167,7 +168,7 @@ installPress(frame.contentDocument);
 
 // Later, if the page goes away
 uninstall();`,
-  spring: `import { SpringAnimator } from "liquid-blur/spring";
+  spring: `import { SpringAnimator } from "@liquid-web/core";
 
 const spring = new SpringAnimator(
   { width: 100, radius: 12 },
@@ -193,11 +194,11 @@ spring.to({ width: 240, radius: 24 });`,
 </div>
 
 <script type="module">
-  import { installGlassGroups } from "liquid-blur/melt";
+  import { installGlassGroups } from "@liquid-web/blur/melt";
 
   installGlassGroups();
 </script>`,
-  groupManual: `import { createGlassGroup } from "liquid-blur/melt";
+  groupManual: `import { createGlassGroup } from "@liquid-web/blur/melt";
 
 const group = createGlassGroup(toolbar);
 
@@ -207,7 +208,7 @@ group.update();
 // Later
 group.destroy();`,
   groupReact: `import { useEffect } from "react";
-import { installGlassGroups } from "liquid-blur/melt";
+import { installGlassGroups } from "@liquid-web/blur/melt";
 
 export function Toolbar() {
   // After hydration: the group adds its own elements to the root
@@ -244,8 +245,8 @@ export function Toolbar() {
     z-index: 2;
   }
 </style>`,
-  morph: `import "liquid-blur/liquid-blur.css";
-import { createMorph } from "liquid-blur/morph";
+  morph: `import "@liquid-web/blur/style.css";
+import { createMorph } from "@liquid-web/morph";
 
 // After mounting or hydration
 const source = document.getElementById("more")!;
@@ -276,7 +277,7 @@ close.addEventListener("click", dismiss);
 // close.removeEventListener("click", dismiss);
 // morph.destroy();`,
   morphReact: `import { useEffect, useRef, useState } from "react";
-import { createMorph, type Morph, type MorphOptions } from "liquid-blur/morph";
+import { createMorph, type Morph, type MorphOptions } from "@liquid-web/morph";
 
 /** Options are read once, on mount */
 export function useMorph(options: Omit<MorphOptions, "source" | "content"> = {}) {
@@ -320,7 +321,7 @@ export function More() {
   );
 }`,
   react: `import { useEffect } from "react";
-import { installPress } from "liquid-blur/press";
+import { installPress } from "@liquid-web/blur/press";
 
 export function App() {
   useEffect(() => installPress(), []);
@@ -370,7 +371,7 @@ export function App() {
                       <button type="button" data-value="bun" aria-pressed="false">bun</button>
                     </div>
                   </div>
-                  <pre><code><span class="tk-cmd">pnpm</span> add liquid-blur</code></pre>
+                  <pre><code><span class="tk-cmd">pnpm</span> add @liquid-web/blur</code></pre>
                   <button class="code__copy" type="button" data-copy aria-label="Copy command">
                     <Icon name="copy" class="is-idle" />
                     <Icon name="check" class="is-done" />
@@ -408,41 +409,42 @@ export function App() {
 
         <section class="doc" id="modules">
           <p class="lead reveal">
-            <a class="anchor" href="#modules"><b>A material and four modules.</b></a> The material is plain
-            CSS. Everything else has an entry of its own, loads only when imported and works without the others.
+            <a class="anchor" href="#modules"><b>A family of packages.</b></a> <code>@liquid-web/blur</code> is
+            the material, plain CSS, with press and melt in entries of their own. <code>@liquid-web/morph</code> is
+            a package of its own, and <code>@liquid-web/core</code> is what they share. Each loads only when
+            imported and works without the others.
           </p>
           <div class="rows reveal">
             <div class="row">
               <p>
-                <b>Press <code>liquid-blur/press</code></b>
+                <b>Press <code>@liquid-web/blur/press</code></b>
                 Highlight, swell and stretch on springs. The light is drawn by the material; swell and stretch
                 move any element.
               </p>
               <p>
-                <b>Melt <code>liquid-blur/melt</code></b>
+                <b>Melt <code>@liquid-web/blur/melt</code></b>
                 Glass that melts between shapes when they come close. It draws the material itself, so it needs
                 the stylesheet.
               </p>
             </div>
             <div class="row">
               <p>
-                <b>Morph <code>liquid-blur/morph</code></b>
+                <b>Morph <code>@liquid-web/morph</code></b>
                 A control grows into a panel and shrinks back. It copies whatever the control looks like: glass
                 or not, it needs neither the material nor another module.
               </p>
               <p>
-                <b>Spring <code>liquid-blur/spring</code></b>
+                <b>Spring <code>@liquid-web/core</code></b>
                 The interruptible, velocity-keeping spring the others run on, for animations of your own.
               </p>
             </div>
           </div>
           <p class="prose reveal">
-            The modules never import each other. Where two meet, they read what the other marks in the DOM:
-            a running group marks its root <code>data-lb-surface</code>, so a morph from one of its children
-            lifts over or melts with the rest; elements a module creates carry <code>data-lb-part</code>, which
-            press leaves alone; a morph's control is <code>data-lb-away</code> while its panel is out, and the
-            group leaves it out. The older entries stay: <code>liquid-blur</code> is press
-            (<code>installLiquidBlur</code>) and spring together, <code>liquid-blur/group</code> is melt.
+            None of them imports another. Where two meet, they read what the other marks in the DOM:
+            a running group marks its root <code>data-lw-surface</code>, so a morph from one of its children
+            lifts over or melts with the rest; elements a package creates carry <code>data-lw-part</code>, which
+            press leaves alone; a morph's control is <code>data-lw-away</code> while its panel is out, and the
+            group leaves it out.
           </p>
         </section>
 
@@ -650,7 +652,7 @@ export function App() {
             <div class="row">
               <p>
                 <b>Pay only when you use it</b>
-                Groups live in their own entry, <code>liquid-blur/melt</code>. Apart, the children are
+                Groups live in their own entry, <code>@liquid-web/blur/melt</code>. Apart, the children are
                 plain glass and the group draws nothing; without the script they stay plain glass too.
               </p>
               <p>
@@ -697,7 +699,8 @@ export function App() {
             too. Try the different layouts in the <a href="/lab">lab</a>.
           </p>
           <p class="prose reveal">
-            Lay out the content at its open position and size. Hide it with <code>visibility: hidden</code>,
+            A package of its own: <code>pnpm add @liquid-web/morph</code>. Lay out the content at its open
+            position and size. Hide it with <code>visibility: hidden</code>,
             so it stays measurable. The source supplies the glass; the content does not need <code>lb</code>.
           </p>
           <div class="reveal"><CodeBlock code={code.morphLayout} lang="html" /></div>
@@ -719,7 +722,7 @@ export function App() {
                 <b>Springs in each direction</b>
                 Pass <code>{"spring: { open, close }"}</code>, each with any of <code>x</code>, <code>y</code>,
                 <code>width</code>, <code>height</code> and <code>progress</code>; the rest stay default.
-                <code>defaultMorphSprings</code> is exported from <code>liquid-blur/morph</code>.
+                <code>defaultMorphSprings</code> is exported from <code>@liquid-web/morph</code>.
               </p>
             </div>
           </div>
@@ -745,14 +748,13 @@ export function App() {
 
         <section class="doc" id="api">
           <p class="lead reveal">
-            <a class="anchor" href="#api"><b>Presses and springs.</b></a> <code>liquid-blur/press</code> turns
-            presses on, <code>liquid-blur/spring</code> exports the spring that powers them. Melt and morph
+            <a class="anchor" href="#api"><b>Presses and springs.</b></a> <code>@liquid-web/blur/press</code> turns
+            presses on, <code>@liquid-web/core</code> exports the spring that powers them. Melt and morph
             are covered in their sections above.
           </p>
           <p class="prose reveal">
             <b><code>installPress(root?: Document): () =&gt; void</code></b><br />
-            Installs press behaviors on a document and returns a cleanup; <code>installLiquidBlur</code> from
-            <code>liquid-blur</code> is the same function. Installing twice returns the first
+            Installs press behaviors on a document and returns a cleanup. Installing twice returns the first
             cleanup. Looks through open shadow roots, works in iframes, and does nothing during server
             rendering.
           </p>
@@ -930,7 +932,7 @@ export function App() {
 </style>
 
 <script>
-  import { installGlassGroups } from "liquid-blur/melt";
+  import { installGlassGroups } from "@liquid-web/blur/melt";
 
   installGlassGroups();
 </script>

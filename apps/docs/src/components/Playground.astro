@@ -131,7 +131,7 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
 </div>
 
 <script>
-  import { installGlassGroups } from "liquid-blur/melt";
+  import { installGlassGroups } from "@liquid-web/blur/melt";
   import { segmented } from "../scripts/segmented";
 
   installGlassGroups();
@@ -225,8 +225,8 @@ const words = ["Liquid Blur", "glass for the web", "calm and clear", "no refract
         .join("\n");
 
       const needs = [
-        ...(state.behaviors.size ? ["<code>installPress()</code> from <code>liquid-blur/press</code>"] : []),
-        ...(state.melt ? ['<code>installGlassGroups()</code> from <code>liquid-blur/melt</code>'] : []),
+        ...(state.behaviors.size ? ["<code>installPress()</code> from <code>@liquid-web/blur/press</code>"] : []),
+        ...(state.melt ? ['<code>installGlassGroups()</code> from <code>@liquid-web/blur/melt</code>'] : []),
       ];
       note.innerHTML = needs.length ? `Needs ${needs.join(" and ")}, once on the page.` : "Plain CSS. No script needed.";
     };

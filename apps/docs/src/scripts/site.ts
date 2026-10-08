@@ -1,4 +1,4 @@
-import { installPress } from "liquid-blur/press";
+import { installPress } from "@liquid-web/blur/press";
 import { segmented } from "./segmented";
 
 installPress();
@@ -42,10 +42,10 @@ setTheme((root.dataset.theme ?? "auto") as Theme);
 // ── Install command, per package manager ──
 
 const COMMANDS: Record<string, [string, string]> = {
-  pnpm: ["pnpm", "add liquid-blur"],
-  npm: ["npm", "install liquid-blur"],
-  yarn: ["yarn", "add liquid-blur"],
-  bun: ["bun", "add liquid-blur"],
+  pnpm: ["pnpm", "add @liquid-web/blur"],
+  npm: ["npm", "install @liquid-web/blur"],
+  yarn: ["yarn", "add @liquid-web/blur"],
+  bun: ["bun", "add @liquid-web/blur"],
 };
 
 for (const block of document.querySelectorAll<HTMLElement>("[data-install]")) {

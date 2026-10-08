@@ -1,0 +1,58 @@
+{
+  "name": "@liquid-web/morph",
+  "version": "1.0.0",
+  "description": "A control grows into a panel and shrinks back: one shape the whole way, on interruptible springs. Works on any element.",
+  "keywords": [
+    "animation",
+    "liquid-web",
+    "morph",
+    "popover",
+    "shared-element",
+    "spring",
+    "transition"
+  ],
+  "homepage": "https://github.com/mikhailmogilnikov/liquid-web/tree/main/packages/morph#readme",
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/liquid-web/issues"
+  },
+  "license": "MIT",
+  "author": "Mikhail Mogilnikov",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/liquid-web.git",
+    "directory": "packages/morph"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "check-types": "tsc --noEmit",
+    "test": "vp test run",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
+  },
+  "dependencies": {
+    "@liquid-web/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@liquid-web/blur": "workspace:*",
+    "happy-dom": "^20.14.5",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.1.0"
+  }
+}

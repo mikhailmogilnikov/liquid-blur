@@ -1,0 +1,72 @@
+{
+  "name": "@liquid-web/blur",
+  "version": "1.0.0",
+  "description": "A glass material for the web: backdrop blur, fill, rims, springy press behaviors and glass that melts between shapes. No refraction.",
+  "keywords": [
+    "backdrop-filter",
+    "blur",
+    "css",
+    "glass",
+    "liquid-glass",
+    "liquid-web",
+    "material"
+  ],
+  "homepage": "https://github.com/mikhailmogilnikov/liquid-web/tree/main/packages/blur#readme",
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/liquid-web/issues"
+  },
+  "license": "MIT",
+  "author": "Mikhail Mogilnikov",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/liquid-web.git",
+    "directory": "packages/blur"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./dist/auto.js"
+  ],
+  "exports": {
+    "./style.css": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/style.css"
+    },
+    "./press": {
+      "types": "./dist/press.d.ts",
+      "default": "./dist/press.js"
+    },
+    "./melt": {
+      "types": "./dist/melt.d.ts",
+      "default": "./dist/melt.js"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "default": "./dist/auto.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "check-types": "tsc --noEmit",
+    "test": "vp test run",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
+  },
+  "dependencies": {
+    "@liquid-web/core": "workspace:^"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.5",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.1.0"
+  }
+}
