@@ -33,13 +33,14 @@ import { AWAY, PART, SURFACE } from "@liquid-web/core";
  *     solved exactly from the children's boxes (blob.ts), and masked to it as well (an inline SVG
  *     `<mask>`): under an ancestor with `overflow: hidden` and `border-radius`, Chromium on Windows
  *     (and wherever it composites the same way) clips the backdrop only to the path's bounding box,
- *     a blurred rectangle around the glass, while the mask holds. Neither holds under an ancestor
+ *     a blurred rectangle around the glass, while the mask holds. Not in Gecko: it needs no mask
+ *     and paints nothing under one, so there the clip does alone. Neither holds under an ancestor
  *     that clips with `corner-shape`: Chromium shows the rectangle then, whatever the glass does.
  *   - in it, the volume and glow: a canvas with one pixel per 2px, stretched by the browser on
  *     the GPU and clipped by the glass, so it costs no redraw at full resolution
  *   - rims, edge and drop shadow on one canvas above, clipped to the outline or to the area around
- *     it: plain path clips, no masks, no cut-outs. Drawn at no more than 2x while things move,
- *     at full resolution once they stop.
+ *     it: plain path clips, no masks, no cut-outs. Always at full resolution: on 3x, a 2x canvas
+ *     stretched by the browser turns the hairlines into a soft dark band.
  *
  * The volume is the box material's own: ends and top and bottom shaded by the distance to the
  * box's sides, so a child that isn't melting looks as it did a moment before as `.lb`. Two things
@@ -116,10 +117,12 @@ type Look = {
 
 /**
  * One element resolves the material's values through properties that compute calc() to a plain
- * length: amounts are scaled by 1000px and read back. Colors come back as colors.
+ * length: amounts are scaled by 1000px and read back. Colors come back as colors. Scaled to
+ * nothing, so a box thousands of pixels wide doesn't widen the page: a hidden one still does.
  */
 const PROBE =
   "position: absolute; visibility: hidden; pointer-events: none; box-sizing: content-box; " +
+  "transform: scale(0); transform-origin: 0 0; " +
   "width: calc(var(--_a) * 1000px); height: calc(var(--_v) * 1000px); " +
   "padding: var(--_s) var(--_sv) var(--_lb-glow-size) calc(var(--_p) * 1000px); " +
   "margin: calc(min(1, var(--_g)) * 1000px) calc(min(1, var(--_lb-rim-top) * var(--_k)) * 1000px) " +
@@ -389,6 +392,8 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   const svg = doc.createElementNS(SVG, "svg");
   svg.setAttribute("aria-hidden", "true");
   svg.style.cssText = "position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none";
+  // Gecko clips the backdrop to the path fine, and paints nothing at all under the mask
+  const masked = !win.CSS?.supports("-moz-appearance", "none");
   const id = `lb-group-mask-${++masks}`;
   const outlines = [0, 1].map((n) => {
     const mask = doc.createElementNS(SVG, "mask");
@@ -402,7 +407,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   });
   let turn = 0;
   let outlineKey = "";
-  glass.append(probe, pulse, svg, volume);
+  glass.append(probe, pulse, ...(masked ? [svg] : []), volume);
   const paint = doc.createElement("canvas");
   paint.className = "lb-group__paint";
   paint.setAttribute("aria-hidden", "true");
@@ -511,9 +516,8 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   for (const type of animationEvents) root.addEventListener(type, animate);
 
   /*
-   * While things move, rims, edge and shadow are drawn at no more than 2x (at 3x that's more than
-   * twice the pixels) and the volume on a coarser grid: in motion neither shows. Once still, both
-   * are drawn again in full.
+   * While things move, the volume is drawn on a coarser grid: in motion it doesn't show. Once
+   * still, it's drawn again in full.
    */
   let lastDraw = 0;
   let settle = 0;
@@ -621,11 +625,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     const moving = inMotion();
     const b = blob.bounds;
     const want = { x: b.x - MARGIN, y: b.y - MARGIN, width: b.width + 2 * MARGIN, height: b.height + 2 * MARGIN };
-    place(
-      want,
-      moving ? Math.min(2, win.devicePixelRatio || 1) : win.devicePixelRatio || 1,
-      moving ? MOVING_STEP : STEP,
-    );
+    place(want, win.devicePixelRatio || 1, moving ? MOVING_STEP : STEP);
     const d = blobPath(blob, frameBox.x, frameBox.y);
     // The mask's scale goes with the glass's size, which may change while the path doesn't
     const shape = `${d} ${frameBox.width} ${frameBox.height}`;
@@ -636,7 +636,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
       outline.setAttribute("d", d);
       outline.setAttribute("transform", `scale(${1 / frameBox.width} ${1 / frameBox.height})`);
       glass.style.clipPath = `path("${d}")`;
-      glass.style.mask = `url(#${id}-${turn})`;
+      if (masked) glass.style.mask = `url(#${id}-${turn})`;
     }
 
     if (context) {

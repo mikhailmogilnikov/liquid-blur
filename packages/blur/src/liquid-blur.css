@@ -123,7 +123,7 @@
     --_lb-spring: linear(0, 0.0138, 0.0504, 0.1035, 0.1676, 0.2385, 0.3127, 0.3875, 0.4606, 0.5307, 0.5965, 0.6573, 0.7128, 0.7626, 0.8069, 0.8458, 0.8795, 0.9083, 0.9328, 0.9532, 0.97, 0.9836, 0.9944, 1.0028, 1.0091, 1.0136, 1.0168, 1.0187, 1.0197, 1.0199, 1.0196, 1.0188, 1.0177, 1.0164, 1.015, 1.0135, 1.012, 1.0105, 1.0091, 1.0079, 1.0067, 1.0056, 1.0046, 1.0037, 1.003, 1.0023, 1.0017, 1.0013, 1);
     --_lb-spring-duration: 558ms;
 
-    /* Hairline: one device pixel on 1x, half a CSS pixel on 2x and up */
+    /* Hairline: one device pixel: 1px on 1x, half a CSS pixel on 2x, a third on 3x */
     --_lb-hair: 0.5px;
 
     --_lb-light-alpha: 0.72;
@@ -163,6 +163,13 @@
 
   @media (resolution < 1.5dppx) {
     :root { --_lb-hair: 1px; }
+  }
+  /*
+   * A third on 3x: half would be 1.5 device pixels, which WebKit rounds to one for box-shadows
+   * while a group's canvas draws all 1.5. A hair over a third, so rounding never takes it to none.
+   */
+  @media (resolution >= 2.5dppx) {
+    :root { --_lb-hair: 0.34px; }
   }
 
   /* Theme: the page default, the system setting, or data-theme on any element */
