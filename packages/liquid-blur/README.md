@@ -261,7 +261,7 @@ installGlassGroups();
 
 - **Children are glass** (`.lb`) and stay exactly that while none of them are close: the group
   draws nothing and only watches. Without the script they're plain glass too.
-- **Merging** starts at `--lb-merge` (default `24px`) between two children; set it on the group.
+- **Merging** starts at `--lb-merge` (default `18px`) between two children; set it on the group.
 - **Motion is followed on its own**: springs, `lb-stretch` and `lb-swell`, any inline style or
   class change of a child, its size, and CSS transitions and animations on the children. Moved
   some other way (layout from outside the group), call `update()` on it.
@@ -304,7 +304,7 @@ export function Toolbar() {
 | `liquid-blur` | `installLiquidBlur`, `SpringAnimator`; types `SpringConfig`, `SpringParams` |
 | `liquid-blur/auto` | Installs press behaviors on import; no named exports |
 | `liquid-blur/group` | `installGlassGroups`, `createGlassGroup`; type `GlassGroup` |
-| `liquid-blur/morph` | `createMorph`, `defaultMorphSprings`; types `Morph`, `MorphOptions`, `MorphSprings` |
+| `liquid-blur/morph` | `createMorph`, `defaultMorphSprings`; types `Morph`, `MorphOptions`, `MorphSprings`, `MorphPhase`, `MorphMove` |
 | `liquid-blur/liquid-blur.css` | Stylesheet |
 
 ### `installLiquidBlur(root?: Document): () => void`
@@ -388,8 +388,14 @@ const close = document.getElementById("close-panel");
 const morph = createMorph({
   source,
   content,
+  // Escape and a press outside close it
+  dismiss: true,
+  // Into the panel as it sets off; back to the control once it's there again
+  onStart(open) {
+    if (open) close.focus({ preventScroll: true });
+  },
   onRest(open) {
-    (open ? close : source).focus({ preventScroll: true });
+    if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
   },
 });
 
@@ -408,30 +414,39 @@ close.addEventListener("click", dismiss);
 | --- | --- |
 | `source: HTMLElement` | The originating control, with a parent in the DOM |
 | `content: HTMLElement` | The panel content, with a measurable open position and size |
-| `spring?: { open: MorphSprings; close: MorphSprings }` | Full spring settings for each direction; defaults to `defaultMorphSprings` |
+| `container?: HTMLElement` | Where the glass goes instead of next to the control, e.g. out of a parent with `overflow: hidden` |
+| `spring?: { open?: Partial<MorphSprings>; close?: Partial<MorphSprings> }` | Spring settings for each direction; anything left out comes from `defaultMorphSprings` |
+| `initialOpen?: boolean` | Starts open, at rest, without calling `onStart` or `onRest` |
+| `dismiss?: boolean \| { escape?: boolean; outside?: boolean }` | Closes on Escape and on a press outside the panel and the control; `true` for both, off by default |
+| `onStart?: (open: boolean) => void` | Called when the animation sets off, including when it reverses mid-way |
 | `onRest?: (open: boolean) => void` | Called when the animation settles open or closed |
 
-The returned `Morph` has `open()`, `close()`, `toggle()` and `destroy()`. Its read-only `isOpen`
-is the requested state, updated immediately, rather than an indication that the animation has
-finished. Reversing while moving preserves velocity. `destroy()` stops motion, removes the copies,
-restores the content's saved inline styles, shows the control and removes its `aria-expanded`.
-It does not remove event listeners added by your application.
+The returned `Morph`:
 
-Each `MorphSprings` set contains `x`, `y`, `width`, `height` and `progress` springs. Change the
-defaults selectively:
+| Member | Meaning |
+| --- | --- |
+| `isOpen` | The requested state, updated immediately |
+| `phase` | `"closed"`, `"opening"`, `"open"` or `"closing"`: whether it has got there yet |
+| `open(move?)`, `close(move?)`, `toggle(move?)` | Return a `Promise<boolean>`: `true` once it rests where asked, `false` if it reversed or was destroyed first. `{ instant: true }` swaps at once, as with reduced motion |
+| `update()` | Reads the boxes again and follows them |
+| `destroy()` | Stops motion, removes the copies, restores the content's inline styles, shows the control and removes its `aria-expanded` |
+
+Reversing while moving preserves velocity. While open, the glass follows the content when its
+size changes and when the window resizes; call `update()` after anything else moves the content or
+the control. `destroy()` doesn't remove event listeners added by your application; calls after it
+do nothing.
+
+Each `MorphSprings` set contains `x`, `y`, `width`, `height` and `progress` springs. Pass only
+the ones you change:
 
 ```js
-import { createMorph, defaultMorphSprings } from "liquid-blur/morph";
+import { createMorph } from "liquid-blur/morph";
 
 const morph = createMorph({
   source,
   content,
   spring: {
-    open: {
-      ...defaultMorphSprings.open,
-      y: { duration: 0.4, bounce: 0.3, settle: 0.1 },
-    },
-    close: defaultMorphSprings.close,
+    open: { y: { duration: 0.4, bounce: 0.3, settle: 0.1 } },
   },
 });
 ```
@@ -439,19 +454,83 @@ const morph = createMorph({
 Layout and lifecycle:
 
 - Keep the content separate from the glass and above it in stacking order. In a group, a morph
-  that covers a neighbor lifts its glass out of the group; `z-index: 2` keeps the content above it.
+  that covers a neighbor lifts its glass out of the group (`z-index: 1`), as does a `container`;
+  `z-index: 2` keeps the content above it.
 - Hide content with `visibility: hidden`, not `display: none` or the `hidden` attribute: it must
-  remain measurable. Its computed `border-radius` defines the open panel's corners.
+  remain measurable. Its computed `border-radius` defines the open panel's corners, each its own
+  (a sheet rounded on top only stays square below); a percent resolves against the panel's box,
+  and an elliptical corner becomes the smaller of its two radii.
 - The morph manages inline `transform`, `opacity`, `filter` and `clip-path` on the content.
   Avoid competing transitions on these properties. Apply press behaviors to the source only.
+  A translation of the content's own, such as `translate: -50% -50%` or
+  `transform: translate(-50%, -50%)` for centering, is kept; rotating or scaling it is not supported.
 - Source styles should use classes that also match its clone, rather than only its `id`. Inline
   styles on the source are not copied. The example's measured size and radius are set by the morph.
-- Geometry is measured on open and close, not continuously during scrolling or resizing. Rotated
-  or scaled ancestors are unsupported. Groups merge using round arcs even with squircle children.
-- With reduced motion, the panel and control swap immediately. `aria-expanded` is managed;
-  focus, Escape, outside clicks and any dialog or menu keyboard behavior are your responsibility.
+- The copy that morphs is added next to the control only while the panel is open or moving, so
+  selectors such as `:last-child` keep matching at rest. Lifted over a group it sits right after
+  the group, and with a `container` inside that: style the control with classes rather than
+  selectors through its parent, and make sure the container inherits the same theme.
+- While the panel is out the control is unseen (`opacity: 0`, marked `data-lb-away`) but stays
+  focusable and in the accessibility tree, so its `aria-expanded` is read and focus on it isn't
+  lost. Groups leave it out. Its own inline `opacity` is put back after.
+- Geometry is measured on open and close, and while open when the content resizes or the window
+  does. Scrolling during the animation isn't followed. Rotated or scaled ancestors are unsupported.
+  Groups merge using round arcs even with squircle children.
+- With reduced motion, the panel and control swap immediately. `aria-expanded` is managed, and
+  `dismiss` handles Escape and outside presses; focus and any dialog or menu keyboard behavior are
+  your responsibility.
 - Importing the module is safe during server rendering; call `createMorph()` only in the browser,
   after mounting or hydration, and call `destroy()` on unmount.
+
+In React, a small hook covers the lifecycle. Keep the panel's `visibility: hidden` in its
+stylesheet, not inline, so a re-render doesn't fight the morph:
+
+```tsx
+import { useEffect, useRef, useState } from "react";
+import { createMorph, type Morph, type MorphOptions } from "liquid-blur/morph";
+
+/** Options are read once, on mount */
+export function useMorph(options: Omit<MorphOptions, "source" | "content"> = {}) {
+  const source = useRef<HTMLButtonElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const morph = useRef<Morph | null>(null);
+  const [open, setOpen] = useState(options.initialOpen ?? false);
+  useEffect(() => {
+    const m = createMorph({
+      ...options,
+      source: source.current!,
+      content: content.current!,
+      onStart(next) {
+        setOpen(next);
+        options.onStart?.(next);
+      },
+    });
+    morph.current = m;
+    return () => m.destroy();
+  }, []);
+  return {
+    source,
+    content,
+    open,
+    toggle: () => morph.current?.toggle(),
+    close: () => morph.current?.close(),
+  };
+}
+
+export function More() {
+  const morph = useMorph({ dismiss: true });
+  return (
+    <div className="morph-scene">
+      <button ref={morph.source} className="lb" type="button" aria-controls="panel" onClick={morph.toggle}>
+        More
+      </button>
+      <div ref={morph.content} id="panel" role="menu">
+        <button type="button" onClick={morph.close}>Close</button>
+      </div>
+    </div>
+  );
+}
+```
 
 ### `SpringAnimator`
 
@@ -474,6 +553,7 @@ const spring = new SpringAnimator(
 
 spring.to({ width: 240, radius: 24 });
 spring.to({ width: 100, radius: 12 }, { duration: 0.6, bounce: 0 }); // new params are optional
+spring.retarget({ width: 110, radius: 12 }); // a correction of the flight under way: no new bounce
 spring.values(); // current values
 spring.stop();
 ```
@@ -499,10 +579,58 @@ Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. `@property` i
 per-element switches and the highlight fade; browsers without it (Firefox < 128) still render the
 glass, with fallbacks.
 
-Glass groups also use `clip-path: path()` and Canvas 2D. Morph corner shapes use `corner-shape`
+Glass groups also use `clip-path: path()`, CSS `mask` with an inline SVG `<mask>`, and Canvas 2D. Morph corner shapes use `corner-shape`
 where supported and otherwise stay round. JavaScript is shipped as ESM targeting ES2022.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Limitations
+
+What the library doesn't do, or can't do around browser behavior, in one place.
+
+**Material**
+
+- No refraction, by design: only blur, saturation, fill and shading, which every engine renders
+  the same way.
+- Glass blurs only what's inside its backdrop root. An ancestor with `filter`, `opacity` below 1,
+  `mask`, `clip-path`, `mix-blend-mode` or its own `backdrop-filter` cuts the glass off from
+  everything behind that ancestor.
+
+**Press behaviors**
+
+- For single controls, not containers: highlight lights the whole element on any press inside it,
+  and stretch blocks scrolling and text selection in its whole subtree.
+- Don't transition `scale` (with swell) or `transform` (with stretch) on the same element.
+
+**Glass groups**
+
+- Rotating the group or an ancestor isn't supported; scaling is.
+- Movement from outside the group (layout changes, an ancestor's children reordered) isn't seen:
+  call `update()`.
+- The melted outline is drawn from circular arcs, also for children with `corner-shape: squircle`.
+- Don't clip a group with `corner-shape`. An ancestor with `overflow: hidden` (or `clip`, or paint
+  containment) and a `corner-shape` other than `round` makes Chromium show a blurred rectangle
+  around melted glass. Give the shape to the ancestor's background layers and clip there, leaving
+  the container itself unclipped. A plain `border-radius` clip is fine.
+
+**Morph**
+
+- Geometry is measured on open and close, and while open when the content or window resizes;
+  other moves need `update()`. Scrolling during the animation isn't followed.
+- Rotated or scaled ancestors aren't supported, nor a content transform other than a translation.
+- Corners interpolate as circles: an elliptical radius becomes the smaller of its two, and corner
+  shapes follow the top-left corner's.
+- A glass copy outside the control's parent (lifted over a group, or in a `container`) isn't
+  reached by selectors through that parent.
+- The content must stay measurable: hide it with `visibility: hidden`, not `display: none`.
+- Focus and dialog or menu keyboard behavior are yours to handle; `dismiss` covers Escape and
+  outside presses.
+
+**Browsers**
+
+- Without `@property` (Firefox < 128) the glass renders through fallbacks: per-element switches
+  inherit, and the press highlight doesn't fade.
+- Corner shapes interpolate only where `corner-shape` is supported; elsewhere corners stay round.
 
 ## License
 

@@ -19,7 +19,8 @@ import {
  * children and their CSS transitions and animations are picked up on their own: anything that
  * moves them through `style` (a spring, `lb-stretch`, `lb-swell`) or CSS just works. Moved some
  * other way (layout changes from outside the group, a script animating an ancestor's child list),
- * call `update()`. A child with `visibility: hidden` makes no glass.
+ * call `update()`. A child with `visibility: hidden` makes no glass, nor one marked `data-lb-away`
+ * (a morph's control while its panel is out: invisible, yet still there to focus and read).
  *
  * The children are glass themselves (`.lb`), and while none of them melt they stay exactly that:
  * the group draws nothing and costs a few dozen microseconds a frame to watch them. Without the
@@ -27,7 +28,11 @@ import {
  * (`data-lb-melted` on the root): two panes that overlap would blur and fill the overlap twice, so
  * the children's own glass steps aside for one surface drawn behind them:
  *   - backdrop and fill on a single element clipped to the melted outline (`clip-path: path()`),
- *     solved exactly from the children's boxes (blob.ts)
+ *     solved exactly from the children's boxes (blob.ts), and masked to it as well (an inline SVG
+ *     `<mask>`): under an ancestor with `overflow: hidden` and `border-radius`, Chromium on Windows
+ *     (and wherever it composites the same way) clips the backdrop only to the path's bounding box,
+ *     a blurred rectangle around the glass, while the mask holds. Neither holds under an ancestor
+ *     that clips with `corner-shape`: Chromium shows the rectangle then, whatever the glass does.
  *   - in it, the volume and glow: a canvas with one pixel per 2px, stretched by the browser on
  *     the GPU and clipped by the glass, so it costs no redraw at full resolution
  *   - rims, edge and drop shadow on one canvas above, clipped to the outline or to the area around
@@ -53,7 +58,7 @@ import {
  */
 
 /** Distance below which children start to merge, px, unless --lb-merge says otherwise */
-const MERGE = 24;
+const MERGE = 18;
 /** Volume grid step, px: at rest, and while things move */
 const STEP = 2;
 const MOVING_STEP = 3;
@@ -333,6 +338,9 @@ const contains = (outer: Bounds, inner: Bounds) =>
 
 /** One group per root: creating another for it returns the first */
 const groups = new WeakMap<HTMLElement, GlassGroup>();
+const SVG = "http://www.w3.org/2000/svg";
+/** Masks made so far, for unique ids */
+let masks = 0;
 
 export function createGlassGroup(root: HTMLElement): GlassGroup {
   const existing = groups.get(root);
@@ -358,7 +366,29 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
    */
   const volume = doc.createElement("canvas");
   volume.className = "lb-group__volume";
-  glass.append(probe, pulse, volume);
+  /*
+   * The outline the glass is masked to, on top of its clip-path. Two masks taking turns: the glass
+   * switches to the other one with each new outline, as browsers may keep painting a mask whose
+   * path alone changed. In the glass's box units, scaled from its pixels, so CSS zoom can't put
+   * the outline off the way user space would in WebKit.
+   */
+  const svg = doc.createElementNS(SVG, "svg");
+  svg.setAttribute("aria-hidden", "true");
+  svg.style.cssText = "position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none";
+  const id = `lb-group-mask-${++masks}`;
+  const outlines = [0, 1].map((n) => {
+    const mask = doc.createElementNS(SVG, "mask");
+    mask.id = `${id}-${n}`;
+    mask.setAttribute("maskContentUnits", "objectBoundingBox");
+    const path = doc.createElementNS(SVG, "path");
+    path.setAttribute("fill", "white");
+    mask.append(path);
+    svg.append(mask);
+    return path;
+  });
+  let turn = 0;
+  let outlineKey = "";
+  glass.append(probe, pulse, svg, volume);
   const paint = doc.createElement("canvas");
   paint.className = "lb-group__paint";
   paint.setAttribute("aria-hidden", "true");
@@ -534,7 +564,10 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
       let trait = traits.get(el);
       if (!trait) {
         const style = win.getComputedStyle(el);
-        trait = { radius: parseFloat(style.borderTopLeftRadius) || 0, hidden: style.visibility === "hidden" };
+        trait = {
+          radius: parseFloat(style.borderTopLeftRadius) || 0,
+          hidden: style.visibility === "hidden" || el.hasAttribute("data-lb-away"),
+        };
         traits.set(el, trait);
       }
       if (trait.hidden) continue;
@@ -576,7 +609,17 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     const want = { x: b.x - MARGIN, y: b.y - MARGIN, width: b.width + 2 * MARGIN, height: b.height + 2 * MARGIN };
     place(want, moving ? Math.min(2, win.devicePixelRatio || 1) : win.devicePixelRatio || 1, moving ? MOVING_STEP : STEP);
     const d = blobPath(blob, frameBox.x, frameBox.y);
-    glass.style.clipPath = `path("${d}")`;
+    // The mask's scale goes with the glass's size, which may change while the path doesn't
+    const shape = `${d} ${frameBox.width} ${frameBox.height}`;
+    if (shape !== outlineKey) {
+      outlineKey = shape;
+      turn = 1 - turn;
+      const outline = outlines[turn]!;
+      outline.setAttribute("d", d);
+      outline.setAttribute("transform", `scale(${1 / frameBox.width} ${1 / frameBox.height})`);
+      glass.style.clipPath = `path("${d}")`;
+      glass.style.mask = `url(#${id}-${turn})`;
+    }
 
     if (context) {
       // What this frame draws, in device pixels; the canvas around it is slack
@@ -709,7 +752,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     resize.observe(root);
     for (const el of items()) {
       resize.observe(el);
-      moves.observe(el, { attributes: true, attributeFilter: ["style", "class"] });
+      moves.observe(el, { attributes: true, attributeFilter: ["style", "class", "data-lb-away"] });
     }
   };
   // Children come and go; the root's own style may carry the merge distance, theme or material

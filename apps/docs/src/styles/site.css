@@ -433,9 +433,16 @@ code {
 
 /* ── Backdrops: vivid things for the glass to blur ── */
 
+/*
+ * Screens, tiles and the playground stage don't clip: their layers do, in their shape. A container
+ * clipping with corner-shape breaks the melted glass of a group inside it in Chromium (a blurred
+ * rectangle around it), so the backdrops and the feed take the corners instead.
+ */
 .bd {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
+  corner-shape: inherit;
   overflow: hidden;
 }
 .bd[hidden] { display: none; }
@@ -553,7 +560,6 @@ code {
   position: relative;
   height: clamp(520px, 52vw, 660px);
   border-radius: 16px;
-  overflow: hidden;
   background: var(--ground);
   box-shadow: var(--shot), 0 0 0 0.5px var(--hair);
   isolation: isolate;
@@ -566,6 +572,8 @@ code {
    * Moved by the script only: a wheel or a finger over it scrolls the page. Never an anchor for
    * the page's scroll, since it moves on its own.
    */
+  border-radius: inherit;
+  corner-shape: inherit;
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -793,7 +801,6 @@ code {
 .play__stage {
   position: relative;
   border-radius: var(--radius);
-  overflow: hidden;
   min-height: 480px;
   height: 100%;
   isolation: isolate;
@@ -1137,7 +1144,6 @@ code {
   position: relative;
   height: 128px;
   border-radius: 14px;
-  overflow: hidden;
   display: grid;
   place-items: center;
   isolation: isolate;

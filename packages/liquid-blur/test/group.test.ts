@@ -51,6 +51,14 @@ describe("createGlassGroup", () => {
     group.destroy();
   });
 
+  it("leaves a morph's away control out", () => {
+    const root = groupOf("", [0, 0, 100, 40], [110, 0, 100, 40]);
+    root.children[1].setAttribute("data-lb-away", "");
+    const group = createGlassGroup(root);
+    expect(root.hasAttribute("data-lb-melted")).toBe(false);
+    group.destroy();
+  });
+
   it("follows an animation that started before the group did", async () => {
     const root = groupOf("", [0, 0, 100, 40], [200, 0, 100, 40]);
     const drop = root.children[1] as HTMLElement;

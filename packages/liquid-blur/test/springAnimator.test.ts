@@ -128,4 +128,24 @@ describe("SpringAnimator", () => {
     vi.advanceTimersByTime(2000);
     expect(onRest).not.toHaveBeenCalled();
   });
+
+  it("moves the target without a second overshoot once it has turned", () => {
+    // Bouncy until it turns, then settling without a swing
+    const lowAfter = (move: (spring: SpringAnimator<"x">) => void) => {
+      const xs: number[] = [];
+      const spring = new SpringAnimator({ x: 0 }, { duration: 0.4, bounce: 0.6, settle: 0 }, (v) => xs.push(v.x));
+      spring.to({ x: 100 });
+      // Past its peak (125) and on its way back, a few px above 100
+      vi.advanceTimersByTime(400);
+      const from = xs.length;
+      move(spring);
+      vi.advanceTimersByTime(3000);
+      expect(xs.at(-1)).toBe(100);
+      return Math.min(...xs.slice(from));
+    };
+    // Its target given again as a new flight, it's bouncy again and swings under; as a correction
+    // it comes down onto it and stays
+    expect(lowAfter((s) => s.to({ x: 100 }))).toBeLessThan(99);
+    expect(lowAfter((s) => s.retarget({ x: 100 }))).toBeGreaterThan(99.75);
+  });
 });

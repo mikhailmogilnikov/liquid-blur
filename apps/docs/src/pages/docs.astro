@@ -20,6 +20,7 @@ const toc = [
   ["morph", "Morph"],
   ["api", "API"],
   ["support", "Browser support"],
+  ["limitations", "Limitations"],
   ["faq", "FAQ"],
 ];
 
@@ -253,8 +254,14 @@ const close = document.getElementById("close-panel")!;
 const morph = createMorph({
   source,
   content,
+  // Escape and a press outside close it
+  dismiss: true,
+  // Into the panel as it sets off; back to the control once it's there again
+  onStart(open) {
+    if (open) close.focus({ preventScroll: true });
+  },
   onRest(open) {
-    (open ? close : source).focus({ preventScroll: true });
+    if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
   },
 });
 
@@ -267,6 +274,50 @@ close.addEventListener("click", dismiss);
 // source.removeEventListener("click", toggle);
 // close.removeEventListener("click", dismiss);
 // morph.destroy();`,
+  morphReact: `import { useEffect, useRef, useState } from "react";
+import { createMorph, type Morph, type MorphOptions } from "liquid-blur/morph";
+
+/** Options are read once, on mount */
+export function useMorph(options: Omit<MorphOptions, "source" | "content"> = {}) {
+  const source = useRef<HTMLButtonElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const morph = useRef<Morph | null>(null);
+  const [open, setOpen] = useState(options.initialOpen ?? false);
+  useEffect(() => {
+    const m = createMorph({
+      ...options,
+      source: source.current!,
+      content: content.current!,
+      onStart(next) {
+        setOpen(next);
+        options.onStart?.(next);
+      },
+    });
+    morph.current = m;
+    return () => m.destroy();
+  }, []);
+  return {
+    source,
+    content,
+    open,
+    toggle: () => morph.current?.toggle(),
+    close: () => morph.current?.close(),
+  };
+}
+
+export function More() {
+  const morph = useMorph({ dismiss: true });
+  return (
+    <div className="morph-scene">
+      <button ref={morph.source} className="lb" type="button" aria-controls="panel" onClick={morph.toggle}>
+        More
+      </button>
+      <div ref={morph.content} id="panel" role="menu">
+        <button type="button" onClick={morph.close}>Close</button>
+      </div>
+    </div>
+  );
+}`,
   react: `import { useEffect } from "react";
 import { installLiquidBlur } from "liquid-blur";
 
@@ -563,7 +614,7 @@ export function App() {
               </p>
               <p>
                 <b>Merge distance</b>
-                Children start to melt <code>--lb-merge</code> apart, <code>24px</code> by default. Set it
+                Children start to melt <code>--lb-merge</code> apart, <code>18px</code> by default. Set it
                 on the group.
               </p>
             </div>
@@ -614,28 +665,40 @@ export function App() {
               <p>
                 <b>State and completion</b>
                 <code>open()</code>, <code>close()</code> and <code>toggle()</code> can reverse a running
-                animation. <code>isOpen</code> is the requested state; <code>onRest(open)</code> reports
-                when the movement finishes. <code>destroy()</code> removes the copies and restores the content.
+                animation and return a promise: <code>true</code> once it rests there, <code>false</code> if it
+                turned around first. <code>{"{ instant: true }"}</code> swaps at once. <code>isOpen</code> is the
+                requested state, <code>phase</code> whether it's there yet; <code>onStart(open)</code> and
+                <code>onRest(open)</code> report the movement setting off and finishing.
+                <code>initialOpen</code> starts it open. While open the glass follows the content's size and
+                the window; <code>update()</code> covers any other move. <code>destroy()</code> removes the
+                copies and restores the content.
               </p>
               <p>
                 <b>Springs in each direction</b>
-                Pass <code>{"spring: { open, close }"}</code>, each with <code>x</code>, <code>y</code>,
-                <code>width</code>, <code>height</code> and <code>progress</code> settings.
+                Pass <code>{"spring: { open, close }"}</code>, each with any of <code>x</code>, <code>y</code>,
+                <code>width</code>, <code>height</code> and <code>progress</code>; the rest stay default.
                 <code>defaultMorphSprings</code> is exported from <code>liquid-blur/morph</code>.
               </p>
             </div>
           </div>
           <p class="prose reveal">
-            Keep the content above the glass and leave its <code>transform</code>, <code>opacity</code>,
-            <code>filter</code> and <code>clip-path</code> to the morph. Geometry is measured on open and close;
-            scrolling or resizing while open is not tracked. Rotated or scaled ancestors are unsupported.
-            Corner shapes interpolate where <code>corner-shape</code> is supported; otherwise corners stay round.
+            Keep the content above the glass (<code>z-index: 2</code>) and leave its <code>transform</code>,
+            <code>opacity</code>, <code>filter</code> and <code>clip-path</code> to the morph; a translation of
+            its own, such as <code>translate: -50% -50%</code> for centering, is kept. Each corner of the panel
+            keeps its own radius, so a sheet rounded on top stays square below. The glass copy joins the
+            control's parent only while open or moving; if that parent clips, pass a <code>container</code>
+            for it. Scrolling during the animation is not followed. Rotated or scaled ancestors are
+            unsupported. Corner shapes interpolate where <code>corner-shape</code> is supported; otherwise
+            corners stay round.
           </p>
           <p class="prose reveal">
-            The source's <code>aria-expanded</code> is managed automatically. Focus, Escape, outside clicks
-            and menu or dialog keyboard behavior belong to your app. With reduced motion, the panel and
-            control swap immediately. Create the morph after mounting or hydration and destroy it on unmount.
+            The source's <code>aria-expanded</code> is managed automatically. While the panel is out the
+            source is unseen but stays focusable and readable. <code>dismiss: true</code> closes on Escape
+            and on a press outside; focus and menu or dialog keyboard behavior belong to your app. With
+            reduced motion, the panel and control swap immediately. Create the morph after mounting or
+            hydration and destroy it on unmount; in React, a small hook does both:
           </p>
+          <div class="reveal"><CodeBlock code={code.morphReact} lang="tsx" /></div>
         </section>
 
         <section class="doc" id="api">
@@ -672,8 +735,65 @@ export function App() {
             <a class="anchor" href="#support"><b>Browser support.</b></a> Anything with
             <code>backdrop-filter</code>, <code>color-mix()</code> and CSS <code>pow()</code>.
             Browsers without <code>@property</code> use fallbacks. Groups also need
-            <code>clip-path: path()</code> and Canvas 2D. JavaScript is ESM targeting ES2022.
+            <code>clip-path: path()</code>, <code>mask</code> with an inline SVG <code>&lt;mask&gt;</code>, and Canvas 2D. JavaScript is ESM targeting ES2022.
           </p>
+        </section>
+
+        <section class="doc" id="limitations">
+          <p class="lead reveal">
+            <a class="anchor" href="#limitations"><b>Limitations.</b></a> What Liquid Blur doesn't do, or
+            can't do around browser behavior, in one place.
+          </p>
+          <div class="rows reveal">
+            <div class="row">
+              <p>
+                <b>Blur, not refraction</b>
+                By design: blur, saturation, fill and shading are what every engine renders the same way.
+              </p>
+              <p>
+                <b>Backdrop roots</b>
+                Glass blurs only what's inside its backdrop root. An ancestor with <code>filter</code>,
+                <code>opacity</code> below 1, <code>mask</code>, <code>clip-path</code>,
+                <code>mix-blend-mode</code> or its own <code>backdrop-filter</code> cuts it off from
+                everything behind that ancestor.
+              </p>
+            </div>
+            <div class="row">
+              <p>
+                <b>Press behaviors</b>
+                For single controls, not containers. Don't transition <code>scale</code> with swell or
+                <code>transform</code> with stretch on the same element.
+              </p>
+              <p>
+                <b>Groups and transforms</b>
+                Scaling a group or an ancestor is fine, rotating isn't. Movement from outside the group
+                isn't seen: call <code>update()</code>. Outlines use circular arcs, also for squircle children.
+              </p>
+            </div>
+            <div class="row">
+              <p>
+                <b>No corner-shape clip around a group</b>
+                An ancestor with <code>overflow: hidden</code> (or <code>clip</code>, or paint containment)
+                and a <code>corner-shape</code> other than <code>round</code> makes Chromium show a blurred
+                rectangle around melted glass. Give the shape to the ancestor's background layers and clip
+                there, leaving the container unclipped. A plain <code>border-radius</code> clip is fine.
+              </p>
+              <p>
+                <b>Morph</b>
+                Measured on open and close, and on resize while open; other moves need <code>update()</code>.
+                No rotated or scaled ancestors, and no content transform beyond a translation. Content hides with <code>visibility: hidden</code>, not <code>display: none</code>.
+                Corners stay circular. Focus and keyboard behavior are yours.
+              </p>
+            </div>
+            <div class="row">
+              <p>
+                <b>Older browsers</b>
+                Without <code>@property</code> (Firefox &lt; 128) the glass renders through fallbacks:
+                switches inherit and the press highlight doesn't fade. Corner shapes interpolate only where
+                <code>corner-shape</code> is supported.
+              </p>
+            </div>
+          </div>
         </section>
 
         <section class="doc" id="faq">

@@ -381,7 +381,7 @@
    * the material's values for them but draws nothing itself.
    */
   .lb.lb-group {
-    --lb-merge: 24px;
+    --lb-merge: 18px;
     position: relative;
     background: none;
     -webkit-backdrop-filter: none;

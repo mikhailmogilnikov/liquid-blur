@@ -90,6 +90,19 @@ export class SpringAnimator<K extends string> {
     }
   }
 
+  /**
+   * Moves the target of the flight under way, keeping its springs, its velocity and whether each
+   * channel has turned: a correction, not a new flight, so a spring that has already overshot
+   * doesn't overshoot again.
+   */
+  retarget(target: Record<K, number>) {
+    this.target = { ...target };
+    if (!this.frame) {
+      this.last = performance.now();
+      this.frame = requestAnimationFrame(this.tick);
+    }
+  }
+
   stop() {
     cancelAnimationFrame(this.frame);
     this.frame = 0;
