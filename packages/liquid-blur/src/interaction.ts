@@ -1,3 +1,4 @@
+import { PART } from "./contract";
 import { SpringAnimator, type SpringParams } from "./springAnimator";
 
 /**
@@ -41,7 +42,8 @@ import { SpringAnimator, type SpringParams } from "./springAnimator";
  * it does nothing. Returns a cleanup function.
  */
 
-const SELECTOR = ".lb-highlight, .lb-swell, .lb-stretch, .lb-interactive";
+/** What a module made (a morph's copy, say) only looks pressable: the element it stands in for is */
+const SELECTOR = `:is(.lb-highlight, .lb-swell, .lb-stretch, .lb-interactive):not([${PART}])`;
 /** Whether a behavior is on: its own class, or `lb-interactive`, which is all of them */
 const has = (el: Element, behavior: "highlight" | "swell" | "stretch") =>
   el.classList.contains(`lb-${behavior}`) || el.classList.contains("lb-interactive");

@@ -46,6 +46,14 @@ function key(el: Element, type: "keydown" | "keyup", key: string) {
 const pressed = (el: Element) => el.hasAttribute("data-lb-pressed");
 
 describe("installLiquidBlur", () => {
+  it("leaves what a module made alone: the element it stands in for is the pressable one", () => {
+    const copy = glass("lb-interactive");
+    copy.setAttribute("data-lb-part", "");
+    pointer(copy, "pointerdown", 50, 20);
+    expect(pressed(copy)).toBe(false);
+    pointer(copy, "pointerup", 50, 20);
+  });
+
   it("marks the root while installed and installs once", () => {
     expect(document.documentElement.hasAttribute("data-lb-interaction")).toBe(true);
     expect(installLiquidBlur()).toBe(uninstall);

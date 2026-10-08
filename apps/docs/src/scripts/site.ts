@@ -1,7 +1,7 @@
-import { installLiquidBlur } from "liquid-blur";
+import { installPress } from "liquid-blur/press";
 import { segmented } from "./segmented";
 
-installLiquidBlur();
+installPress();
 
 const root = document.documentElement;
 

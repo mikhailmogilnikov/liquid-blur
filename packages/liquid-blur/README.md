@@ -7,8 +7,32 @@ renders the same way: no refraction, no SVG filters, no blend modes, no pseudo-e
 sub-pixel hairlines. The material is plain CSS classes; an optional, framework-agnostic script adds
 press behaviors.
 
-ES modules with TypeScript declarations and no runtime dependencies. Glass groups and control-to-panel
-morphs have separate entry points, so they are only loaded when used.
+ES modules with TypeScript declarations and no runtime dependencies.
+
+## Modules
+
+The material is the core; everything else is a module of its own, in its own entry, loaded only
+when imported and usable without the others.
+
+| Module | Entry | What it does | Needs the material |
+| --- | --- | --- | --- |
+| Material | `liquid-blur/liquid-blur.css` | The glass: `lb` and its variants, as plain CSS classes | — |
+| Press | `liquid-blur/press` | Highlight, swell and stretch on press, on springs | Highlight draws in it; swell and stretch move any element |
+| Melt | `liquid-blur/melt` | Glass that melts between shapes when they come close | Yes: it draws the material itself |
+| Morph | `liquid-blur/morph` | A control grows into a panel and shrinks back | No: it morphs any element |
+| Spring | `liquid-blur/spring` | The interruptible spring the others run on, for your own animations | No |
+
+The modules never import each other. Where two of them meet, they do it through a few attributes
+in the DOM, which you can rely on too:
+
+| Attribute | Set by | Meaning |
+| --- | --- | --- |
+| `data-lb-surface` | Melt, on a group's root while it runs | Its children share one surface: a morph from one of them lifts its glass over the others or melts with them |
+| `data-lb-part` | Melt and morph, on elements they create | Not content: morph doesn't count it as a neighbor, press doesn't press it |
+| `data-lb-away` | Morph, on the control while its panel is out | Unseen but still focusable; melt leaves it out |
+
+The older entries stay: `liquid-blur` exports press (as `installLiquidBlur`) and spring together,
+`liquid-blur/group` is melt, and `liquid-blur/auto` installs press on import.
 
 ## Install
 
@@ -32,9 +56,9 @@ If you use press behaviors (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-intera
 script once:
 
 ```js
-import { installLiquidBlur } from "liquid-blur";
+import { installPress } from "liquid-blur/press";
 
-installLiquidBlur();
+installPress();
 ```
 
 That's all. One delegated listener covers the whole document, so elements mounted later work
@@ -215,7 +239,7 @@ next-themes with `attribute="class"`), daisyUI theme names, anything:
 
 - **Pressed state.** While a pointer is down the element gets `data-lb-pressed`, which you can
   style too. On touch it appears after a short delay, so a finger that lands to scroll doesn't
-  flash it; a quick tap still gets a brief flash on release. Without `installLiquidBlur()`,
+  flash it; a quick tap still gets a brief flash on release. Without `installPress()`,
   highlight and swell fall back to `:active`, centered.
 - **Highlight** is a soft glow with no edge, sized to the element: about the size of a small
   button, broad on a card, capped on a panel so it never floods it. `--lb-highlight-size` scales it.
@@ -239,11 +263,11 @@ next-themes with `attribute="class"`), daisyUI theme names, anything:
 - Press behaviors are for single controls, not containers: highlight lights the whole element on
   any press inside it, and stretch blocks scrolling and text selection in its whole subtree.
 
-## Glass groups
+## Glass groups (melt)
 
 Glass that melts between shapes when they come close, like drops of liquid: put the pieces in one
 `.lb-group` and they share a single surface, one backdrop clipped to the merged outline, so nothing
-blurs twice. Groups live in their own entry, `liquid-blur/group`, so they cost nothing to pages
+blurs twice. Groups live in their own entry, `liquid-blur/melt`, so they cost nothing to pages
 that don't use them.
 
 ```html
@@ -254,7 +278,7 @@ that don't use them.
 ```
 
 ```js
-import { installGlassGroups } from "liquid-blur/group";
+import { installGlassGroups } from "liquid-blur/melt";
 
 installGlassGroups();
 ```
@@ -273,7 +297,7 @@ installGlassGroups();
 
 ### Server rendering
 
-`liquid-blur/group` is safe to import on the server, and `installGlassGroups()` does nothing
+`liquid-blur/melt` is safe to import on the server, and `installGlassGroups()` does nothing
 there. Rendered without the script, the children are plain glass; close ones melt once it runs.
 With a framework that hydrates (React, Vue, Svelte):
 
@@ -284,7 +308,7 @@ With a framework that hydrates (React, Vue, Svelte):
 
 ```tsx
 import { useEffect } from "react";
-import { installGlassGroups } from "liquid-blur/group";
+import { installGlassGroups } from "liquid-blur/melt";
 
 export function Toolbar() {
   useEffect(() => installGlassGroups(), []);
@@ -301,13 +325,18 @@ export function Toolbar() {
 
 | Entry point | Exports |
 | --- | --- |
-| `liquid-blur` | `installLiquidBlur`, `SpringAnimator`; types `SpringConfig`, `SpringParams` |
-| `liquid-blur/auto` | Installs press behaviors on import; no named exports |
-| `liquid-blur/group` | `installGlassGroups`, `createGlassGroup`; type `GlassGroup` |
+| `liquid-blur/liquid-blur.css` | Stylesheet: the material, and the styles press and melt use |
+| `liquid-blur/press` | `installPress` |
+| `liquid-blur/melt` | `installGlassGroups`, `createGlassGroup`; type `GlassGroup` |
 | `liquid-blur/morph` | `createMorph`, `defaultMorphSprings`; types `Morph`, `MorphOptions`, `MorphSprings`, `MorphPhase`, `MorphMove` |
-| `liquid-blur/liquid-blur.css` | Stylesheet |
+| `liquid-blur/spring` | `SpringAnimator`; types `SpringConfig`, `SpringParams` |
+| `liquid-blur/auto` | Installs press on import; no named exports |
+| `liquid-blur` | `installLiquidBlur` (the same as `installPress`), `SpringAnimator`; types `SpringConfig`, `SpringParams` |
+| `liquid-blur/group` | The same as `liquid-blur/melt` |
 
-### `installLiquidBlur(root?: Document): () => void`
+### `installPress(root?: Document): () => void`
+
+From `liquid-blur/press`; `installLiquidBlur` from `liquid-blur` is the same function.
 
 Installs press behaviors on a document (default: `document`) and returns a cleanup function.
 Installing twice returns the first install's cleanup. Sets `data-lb-interaction` on `<html>` while
@@ -315,26 +344,26 @@ installed. Looks through open shadow roots. Pass an iframe's `contentDocument` t
 iframe. Without a DOM it returns a no-op.
 
 ```js
-const uninstall = installLiquidBlur();
+const uninstall = installPress();
 // later
 uninstall();
 ```
 
 ### `installGlassGroups(root?: Document): () => void`
 
-From `liquid-blur/group`. Makes every `.lb-group` in the document a glass group, including ones
+From `liquid-blur/melt`. Makes every `.lb-group` in the document a glass group, including ones
 mounted later, and lets go of a group once its root leaves the document. Installing twice returns
 the first install's cleanup; the cleanup destroys the groups it made. Without a DOM it returns a
 no-op.
 
 ### `createGlassGroup(root: HTMLElement): GlassGroup`
 
-From `liquid-blur/group`. One group by hand, for an element you manage yourself. Adds `lb` and
+From `liquid-blur/melt`. One group by hand, for an element you manage yourself. Adds `lb` and
 `lb-group` to the root if missing. Returns `{ update(), destroy() }`; creating a group for the same
 root twice returns the first.
 
 ```ts
-import { createGlassGroup } from "liquid-blur/group";
+import { createGlassGroup } from "liquid-blur/melt";
 
 const group = createGlassGroup(toolbar);
 // a child moved by something the group can't see
@@ -345,7 +374,8 @@ group.destroy();
 
 ### `createMorph(options: MorphOptions): Morph`
 
-From `liquid-blur/morph`. A glass control grows into a panel and shrinks back. Give it the control
+From `liquid-blur/morph`. A glass control grows into a panel and shrinks back. Glass or not: it
+copies whatever the control looks like, so it needs neither the material nor any other module. Give it the control
 (`source`) and the panel's content (`content`), already laid out where the panel should open.
 The glass is copied from the control; the content does not need its own `lb` class.
 
@@ -534,12 +564,13 @@ export function More() {
 
 ### `SpringAnimator`
 
-The interruptible spring that drives the press behaviors, exported for your own animations.
+From `liquid-blur/spring` (also `liquid-blur`). The interruptible spring that drives press and
+morph, exported for your own animations.
 Animates several numeric channels at once; retargeting keeps the current velocity, so reversing
 mid-flight stays smooth — which CSS transitions can't do.
 
 ```ts
-import { SpringAnimator, type SpringParams } from "liquid-blur";
+import { SpringAnimator, type SpringParams } from "liquid-blur/spring";
 
 const spring = new SpringAnimator(
   { width: 100, radius: 12 },

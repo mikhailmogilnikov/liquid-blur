@@ -298,7 +298,8 @@ describe("createMorph", () => {
 
   it("stays in a group when the panel opens beside the neighbors", () => {
     const { parent, source, content } = scene();
-    parent.className = "lb-group";
+    // A group running on the parent, as the contract says: no group code needed here
+    parent.setAttribute("data-lb-surface", "");
     const bar = document.createElement("div");
     bar.getBoundingClientRect = () => new DOMRect(300, 20, 80, 44);
     parent.prepend(bar);
@@ -312,7 +313,8 @@ describe("createMorph", () => {
 
   it("lifts out over a group when the panel covers a neighbor, leaving a stub in it", async () => {
     const { parent, source, content } = scene();
-    parent.className = "lb-group";
+    // A group running on the parent, as the contract says: no group code needed here
+    parent.setAttribute("data-lb-surface", "");
     const bar = document.createElement("div");
     bar.getBoundingClientRect = () => new DOMRect(70, 120, 160, 44);
     parent.prepend(bar);
@@ -564,5 +566,31 @@ describe("createMorph", () => {
     outside.dispatchEvent(new Event("pointerdown", { bubbles: true }));
     expect(quiet.isOpen).toBe(true);
     quiet.destroy();
+  });
+
+  it("morphs any element: no material, no other module", async () => {
+    const { parent, content } = scene();
+    // A plain button styled by a class of the page's own
+    const source = document.createElement("button");
+    source.className = "fab";
+    source.textContent = "+";
+    source.getBoundingClientRect = () => new DOMRect(300, 300, 56, 56);
+    parent.append(source);
+    let rest: (open: boolean) => void = () => {};
+    const morph = createMorph({ source, content, spring: fast, onRest: (open) => rest(open) });
+    await new Promise<boolean>((resolve) => {
+      rest = resolve;
+      morph.open();
+    });
+    const shape = source.nextElementSibling as HTMLElement;
+    expect(shape.className).toBe("fab");
+    expect(shape.style.width).toBe("240px");
+    expect(shape.hasAttribute("data-lb-part")).toBe(true);
+    await new Promise<boolean>((resolve) => {
+      rest = resolve;
+      morph.close();
+    });
+    expect(source.nextElementSibling).toBeNull();
+    morph.destroy();
   });
 });

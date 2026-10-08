@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The library is a material and four modules, each in its own entry and usable alone: `liquid-blur/press` (`installPress`), `liquid-blur/melt` (glass groups), `liquid-blur/morph` and `liquid-blur/spring` (`SpringAnimator`). The older entries stay: `liquid-blur` is press (`installLiquidBlur`) and spring together, `liquid-blur/group` is melt.
+- The modules never import each other; where two meet they read DOM attributes the other sets, documented in the README: `data-lb-surface` on a running group's root, `data-lb-part` on elements a module creates, `data-lb-away` on a morph's control while its panel is out. A morph checks `data-lb-surface` instead of the `lb-group` class, so it lifts or melts only where a group actually runs; press leaves `data-lb-part` elements alone.
 - Morphs close onto the control where it is now: scrolling the page while a panel was open sent it back to the control's old place on screen.
 - Open morphs follow the panel: when the content's size or the window changes, the glass takes the new box. `morph.update()` does the same for any other move.
 - Morphs add their glass copies next to the control only while the panel is open or moving, so the control's parent keeps its own children at rest and `:last-child` and similar selectors keep matching.

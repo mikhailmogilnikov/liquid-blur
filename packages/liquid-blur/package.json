@@ -36,6 +36,18 @@
       "types": "./dist/auto.d.ts",
       "default": "./dist/auto.js"
     },
+    "./spring": {
+      "types": "./dist/spring.d.ts",
+      "default": "./dist/spring.js"
+    },
+    "./press": {
+      "types": "./dist/press.d.ts",
+      "default": "./dist/press.js"
+    },
+    "./melt": {
+      "types": "./dist/melt.d.ts",
+      "default": "./dist/melt.js"
+    },
     "./group": {
       "types": "./dist/group.d.ts",
       "default": "./dist/group.js"

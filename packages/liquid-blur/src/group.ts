@@ -12,6 +12,7 @@ import {
   type Nearest,
   type Shape,
 } from "./blob";
+import { AWAY, PART, SURFACE } from "./contract";
 
 /**
  * Glass group: the children of `.lb-group` share one piece of glass, which melts between them
@@ -20,7 +21,8 @@ import {
  * moves them through `style` (a spring, `lb-stretch`, `lb-swell`) or CSS just works. Moved some
  * other way (layout changes from outside the group, a script animating an ancestor's child list),
  * call `update()`. A child with `visibility: hidden` makes no glass, nor one marked `data-lb-away`
- * (a morph's control while its panel is out: invisible, yet still there to focus and read).
+ * (a morph's control while its panel is out: invisible, yet still there to focus and read). While
+ * it runs the root is marked `data-lb-surface` and its own elements `data-lb-part` (contract.ts).
  *
  * The children are glass themselves (`.lb`), and while none of them melt they stay exactly that:
  * the group draws nothing and costs a few dozen microseconds a frame to watch them. Without the
@@ -348,6 +350,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   // Only what we add comes off again on destroy: `lb-group` written in the markup stays
   const added = ["lb", "lb-group"].filter((name) => !root.classList.contains(name));
   root.classList.add(...added);
+  root.setAttribute(SURFACE, "");
   // The root's own document and window: it may live in an iframe
   const doc = root.ownerDocument;
   const win = doc.defaultView ?? window;
@@ -355,6 +358,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   const glass = doc.createElement("div");
   glass.className = "lb-group__glass";
   glass.setAttribute("aria-hidden", "true");
+  glass.setAttribute(PART, "");
   const probe = doc.createElement("span");
   probe.style.cssText = PROBE;
   // Resized to ask for a redraw in the frame's resize-observer step: see `schedule`
@@ -392,6 +396,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   const paint = doc.createElement("canvas");
   paint.className = "lb-group__paint";
   paint.setAttribute("aria-hidden", "true");
+  paint.setAttribute(PART, "");
   root.prepend(glass, paint);
 
   const context = paint.getContext("2d");
@@ -566,7 +571,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
         const style = win.getComputedStyle(el);
         trait = {
           radius: parseFloat(style.borderTopLeftRadius) || 0,
-          hidden: style.visibility === "hidden" || el.hasAttribute("data-lb-away"),
+          hidden: style.visibility === "hidden" || el.hasAttribute(AWAY),
         };
         traits.set(el, trait);
       }
@@ -752,7 +757,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     resize.observe(root);
     for (const el of items()) {
       resize.observe(el);
-      moves.observe(el, { attributes: true, attributeFilter: ["style", "class", "data-lb-away"] });
+      moves.observe(el, { attributes: true, attributeFilter: ["style", "class", AWAY] });
     }
   };
   // Children come and go; the root's own style may carry the merge distance, theme or material
@@ -812,6 +817,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
       glass.remove();
       paint.remove();
       root.removeAttribute("data-lb-melted");
+      root.removeAttribute(SURFACE);
       root.classList.remove(...added);
     },
   };

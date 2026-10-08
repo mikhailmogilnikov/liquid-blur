@@ -92,6 +92,16 @@ describe("createGlassGroup", () => {
     createGlassGroup(root).destroy();
     expect(root.className).toBe("lb-group");
     expect(root.children).toHaveLength(1);
+    expect(root.hasAttribute("data-lb-surface")).toBe(false);
+  });
+
+  it("marks its root a surface and its own elements parts while it runs", () => {
+    const root = groupOf("", [0, 0, 100, 40]);
+    const group = createGlassGroup(root);
+    expect(root.hasAttribute("data-lb-surface")).toBe(true);
+    const parts = [...root.children].filter((el) => el.hasAttribute("data-lb-part"));
+    expect(parts.map((el) => el.className).sort()).toEqual(["lb-group__glass", "lb-group__paint"]);
+    group.destroy();
   });
 });
 

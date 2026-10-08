@@ -1,3 +1,4 @@
+import { AWAY, PART, SURFACE } from "./contract.js";
 import { SpringAnimator, type SpringParams } from "./springAnimator.js";
 
 /**
@@ -27,8 +28,8 @@ import { SpringAnimator, type SpringParams } from "./springAnimator.js";
  * It's placed from where it sits like anywhere else; what it inherits (theme, custom properties)
  * is the container's, and selectors through the control's parent don't reach it there.
  *
- * In a glass group (`.lb-group`) the group leaves the away control out, and how the copy goes
- * depends on where the panel opens:
+ * In a glass group (a parent a group runs on, marked `data-lb-surface`: see contract.ts) the
+ * group leaves the away control out, and how the copy goes depends on where the panel opens:
  *   - beside the control's neighbors (and no container): the copy stays in the group and melts
  *     with them on the way, as anything there does
  *   - over any of them, or into a container: the group's glass is one surface behind all its
@@ -170,7 +171,11 @@ const CONTENT_FROM = 0.08;
 const CONTENT_SPAN = 0.87;
 /** Content blur at the start, px; below a third of a pixel it's dropped */
 const CONTENT_BLUR = 14;
-/** Press behaviors stay with the control: the copy only looks like it */
+/**
+ * Press behaviors stay with the control: the copy only looks like it. Press behaviors skip a
+ * `data-lb-part` already; their classes come off too, so their CSS without the script (`:active`)
+ * doesn't scale the copy either. Names only: nothing of theirs is loaded.
+ */
 const BEHAVIORS = ["lb-highlight", "lb-swell", "lb-stretch", "lb-interactive"];
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -264,7 +269,8 @@ export function createMorph({
   const copy = () => {
     const el = source.cloneNode(false) as HTMLElement;
     el.removeAttribute("id");
-    el.removeAttribute("data-lb-away");
+    el.removeAttribute(AWAY);
+    el.setAttribute(PART, "");
     el.style.cssText =
       "position: absolute; left: 0; top: 0; margin: 0; box-sizing: border-box; contain: strict; " +
       "overflow: hidden; pointer-events: none";
@@ -407,25 +413,25 @@ export function createMorph({
   /** The control unseen, and marked so a group leaves it out; its own inline opacity kept */
   let savedOpacity = "";
   const away = (on: boolean) => {
-    if (on === source.hasAttribute("data-lb-away")) return;
+    if (on === source.hasAttribute(AWAY)) return;
     if (on) {
       savedOpacity = source.style.opacity;
-      source.setAttribute("data-lb-away", "");
+      source.setAttribute(AWAY, "");
       source.style.opacity = "0";
     } else {
-      source.removeAttribute("data-lb-away");
+      source.removeAttribute(AWAY);
       source.style.opacity = savedOpacity;
     }
   };
 
-  const grouped = () => parent.classList.contains("lb-group");
+  /** Whether the control's parent is one surface of glass now: a group runs on it */
+  const grouped = () => parent.hasAttribute(SURFACE);
   /** Whether the panel would cover any of the control's neighbors in a group */
   const covers = (panel: Box) =>
     grouped() &&
     [...parent.children].some((el) => {
-      if (el === source || el === shape || el === stub || !(el instanceof HTMLElement)) return false;
-      if (el.classList.contains("lb-group__glass") || el.classList.contains("lb-group__paint")) return false;
-      if (win.getComputedStyle(el).visibility === "hidden" || el.hasAttribute("data-lb-away")) return false;
+      if (el === source || !(el instanceof HTMLElement) || el.hasAttribute(PART) || el.hasAttribute(AWAY)) return false;
+      if (win.getComputedStyle(el).visibility === "hidden") return false;
       const r = el.getBoundingClientRect();
       return (
         r.width > 0 &&
