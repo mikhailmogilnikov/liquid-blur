@@ -1,7 +1,7 @@
 {
   "name": "@liquid-web/morph",
   "version": "1.0.0",
-  "description": "A control grows into a panel and shrinks back: one shape the whole way, on interruptible springs. Works on any element.",
+  "description": "One element flows into another: one shape the whole way, on interruptible springs. Works on any element.",
   "keywords": [
     "animation",
     "liquid-web",

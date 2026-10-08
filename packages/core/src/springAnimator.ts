@@ -103,6 +103,21 @@ export class SpringAnimator<K extends string> {
     }
   }
 
+  /**
+   * Puts channels somewhere else at once, their targets left as they are: a progress that starts
+   * over, or a flight carried along by a scroll. Each keeps its velocity unless given one.
+   */
+  jump(values: Partial<Record<K, number>>, velocity?: Partial<Record<K, number>>) {
+    for (const key of Object.keys(values) as K[]) {
+      const s = this.state[key];
+      const x = values[key];
+      if (!s || x === undefined) continue;
+      s.x = x;
+      const v = velocity?.[key];
+      if (v !== undefined) s.v = v;
+    }
+  }
+
   stop() {
     cancelAnimationFrame(this.frame);
     this.frame = 0;
@@ -117,7 +132,9 @@ export class SpringAnimator<K extends string> {
   }
 
   private tick = (now: number) => {
-    const dt = Math.min((now - this.last) / 1000, 1 / 30);
+    // A frame's time can be before the moment it was asked for (an input handler runs after the frame
+    // began): no step back in time, which would push a spring away from its target
+    const dt = Math.max(0, Math.min((now - this.last) / 1000, 1 / 30));
     this.last = now;
 
     let resting = true;

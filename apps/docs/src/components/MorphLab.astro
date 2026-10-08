@@ -29,15 +29,15 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <p class="ms__words" aria-hidden="true">Corner</p>
     <div class="ms__layer">
       <button class="src src--corner lb lb-interactive" type="button" aria-label="Create" aria-controls="m-corner" data-morph-source>
-        <Icon name="plus" size={22} />
+        <Icon name="plus" size={22} match="plus" />
       </button>
     </div>
-    <div class="panel panel--corner" id="m-corner" role="menu">
+    <div class="panel panel--corner lb" id="m-corner" role="menu">
       <button type="button" role="menuitem" data-close><Icon name="arrow" size={18} />Share</button>
       <button type="button" role="menuitem" data-close><Icon name="heart" size={18} />Add to Favorites</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Copy Link</button>
       <hr />
-      <button type="button" role="menuitem" data-close><Icon name="plus" size={18} />New Tab</button>
+      <button type="button" role="menuitem" data-close><Icon name="plus" size={18} match="plus" />New Tab</button>
       <button type="button" role="menuitem" data-close><Icon name="eye" size={18} />New Private Tab</button>
     </div>
     <p class="ms__hint"><b>Corner.</b> The reference: grows right and down from the button.</p>
@@ -49,10 +49,10 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <p class="ms__words" aria-hidden="true">Upward</p>
     <div class="ms__layer">
       <button class="src src--fab lb lb-interactive" type="button" aria-label="Now playing" aria-controls="m-fab" data-morph-source>
-        <Icon name="play" size={22} />
+        <Icon name="play" size={22} match="play" />
       </button>
     </div>
-    <div class="panel panel--fab" id="m-fab" role="dialog" aria-label="Now playing">
+    <div class="panel panel--fab lb" id="m-fab" role="dialog" aria-label="Now playing">
       <div class="player">
         <div class="player__cover"></div>
         <div>
@@ -63,7 +63,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <div class="player__track"><i></i></div>
       <div class="player__controls">
         <button type="button" aria-label="Back"><Icon name="back" size={22} /></button>
-        <button type="button" aria-label="Pause" data-close><Icon name="pause" size={26} /></button>
+        <button type="button" aria-label="Pause" data-close><Icon name="pause" size={26} match="play" /></button>
         <button type="button" aria-label="Next"><Icon name="next" size={22} /></button>
       </div>
     </div>
@@ -75,15 +75,15 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <div class="ms__art" style={hue(110)}></div>
     <p class="ms__words" aria-hidden="true">Sort</p>
     <div class="ms__layer">
-      <button class="src src--pill lb lb-interactive" type="button" aria-controls="m-pill" data-morph-source data-label>
-        Newest
+      <button class="src src--pill lb lb-interactive" type="button" aria-controls="m-pill" data-morph-source>
+        <span data-label data-lw-match="sort">Newest</span>
       </button>
     </div>
-    <div class="panel panel--pill" id="m-pill" role="menu">
-      <button type="button" role="menuitemradio" aria-checked="true" data-pick>Newest</button>
-      <button type="button" role="menuitemradio" aria-checked="false" data-pick>Oldest</button>
-      <button type="button" role="menuitemradio" aria-checked="false" data-pick>Most popular</button>
-      <button type="button" role="menuitemradio" aria-checked="false" data-pick>A–Z</button>
+    <div class="panel panel--pill lb" id="m-pill" role="menu">
+      <button type="button" role="menuitemradio" aria-checked="true" data-pick><span data-lw-match="sort">Newest</span></button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>Oldest</span></button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>Most popular</span></button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>A–Z</span></button>
     </div>
     <p class="ms__hint"><b>Capsule with a label.</b> Pick an option: the button comes back with the new label.</p>
   </section>
@@ -94,11 +94,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <p class="ms__words" aria-hidden="true">Search</p>
     <div class="ms__layer">
       <button class="src src--search lb lb-interactive" type="button" aria-label="Search" aria-controls="m-search" data-morph-source>
-        <Icon name="search" size={20} />
+        <Icon name="search" size={20} match="search" />
       </button>
     </div>
-    <form class="panel panel--search" id="m-search" role="search" data-close-on-submit>
-      <Icon name="search" size={18} />
+    <form class="panel panel--search lb" id="m-search" role="search" data-close-on-submit>
+      <Icon name="search" size={18} match="search" />
       <input type="search" placeholder="Search" aria-label="Search" />
     </form>
     <p class="ms__hint"><b>Into a field.</b> A circle into a long capsule, anchored right; type, Enter or Esc.</p>
@@ -120,7 +120,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         </button>
       </div>
     </div>
-    <div class="panel panel--group" id="m-group" role="menu">
+    <div class="panel panel--group lb" id="m-group" role="menu">
       <button type="button" role="menuitem" data-close><Icon name="heart" size={18} />Love</button>
       <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Add to Queue</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Copy Link</button>
@@ -144,7 +144,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         </button>
       </div>
     </div>
-    <div class="panel panel--group-over" id="m-group-over" role="menu">
+    <div class="panel panel--group-over lb" id="m-group-over" role="menu">
       <button type="button" role="menuitem" data-close><Icon name="heart" size={18} />Love</button>
       <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Add to Queue</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Copy Link</button>
@@ -164,12 +164,12 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         <Icon name="plus" size={22} />
       </button>
     </div>
-    <div class="panel panel--sq" id="m-sq" role="menu">
+    <div class="panel panel--sq lb" id="m-sq" role="menu">
       <button type="button" role="menuitem" data-close><Icon name="frame" size={18} />Widgets</button>
       <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Stacks</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Duplicate</button>
     </div>
-    <div class="panel panel--sq-round" id="m-sq-round" role="menu">
+    <div class="panel panel--sq-round lb" id="m-sq-round" role="menu">
       <button type="button" role="menuitem" data-close><Icon name="plus" size={18} />New Post</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Drafts</button>
       <button type="button" role="menuitem" data-close><Icon name="motion" size={18} />Scheduled</button>
@@ -186,7 +186,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         <Icon name="heart" size={20} />
       </button>
     </div>
-    <div class="panel panel--far" id="m-far" role="dialog" aria-label="Saved">
+    <div class="panel panel--far lb lb-clear" id="m-far" role="dialog" aria-label="Saved">
       <b>Saved to Favorites</b>
       <span>You'll find it in your library, on every device.</span>
       <button class="panel__action" type="button" data-close>Done</button>
@@ -206,11 +206,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         <Icon name="layers" size={20} />
       </button>
     </div>
-    <div class="panel panel--tiny" id="m-tiny" role="dialog" aria-label="Details">
+    <div class="panel panel--tiny lb" id="m-tiny" role="dialog" aria-label="Details">
       <b>Night Swim</b>
       <span>3:42 · 2026</span>
     </div>
-    <div class="panel panel--tall panel--on-tint" id="m-tall" role="menu">
+    <div class="panel panel--tall panel--on-tint lb lb-tinted" id="m-tall" role="menu">
       <button type="button" role="menuitem" data-close>All</button>
       <button type="button" role="menuitem" data-close>Albums</button>
       <button type="button" role="menuitem" data-close>Artists</button>
@@ -350,10 +350,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     border-radius: 28px;
   }
 
-  /*
-   * Panels: laid out where they open, hidden until the script takes them. Never moved by
-   * `transform`: that's the morph's while it runs.
-   */
+  /* Panels: laid out where they open, glass of their own, hidden until the script shows them */
   .panel {
     position: absolute;
     z-index: 2;
@@ -526,8 +523,10 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       `main avg ${avg.toFixed(1)}ms max ${Math.max(...busy).toFixed(1)}ms · dropped ${dropped}`;
   };
 
+  const isOpen = (entry: Entry) => entry.morph?.current === entry.content;
   // Focus follows: into the panel once open, back to the control once it's there again
   const rested = (entry: Entry, open: boolean) => {
+    entry.source.setAttribute("aria-expanded", String(open));
     if (open) {
       entry.content.querySelector<HTMLElement>("input, button")?.focus({ preventScroll: true });
     } else if (document.activeElement === document.body || entry.content.contains(document.activeElement)) {
@@ -537,21 +536,21 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
   };
 
   // Slow motion stretches every spring; changing it rebuilds the morphs
-  const slowed = (factor: number): { open: MorphSprings; close: MorphSprings } => {
+  const slowed = (factor: number): { grow: MorphSprings; shrink: MorphSprings } => {
     const scale = (set: MorphSprings) =>
       Object.fromEntries(
         Object.entries(set).map(([key, s]) => [key, { ...s, duration: s.duration * factor }]),
       ) as MorphSprings;
-    return { open: scale(defaultMorphSprings.open), close: scale(defaultMorphSprings.close) };
+    return { grow: scale(defaultMorphSprings.grow), shrink: scale(defaultMorphSprings.shrink) };
   };
   const build = (factor: number) => {
     for (const entry of entries) {
       entry.morph?.destroy();
       entry.morph = createMorph({
-        source: entry.source,
-        content: entry.content,
+        states: [entry.source, entry.content],
         spring: slowed(factor),
-        onRest: (open) => rested(entry, open),
+        onStart: (to) => entry.source.setAttribute("aria-expanded", String(to === entry.content)),
+        onRest: (at) => rested(entry, at === entry.content),
       });
     }
   };
@@ -562,25 +561,28 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
 
   const toggle = (entry: Entry) => {
     measure(entry.scene.dataset.scene!);
-    entry.morph?.toggle();
+    entry.morph?.to(isOpen(entry) ? entry.source : entry.content);
   };
   const close = (entry: Entry) => {
-    if (!entry.morph?.isOpen) return;
+    if (!isOpen(entry)) return;
     measure(entry.scene.dataset.scene!);
-    entry.morph.close();
+    entry.morph?.to(entry.source);
   };
 
   for (const entry of entries) {
     entry.source.addEventListener("click", () => toggle(entry));
     entry.content.addEventListener("click", (e) => {
       const target = e.target as Element;
-      // A sort option relabels the control: the copy has to come back with the new label
+      // A sort option relabels the control, and its label is the one that flies back into it
       const pick = target.closest<HTMLElement>("[data-pick]");
       if (pick) {
-        for (const option of entry.content.querySelectorAll("[data-pick]")) {
+        for (const option of entry.content.querySelectorAll<HTMLElement>("[data-pick]")) {
           option.setAttribute("aria-checked", String(option === pick));
+          const label = option.querySelector("span")!;
+          if (option === pick) label.dataset.lwMatch = "sort";
+          else delete label.dataset.lwMatch;
         }
-        entry.source.textContent = pick.textContent!.trim();
+        entry.source.querySelector<HTMLElement>("[data-label]")!.textContent = pick.textContent!.trim();
       }
       if (pick || target.closest("[data-close]")) close(entry);
     });
@@ -595,7 +597,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     scene.addEventListener("pointerdown", (e) => {
       const target = e.target as Node;
       for (const entry of entries) {
-        if (entry.scene !== scene || !entry.morph?.isOpen) continue;
+        if (entry.scene !== scene || !isOpen(entry)) continue;
         if (entry.content.contains(target) || entry.source.contains(target)) continue;
         close(entry);
       }

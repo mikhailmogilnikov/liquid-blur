@@ -21,7 +21,7 @@ import { AWAY, PART, SURFACE } from "@liquid-web/core";
  * moves them through `style` (a spring, `lb-stretch`, `lb-swell`) or CSS just works. Moved some
  * other way (layout changes from outside the group, a script animating an ancestor's child list),
  * call `update()`. A child with `visibility: hidden` makes no glass, nor one marked `data-lw-away`
- * (a morph's control while its panel is out: invisible, yet still there to focus and read). While
+ * (a morph's state while its shape stands in for it: maybe still there to focus and read). While
  * it runs the root is marked `data-lw-surface` and its own elements `data-lw-part` (contract.ts).
  *
  * The children are glass themselves (`.lb`), and while none of them melt they stay exactly that:

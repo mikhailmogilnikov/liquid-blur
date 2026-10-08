@@ -8,8 +8,9 @@
  */
 
 /**
- * On an element that stepped out for a stand-in to take its place (a morph's control while its
- * panel is out): unseen, yet still there to focus and read. A glass group leaves it out.
+ * On an element that stepped out for a stand-in to take its place (a morph's states while its
+ * shape stands in for them): not glass for now, though one that kept focus is still there to focus
+ * and read. A glass group leaves it out.
  */
 export const AWAY = "data-lw-away";
 

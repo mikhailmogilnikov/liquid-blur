@@ -1,8 +1,9 @@
 # @liquid-web/morph
 
-A control grows into a panel and shrinks back: one shape the whole way, its center, size and corners
-on springs you can turn around mid-way, the panel's content coming in magnified and out of focus and
-settling sharp. It copies whatever the control looks like, so it works on any element; with
+One element flows into another and back: one shape the whole way, its center, size and corners on
+springs you can turn around mid-way. The bigger state flies itself, live, coming in magnified and
+out of focus and settling sharp; the smaller one rides along as a copy, and elements they share fly
+from one to the other. It works on any element; with
 [`@liquid-web/blur`](https://liquid-web.mogilnikov.dev/blur) it's the same glass.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/morph)** · [Changelog](CHANGELOG.md) · Part of
@@ -12,17 +13,17 @@ settling sharp. It copies whatever the control looks like, so it works on any el
 npm install @liquid-web/morph
 ```
 
-Lay the panel out where it opens, hidden with `visibility: hidden`, then:
+Lay out both states where they are at rest, the hidden one with `visibility: hidden`, then:
 
 ```js
 import { createMorph } from "@liquid-web/morph";
 
-const morph = createMorph({ source: button, content: panel, dismiss: true });
-button.addEventListener("click", () => morph.toggle());
+const morph = createMorph({ states: [button, panel] });
+button.addEventListener("click", () => morph.to(morph.current === panel ? button : panel));
 ```
 
-Options, the returned morph, layout rules, glass groups, a React hook and the limitations are in the
-[documentation](https://liquid-web.mogilnikov.dev/morph).
+Options, the returned morph, layout rules, shared elements, glass groups, a React hook and the
+limitations are in the [documentation](https://liquid-web.mogilnikov.dev/morph).
 
 ## License
 

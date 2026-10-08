@@ -1,0 +1,52 @@
+---
+/**
+ * A live example with its code behind tabs: the example in the default slot, the code in the
+ * `html`, `js` and `css` slots (Markdown code blocks). A tab shows only for a slot that's filled.
+ */
+const tabs = [
+  ["example", "Example"],
+  ["html", "HTML"],
+  ["js", "JS"],
+  ["css", "CSS"],
+].filter(([slot]) => slot === "example" || Astro.slots.has(slot));
+---
+
+<div class="ex" data-ex>
+  <div class="ex__bar">
+    <div class="seg" role="group" aria-label="Show">
+      <span class="seg__thumb" aria-hidden="true"></span>
+      {
+        tabs.map(([value, label], i) => (
+          <button type="button" data-value={value} aria-pressed={i === 0 ? "true" : "false"}>
+            {label}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+  <div class="ex__panel" data-panel="example"><slot /></div>
+  {Astro.slots.has("html") && <div class="ex__panel" data-panel="html" hidden><slot name="html" /></div>}
+  {Astro.slots.has("js") && <div class="ex__panel" data-panel="js" hidden><slot name="js" /></div>}
+  {Astro.slots.has("css") && <div class="ex__panel" data-panel="css" hidden><slot name="css" /></div>}
+</div>
+
+<style>
+  .ex { margin-block: 20px; }
+  .ex:first-child { margin-top: 0; }
+  .ex:last-child { margin-bottom: 0; }
+  .ex__bar { margin-bottom: 10px; }
+  .ex__panel > :global(.code) { margin: 0; }
+  .ex__panel > :global(.code + .code) { margin-top: 10px; }
+</style>
+
+<script>
+  import { segmented } from "../../scripts/segmented";
+
+  for (const ex of document.querySelectorAll<HTMLElement>("[data-ex]:not([data-ex-ready])")) {
+    ex.dataset.exReady = "";
+    const panels = [...ex.querySelectorAll<HTMLElement>(":scope > [data-panel]")];
+    segmented(ex.querySelector<HTMLElement>(".seg")!, (value) => {
+      for (const panel of panels) panel.hidden = panel.dataset.panel !== value;
+    });
+  }
+</script>

@@ -31,6 +31,7 @@ const spring = new SpringAnimator(
 spring.to({ width: 240, radius: 24 });
 spring.to({ width: 100, radius: 12 }, { duration: 0.6, bounce: 0 }); // new springs are optional
 spring.retarget({ width: 110, radius: 12 }); // adjust the current movement, no new bounce
+spring.jump({ width: 120 }); // move a channel at once, keeping its velocity and target
 spring.values(); // where it is now
 spring.stop();
 ```
@@ -62,6 +63,6 @@ The packages never import each other. Instead, each marks what it does with attr
 | --- | --- | --- | --- |
 | `data-lw-surface` | `SURFACE` | Liquid Blur's melt, on a group's root while it runs | Its children share one surface: a morph from one of them lifts its glass over the others or melts with them |
 | `data-lw-part` | `PART` | Melt and morph, on elements they create | Not content: a morph doesn't count it as a neighbor, press doesn't press it |
-| `data-lw-away` | `AWAY` | Morph, on the control while its panel is out | Unseen but still focusable; melt leaves it out |
+| `data-lw-away` | `AWAY` | Morph, on states that stepped out for its shape | Not glass for now: melt leaves it out. One that kept focus is still focusable |
 
 </Section>

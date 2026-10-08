@@ -19,7 +19,7 @@ const { hint = true } = Astro.props;
   <button class="mdemo__src lb lb-highlight lb-swell" type="button" aria-label="Create" aria-haspopup="menu" data-source>
     <Icon name="plus" size={26} />
   </button>
-  <div class="mdemo__panel" role="menu" aria-label="Create" data-content>
+  <div class="mdemo__panel lb" role="menu" aria-label="Create" data-content>
     <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share</button>
     <button type="button" role="menuitem"><Icon name="heart" size={18} />Add to Favorites</button>
     <button type="button" role="menuitem"><Icon name="copy" size={18} />Copy Link</button>
@@ -94,7 +94,7 @@ const { hint = true } = Astro.props;
   .mdemo.is-dragging .mdemo__src { cursor: grabbing; z-index: 3; }
   .mdemo[data-at^="b"] .mdemo__hint { opacity: 0; }
 
-  /* Laid out where it opens, hidden until the morph takes it */
+  /* Laid out where it opens, its own glass; hidden until the morph shows it */
   .mdemo__panel {
     z-index: 2;
     width: 264px;
@@ -149,22 +149,12 @@ const { hint = true } = Astro.props;
 </style>
 
 <script>
-  import { createMorph } from "@liquid-web/morph";
+  import { disclosure } from "../scripts/disclosure";
 
   for (const scene of document.querySelectorAll<HTMLElement>("[data-morph-demo]")) {
     const source = scene.querySelector<HTMLElement>("[data-source]")!;
     const content = scene.querySelector<HTMLElement>("[data-content]")!;
-    const morph = createMorph({
-      source,
-      content,
-      dismiss: true,
-      onStart(open) {
-        if (open) content.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
-      },
-      onRest(open) {
-        if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
-      },
-    });
+    const menu = disclosure(source, content);
 
     /*
      * Drag the button to a corner or the middle: it lands on the nearest one, and the menu opens
@@ -175,7 +165,7 @@ const { hint = true } = Astro.props;
 
     source.addEventListener("pointerdown", (e) => {
       dragged = false;
-      if (morph.phase !== "closed" || e.button !== 0) return;
+      if (menu.isOpen || menu.morph.moving || e.button !== 0) return;
       drag = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
     });
     source.addEventListener("pointermove", (e) => {
@@ -230,10 +220,10 @@ const { hint = true } = Astro.props;
         dragged = false;
         return;
       }
-      morph.toggle();
+      menu.toggle();
     });
     content.addEventListener("click", (e) => {
-      if ((e.target as Element).closest("button")) morph.close();
+      if ((e.target as Element).closest("button")) menu.close();
     });
   }
 </script>

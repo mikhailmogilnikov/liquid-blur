@@ -120,7 +120,7 @@ const features = [
       </div>
 
       <!-- The menu the pair grows into from its more button: laid out where it opens, hidden until then -->
-      <div class="stage-menu" id="stage-menu" role="menu" aria-label="More" data-stage-menu>
+      <div class="stage-menu lb" id="stage-menu" role="menu" aria-label="More" data-stage-menu>
         <button type="button" role="menuitem"><Icon name="plus" size={18} />Add to Library</button>
         <button type="button" role="menuitem"><Icon name="heart" size={18} />Love</button>
         <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share Album</button>
@@ -151,7 +151,7 @@ const features = [
 
 <script>
   import { installGlassGroups } from "@liquid-web/blur/melt";
-  import { createMorph } from "@liquid-web/morph";
+  import { disclosure } from "../scripts/disclosure";
   import { segmented } from "../scripts/segmented";
 
   // The player and the like button share one piece of glass
@@ -169,18 +169,7 @@ const features = [
   const more = document.querySelector<HTMLElement>("[data-stage-more]");
   const menu = document.querySelector<HTMLElement>("[data-stage-menu]");
   if (pair && more && menu) {
-    const morph = createMorph({
-      source: pair,
-      content: menu,
-      dismiss: true,
-      onStart(open) {
-        more.setAttribute("aria-expanded", String(open));
-        if (open) menu.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
-      },
-      onRest(open) {
-        if (!open && menu.contains(document.activeElement)) more.focus({ preventScroll: true });
-      },
-    });
+    const morph = disclosure(pair, menu, { trigger: more });
     more.addEventListener("click", () => morph.toggle());
     menu.addEventListener("click", (e) => {
       if ((e.target as Element).closest("button")) morph.close();

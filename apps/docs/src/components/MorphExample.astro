@@ -6,9 +6,11 @@ import Icon from "./Icon.astro";
  *   - plain: no Liquid Blur, a solid pill grows into a solid panel
  *   - glassify: the same solid pill, but glass under it, uncovered as it opens
  *   - group: a glass button in a melted toolbar, lifted out over its neighbors
+ *   - match: a sort pill whose icon and label fly into the menu's title and picked option
+ *   - steps: three states, a button, a bar and a card, sharing the artwork, title and play button
  */
 interface Props {
-  kind: "plain" | "glassify" | "group";
+  kind: "plain" | "glassify" | "group" | "match" | "steps";
 }
 
 const { kind } = Astro.props;
@@ -17,13 +19,16 @@ const items = [
   ["copy", "Copy Link"],
   ["heart", "Add to Favorites"],
 ] as const;
+const sorts = ["Newest", "Oldest", "Most Popular", "A–Z"];
+const art =
+  "radial-gradient(circle at 28% 24%, #ffd36e 0, transparent 58%), radial-gradient(circle at 78% 82%, #ff4f81 0, transparent 55%), linear-gradient(135deg, #ff7a59, #b5179e)";
 ---
 
-<div class:list={["mx", `mx--${kind}`]} data-mx>
+<div class:list={["mx", `mx--${kind}`]} data-mx={kind}>
   {kind !== "plain" && <div class="bd bd-aurora"></div>}
 
   {
-    kind === "group" ? (
+    kind === "group" && (
       <div class="mx__bar lb lb-group">
         <button class="lb lb-interactive mx__round" type="button" aria-label="Back">
           <Icon name="back" size={20} />
@@ -35,7 +40,11 @@ const items = [
           <Icon name="arrow" size={20} />
         </button>
       </div>
-    ) : (
+    )
+  }
+
+  {
+    (kind === "plain" || kind === "glassify") && (
       <button
         class:list={["mx__pill", { lb: kind === "glassify" }]}
         type="button"
@@ -48,16 +57,88 @@ const items = [
     )
   }
 
-  <div class="mx__panel" role="menu" aria-label="Share" data-content>
-    {
-      items.map(([icon, label]) => (
-        <button type="button" role="menuitem">
-          <Icon name={icon} size={18} />
-          {label}
+  {
+    (kind === "plain" || kind === "glassify" || kind === "group") && (
+      <div class:list={["mx__panel", { lb: kind !== "plain" }]} role="menu" aria-label="Share" data-content>
+        {items.map(([icon, label]) => (
+          <button type="button" role="menuitem">
+            <Icon name={icon} size={18} />
+            {label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    kind === "match" && (
+      <>
+        <button class="mx__pill mx__sort lb lb-interactive" type="button" aria-haspopup="menu" data-source>
+          <Icon name="sort" size={18} match="sort-icon" />
+          <span data-lw-match="sort" data-label>{sorts[0]}</span>
         </button>
-      ))
-    }
-  </div>
+        <div class="mx__panel lb" role="menu" aria-label="Sort by" data-content>
+          <p class="mx__title">
+            <Icon name="sort" size={18} match="sort-icon" />
+            Sort by
+          </p>
+          {sorts.map((label, i) => (
+            <button type="button" role="menuitemradio" aria-checked={i === 0 ? "true" : "false"} data-pick>
+              <span data-lw-match={i === 0 ? "sort" : undefined}>{label}</span>
+              <Icon name="check" size={18} class="mx__check" />
+            </button>
+          ))}
+        </div>
+      </>
+    )
+  }
+
+  {
+    kind === "steps" && (
+      <>
+        <div class="mx__tabs" role="group" aria-label="State">
+          <button type="button" aria-pressed="true" data-go="0">Button</button>
+          <button type="button" aria-pressed="false" data-go="1">Bar</button>
+          <button type="button" aria-pressed="false" data-go="2">Card</button>
+        </div>
+
+        <button class="mx__dot lb lb-interactive" type="button" aria-label="Now playing" data-step>
+          <Icon name="play" size={20} match="play" />
+        </button>
+
+        <div class="mx__mini lb" data-step>
+          <button class="mx__expand" type="button" aria-label="Open player" data-expand>
+            <span class="mx__art" style={`background: ${art}`} data-lw-match="art"></span>
+            <span class="mx__meta">
+              <strong data-lw-match="title">Surface Tension</strong>
+              <span>Lumen</span>
+            </span>
+          </button>
+          <button class="mx__icon" type="button" aria-label="Play">
+            <Icon name="play" size={20} match="play" />
+          </button>
+        </div>
+
+        <div class="mx__card lb" role="dialog" aria-label="Now playing" data-step>
+          <button class="mx__icon mx__collapse" type="button" aria-label="Minimize" data-collapse>
+            <Icon name="chevron" size={20} />
+          </button>
+          <span class="mx__art mx__art--big" style={`background: ${art}`} data-lw-match="art"></span>
+          <span class="mx__meta mx__meta--big">
+            <strong data-lw-match="title">Surface Tension</strong>
+            <span>Lumen — Neon Tides</span>
+          </span>
+          <div class="mx__controls">
+            <button class="mx__icon" type="button" aria-label="Previous"><Icon name="back" size={22} /></button>
+            <button class="mx__icon mx__icon--big" type="button" aria-label="Play">
+              <Icon name="play" size={28} match="play" />
+            </button>
+            <button class="mx__icon" type="button" aria-label="Next"><Icon name="next" size={22} /></button>
+          </div>
+        </div>
+      </>
+    )
+  }
 </div>
 
 <style>
@@ -68,11 +149,16 @@ const items = [
     background: var(--wash);
     isolation: isolate;
   }
+  .mx--match { height: 340px; }
+  .mx--steps { height: 420px; }
 
   /* Everything sits at the bottom middle, laid out where it is: auto margins, never `transform` */
   .mx__pill,
   .mx__bar,
-  .mx__panel {
+  .mx__panel,
+  .mx__dot,
+  .mx__mini,
+  .mx__card {
     position: absolute;
     inset: auto 0 24px;
     margin: 0 auto;
@@ -94,11 +180,14 @@ const items = [
     background: var(--ink);
     color: var(--on-ink);
   }
-  .mx--plain .mx__panel { color: var(--on-ink); }
+  .mx--plain .mx__panel {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
 
   /*
-   * Solid ink laid over the glass, under the label. The copy that morphs has the control's classes
-   * and `data-lw-part`: open, its ink fades and the glass shows.
+   * Solid ink laid over the glass, under the label. The pill's surface is another than the panel's,
+   * so on the way it lies over the panel's glass, ink and all, and dissolves into it as it grows.
    */
   .mx--glassify .mx__pill {
     color: #fff;
@@ -113,7 +202,6 @@ const items = [
     background: #171717;
     transition: opacity 0.4s var(--glide);
   }
-  .mx--glassify.is-open .mx__pill[data-lw-part]::after { opacity: 0; }
 
   .mx__bar {
     width: fit-content;
@@ -128,7 +216,7 @@ const items = [
     padding: 0;
   }
 
-  /* Hidden until the morph takes it; above a copy lifted out of the group */
+  /* Its own surface; hidden until the morph shows it, above a shape lifted out of the group */
   .mx__panel {
     z-index: 2;
     width: 264px;
@@ -151,6 +239,143 @@ const items = [
   .mx__panel button:hover { background: color-mix(in srgb, currentColor 13%, transparent); }
   .mx__panel button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
 
+  /* Shared elements: the pill as wide as its label, the picked option checked */
+  .mx__sort {
+    width: fit-content;
+    padding: 0 20px 0 16px;
+    color: var(--ink);
+  }
+  .mx__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    margin: 0;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  .mx--match .mx__panel button { justify-content: space-between; }
+  .mx__panel :global(.mx__check) { visibility: hidden; }
+  .mx__panel [aria-checked="true"] > :global(.mx__check) { visibility: visible; }
+
+  /* Three states */
+  .mx__tabs {
+    position: absolute;
+    inset: 16px 0 auto;
+    width: fit-content;
+    margin: 0 auto;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .mx__tabs button {
+    padding: 6px 14px;
+    border-radius: 999px;
+    color: var(--ink-2);
+  }
+  .mx__tabs [aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  .mx__dot,
+  .mx__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 24px;
+    color: var(--ink);
+  }
+  .mx__icon:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+  .mx__icon:focus-visible,
+  .mx__expand:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
+  .mx__mini {
+    z-index: 2;
+    width: 288px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    border-radius: 32px;
+    box-sizing: border-box;
+    color: var(--ink);
+    visibility: hidden;
+  }
+  .mx__expand {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    height: 48px;
+    padding: 0;
+    border-radius: 24px;
+    text-align: left;
+  }
+  .mx__art {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+  }
+  .mx__meta {
+    display: grid;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .mx__meta strong { font-weight: 600; justify-self: start; }
+  .mx__meta span { color: var(--ink-2); }
+
+  .mx__card {
+    z-index: 2;
+    width: 288px;
+    height: fit-content;
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: 24px 16px 12px;
+    border-radius: 36px;
+    box-sizing: border-box;
+    color: var(--ink);
+    visibility: hidden;
+  }
+  .mx__collapse {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+  .mx__art--big {
+    width: 152px;
+    height: 152px;
+    border-radius: 24px;
+  }
+  .mx__meta--big {
+    justify-items: center;
+    text-align: center;
+    font-size: 15px;
+  }
+  .mx__meta--big strong { justify-self: center; }
+  .mx__controls {
+    display: flex;
+    gap: 16px;
+  }
+  .mx__icon--big {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+  }
+
   @supports (corner-shape: squircle) {
     .mx { border-radius: 26px; corner-shape: squircle; }
   }
@@ -158,31 +383,76 @@ const items = [
 
 <script>
   import { createMorph } from "@liquid-web/morph";
+  import { disclosure } from "../scripts/disclosure";
   import { installGlassGroups } from "@liquid-web/blur/melt";
 
   installGlassGroups();
 
   for (const scene of document.querySelectorAll<HTMLElement>("[data-mx]:not([data-mx-ready])")) {
     scene.dataset.mxReady = "";
+    if (scene.dataset.mx === "steps") {
+      steps(scene);
+      continue;
+    }
     const source = scene.querySelector<HTMLElement>("[data-source]")!;
     const content = scene.querySelector<HTMLElement>("[data-content]")!;
-    const morph = createMorph({
-      source,
-      content,
-      dismiss: true,
-      onStart(open) {
-        // The copy is in place now: its style first, so the class below transitions it
-        scene.querySelector("[data-lw-part]")?.getBoundingClientRect();
-        scene.classList.toggle("is-open", open);
-        if (open) content.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
-      },
-      onRest(open) {
-        if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
-      },
-    });
-    source.addEventListener("click", () => morph.toggle());
+    const menu = disclosure(source, content);
+    source.addEventListener("click", () => menu.toggle());
     content.addEventListener("click", (e) => {
-      if ((e.target as Element).closest("button")) morph.close();
+      const target = e.target as Element;
+      // A sort option relabels the pill, and moves the match: its label is the one that flies back
+      const pick = target.closest<HTMLElement>("[data-pick]");
+      if (pick) {
+        for (const option of content.querySelectorAll<HTMLElement>("[data-pick]")) {
+          option.setAttribute("aria-checked", String(option === pick));
+          const label = option.querySelector("span")!;
+          if (option === pick) label.dataset.lwMatch = "sort";
+          else delete label.dataset.lwMatch;
+        }
+        source.querySelector<HTMLElement>("[data-label]")!.textContent = pick.textContent!.trim();
+      }
+      if (target.closest("button")) menu.close();
     });
+  }
+
+  /**
+   * A button, a bar and a card: one morph over all three. The tabs go straight to any of them, the
+   * states themselves one step in, Escape one step out, a press outside all the way back.
+   */
+  function steps(scene: HTMLElement) {
+    const states = [...scene.querySelectorAll<HTMLElement>("[data-step]")];
+    const tabs = [...scene.querySelectorAll<HTMLElement>("[data-go]")];
+    const [dot, mini, card] = states;
+    const focusable = (el: HTMLElement) =>
+      el.matches("button") ? el : el.querySelector<HTMLElement>("[data-expand], [data-collapse], button");
+
+    const morph = createMorph({
+      states,
+      onStart(to, from) {
+        tabs.forEach((tab, i) => tab.setAttribute("aria-pressed", String(states[i] === to)));
+        // Focus follows into the state on its way in, if it was in the one leaving
+        if (from.contains(document.activeElement)) focusable(to)?.focus({ preventScroll: true });
+      },
+    });
+    const step = () => states.indexOf(morph.current);
+
+    for (const tab of tabs) tab.addEventListener("click", () => morph.to(states[Number(tab.dataset.go)]));
+    dot.addEventListener("click", () => morph.to(mini));
+    mini.querySelector("[data-expand]")!.addEventListener("click", () => morph.to(card));
+    card.querySelector("[data-collapse]")!.addEventListener("click", () => morph.to(mini));
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && step() > 0 && !e.defaultPrevented) morph.to(states[step() - 1]);
+    });
+    document.addEventListener(
+      "pointerdown",
+      (e) => {
+        const target = e.target as Element | null;
+        if (!target || step() === 0) return;
+        if (states.some((s) => s.contains(target)) || target.closest("[data-go], [data-lw-part]")) return;
+        morph.to(dot);
+      },
+      true,
+    );
   }
 </script>

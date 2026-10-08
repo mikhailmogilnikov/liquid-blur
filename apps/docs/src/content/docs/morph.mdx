@@ -2,8 +2,8 @@
 package: "@liquid-web/morph"
 name: Morph
 order: 2
-description: "A control grows into a panel and shrinks back: one shape the whole way, on interruptible springs. Works on any element; with Liquid Blur, it's the same glass."
-intro: "A control grows into a panel and back, on springs you can turn around mid-way. Any element; with <a href=\"/blur\">Liquid Blur</a>, the same glass."
+description: "One element flows into another: one shape the whole way, on interruptible springs. Works on any element; with Liquid Blur, it's the same glass."
+intro: "One element flows into another and back, on springs you can turn around mid-way. Any element; with <a href=\"/blur\">Liquid Blur</a>, the same glass."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -14,10 +14,11 @@ import Steps from "../../components/docs/Steps.astro";
 import Step from "../../components/docs/Step.astro";
 import Install from "../../components/docs/Install.astro";
 import MorphExample from "../../components/MorphExample.astro";
+import Example from "../../components/docs/Example.astro";
 
 <Section id="start" title="Get started">
 
-You need two elements: the control, and the panel's content, laid out where the panel opens. The shape that animates is a copy of the control, so the content doesn't need a background.
+A morph flows between states: real elements, each laid out where and as it is at rest. One is shown, the others are hidden. Asked for another, a single shape flows from the box of the one shown to the box of the other, and at rest that element is itself again. Here the states are a button and its panel.
 
 <Steps>
 <Step>
@@ -29,12 +30,12 @@ You need two elements: the control, and the panel's content, laid out where the 
 </Step>
 <Step>
 
-**Lay out the panel** at its open position and size, and hide it with `visibility: hidden` so it can still be measured. Put it above the control (`z-index: 2`). Its `border-radius` sets the open panel's corners. Here the control is [Liquid Blur](/blur) glass, but any styled control works.
+**Lay out both states** where they are at rest. Hide the panel with `visibility: hidden` so it can still be measured, and put it above the button (`z-index: 2`). Each state has its own surface: here both are [Liquid Blur](/blur) glass, but any styling works.
 
 ```html
 <div class="morph-scene">
-  <button id="more" class="lb" type="button" aria-controls="panel">More</button>
-  <div id="panel">
+  <button id="more" class="lb" type="button" aria-controls="panel" aria-expanded="false">More</button>
+  <div id="panel" class="lb">
     <p>Panel content</p>
     <button id="close-panel" type="button">Close</button>
   </div>
@@ -61,38 +62,39 @@ You need two elements: the control, and the panel's content, laid out where the 
 </Step>
 <Step>
 
-**Create the morph** after the elements are in the DOM, and open and close it from your own handlers.
+**Create the morph** after the elements are in the DOM, and send it to a state from your own handlers. What a menu needs on top (its `aria-expanded`, Escape, focus) is yours, in `onStart` and `onRest`.
 
 ```ts
-import "@liquid-web/blur/style.css"; // the glass, if the control is glass
+import "@liquid-web/blur/style.css"; // the glass, if the states are glass
 import { createMorph } from "@liquid-web/morph";
 
-const source = document.getElementById("more")!;
-const content = document.getElementById("panel")!;
+const button = document.getElementById("more")!;
+const panel = document.getElementById("panel")!;
 const close = document.getElementById("close-panel")!;
 
 const morph = createMorph({
-  source,
-  content,
-  // Escape and a press outside close it
-  dismiss: true,
-  // Focus moves into the panel when it opens, and back to the control after it closes
-  onStart(open) {
-    if (open) close.focus({ preventScroll: true });
+  states: [button, panel],
+  onStart(to) {
+    button.setAttribute("aria-expanded", String(to === panel));
+    // The panel is itself on its way in: focus can go into it at once
+    if (to === panel) close.focus({ preventScroll: true });
   },
-  onRest(open) {
-    if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
+  onRest(at) {
+    if (at === button && panel.contains(document.activeElement)) button.focus({ preventScroll: true });
   },
 });
 
-const toggle = () => morph.toggle();
-const dismiss = () => morph.close();
-source.addEventListener("click", toggle);
-close.addEventListener("click", dismiss);
+const toggle = () => morph.to(morph.current === panel ? button : panel);
+const back = () => morph.to(button);
+const onKey = (e: KeyboardEvent) => e.key === "Escape" && back();
+button.addEventListener("click", toggle);
+close.addEventListener("click", back);
+document.addEventListener("keydown", onKey);
 
 // On unmount:
-// source.removeEventListener("click", toggle);
-// close.removeEventListener("click", dismiss);
+// button.removeEventListener("click", toggle);
+// close.removeEventListener("click", back);
+// document.removeEventListener("keydown", onKey);
 // morph.destroy();
 ```
 
@@ -103,33 +105,175 @@ close.addEventListener("click", dismiss);
 
 <Section id="examples" title="Examples">
 
-The animated shape takes the control's look, so the result depends on what the control is made of.
+The shape takes the surface of the states, so the result depends on what they're made of.
 
 ### Plain CSS
 
-Without Liquid Blur: a solid pill grows into a solid panel.
+Without Liquid Blur: a solid pill flows into a solid panel.
 
+<Example>
 <MorphExample kind="plain" />
 
+<Fragment slot="html">
+
+```html
+<div class="scene">
+  <button id="share" type="button" aria-haspopup="menu" aria-expanded="false">
+    <svg>…</svg> Share
+  </button>
+  <div id="share-panel" role="menu" aria-label="Share">
+    <button type="button" role="menuitem"><svg>…</svg> Messages</button>
+    <button type="button" role="menuitem"><svg>…</svg> Copy Link</button>
+    <button type="button" role="menuitem"><svg>…</svg> Add to Favorites</button>
+  </div>
+</div>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import { createMorph } from "@liquid-web/morph";
+
+const share = document.getElementById("share")!;
+const panel = document.getElementById("share-panel")!;
+
+const morph = createMorph({
+  states: [share, panel],
+  onStart: (to) => share.setAttribute("aria-expanded", String(to === panel)),
+});
+
+share.addEventListener("click", () => morph.to(morph.current === panel ? share : panel));
+// A pick closes it
+panel.addEventListener("click", (e) => {
+  if ((e.target as Element).closest("button")) morph.to(share);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") morph.to(share);
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
 ```css
+.scene { position: relative; height: 300px; }
+
+/* Both at the bottom middle, placed by margins, never by transform */
+#share,
+#share-panel {
+  position: absolute;
+  inset: auto 0 24px;
+  margin: 0 auto;
+}
+
 #share {
   width: 116px;
   height: 44px;
   border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #171717;
   color: #fff;
 }
-#share-panel { color: #fff; } /* no background: the copy behind it is the panel */
+
+#share-panel {
+  z-index: 2;
+  width: 264px;
+  height: fit-content;
+  display: grid;
+  padding: 8px;
+  border-radius: 32px;
+  background: #171717;
+  color: #fff;
+  visibility: hidden;
+}
+#share-panel button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 18px 0 16px;
+  border-radius: 999px;
+}
 ```
+
+</Fragment>
+</Example>
 
 ### From solid to glass
 
-The control is glass covered by a solid layer. The copy has the control's classes plus `data-lw-part`, so CSS can fade that layer out while the panel opens.
+The pill is glass covered by a solid layer, the panel plain glass. The two surfaces differ, so on the way the pill's dissolves into the panel's: nothing to script.
 
+<Example>
 <MorphExample kind="glassify" />
 
+<Fragment slot="html">
+
+```html
+<div class="scene">
+  <button id="share" class="lb" type="button" aria-haspopup="menu" aria-expanded="false">
+    <svg>…</svg> Share
+  </button>
+  <div id="share-panel" class="lb" role="menu" aria-label="Share">
+    <button type="button" role="menuitem"><svg>…</svg> Messages</button>
+    <button type="button" role="menuitem"><svg>…</svg> Copy Link</button>
+    <button type="button" role="menuitem"><svg>…</svg> Add to Favorites</button>
+  </div>
+</div>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import "@liquid-web/blur/style.css";
+import { createMorph } from "@liquid-web/morph";
+
+const share = document.getElementById("share")!;
+const panel = document.getElementById("share-panel")!;
+
+const morph = createMorph({
+  states: [share, panel],
+  onStart: (to) => share.setAttribute("aria-expanded", String(to === panel)),
+});
+
+share.addEventListener("click", () => morph.to(morph.current === panel ? share : panel));
+panel.addEventListener("click", (e) => {
+  if ((e.target as Element).closest("button")) morph.to(share);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") morph.to(share);
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
 ```css
-#share { position: relative; isolation: isolate; color: #fff; }
+.scene { position: relative; height: 300px; }
+
+#share,
+#share-panel {
+  position: absolute;
+  inset: auto 0 24px;
+  margin: 0 auto;
+}
+
+/* Glass under a solid layer: the layer is the pill's own surface, so it dissolves on the way */
+#share {
+  width: 116px;
+  height: 44px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  isolation: isolate;
+}
 #share::after {
   content: "";
   position: absolute;
@@ -137,37 +281,428 @@ The control is glass covered by a solid layer. The copy has the control's classe
   z-index: -1;
   border-radius: inherit;
   background: #171717;
-  transition: opacity 0.4s;
 }
-.scene.is-open #share[data-lw-part]::after { opacity: 0; }
+
+#share-panel {
+  z-index: 2;
+  width: 264px;
+  height: fit-content;
+  display: grid;
+  padding: 8px;
+  border-radius: 32px;
+  visibility: hidden;
+}
+#share-panel button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 18px 0 16px;
+  border-radius: 999px;
+}
 ```
 
-```ts
-createMorph({
-  source,
-  content,
-  onStart(open) {
-    // The copy exists now; read its style first so the class change below animates
-    scene.querySelector("[data-lw-part]")?.getBoundingClientRect();
-    scene.classList.toggle("is-open", open);
-  },
-});
-```
+</Fragment>
+</Example>
 
 ### In a glass group
 
-A button in a merged toolbar. The panel opens over the neighboring buttons, so the copy leaves the group and animates as separate glass. See [With Liquid Blur](#glass).
+A button in a merged toolbar. The panel opens over the neighboring buttons, so the shape leaves the group and flies as separate glass. See [With Liquid Blur](#glass).
 
+<Example>
 <MorphExample kind="group" />
 
+<Fragment slot="html">
+
 ```html
-<div class="lb lb-group">
-  <button class="lb">Back</button>
-  <button class="lb">Play</button>
-  <button class="lb" id="share">Share</button>
+<div class="scene">
+  <div class="toolbar lb lb-group">
+    <button class="lb lb-interactive" type="button" aria-label="Back"><svg>…</svg></button>
+    <button class="lb lb-interactive" type="button" aria-label="Play"><svg>…</svg></button>
+    <button id="share" class="lb lb-interactive" type="button" aria-label="Share" aria-haspopup="menu" aria-expanded="false">
+      <svg>…</svg>
+    </button>
+  </div>
+  <div id="share-panel" class="lb" role="menu" aria-label="Share">
+    <button type="button" role="menuitem"><svg>…</svg> Messages</button>
+    <button type="button" role="menuitem"><svg>…</svg> Copy Link</button>
+    <button type="button" role="menuitem"><svg>…</svg> Add to Favorites</button>
+  </div>
 </div>
-<div id="share-panel">…</div>
 ```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import "@liquid-web/blur/style.css";
+import { installGlassGroups } from "@liquid-web/blur/melt";
+import { createMorph } from "@liquid-web/morph";
+
+// Melts the toolbar's buttons into one glass, and the shape with them while it's beside them
+installGlassGroups();
+
+const share = document.getElementById("share")!;
+const panel = document.getElementById("share-panel")!;
+
+const morph = createMorph({
+  states: [share, panel],
+  onStart: (to) => share.setAttribute("aria-expanded", String(to === panel)),
+});
+
+share.addEventListener("click", () => morph.to(morph.current === panel ? share : panel));
+panel.addEventListener("click", (e) => {
+  if ((e.target as Element).closest("button")) morph.to(share);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") morph.to(share);
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.scene { position: relative; height: 300px; }
+
+.toolbar,
+#share-panel {
+  position: absolute;
+  inset: auto 0 24px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  width: fit-content;
+  display: flex;
+  gap: 8px;
+}
+.toolbar button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+}
+
+/* Above the shape when it's lifted out of the group */
+#share-panel {
+  z-index: 2;
+  width: 264px;
+  height: fit-content;
+  display: grid;
+  padding: 8px;
+  border-radius: 32px;
+  visibility: hidden;
+}
+#share-panel button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 18px 0 16px;
+  border-radius: 999px;
+}
+```
+
+</Fragment>
+</Example>
+
+</Section>
+
+<Section id="match" title="Shared elements">
+
+Mark an element in each of two states with the same `data-lw-match`, and it flies from where it is in one to where it is in the other, crossing over from one to the other on the way. Here the pill's icon flies into the menu's title, and its label into the option picked. Pick another and the pill comes back with it.
+
+<Example>
+<MorphExample kind="match" />
+
+<Fragment slot="html">
+
+```html
+<div class="scene">
+  <button id="sort" class="lb lb-interactive" type="button" aria-haspopup="menu" aria-expanded="false">
+    <svg data-lw-match="sort-icon">…</svg>
+    <span data-lw-match="sort">Newest</span>
+  </button>
+  <div id="sort-panel" class="lb" role="menu" aria-label="Sort by">
+    <p><svg data-lw-match="sort-icon">…</svg> Sort by</p>
+    <button type="button" role="menuitemradio" aria-checked="true">
+      <span data-lw-match="sort">Newest</span><svg class="check">…</svg>
+    </button>
+    <button type="button" role="menuitemradio" aria-checked="false">
+      <span>Oldest</span><svg class="check">…</svg>
+    </button>
+    <button type="button" role="menuitemradio" aria-checked="false">
+      <span>Most Popular</span><svg class="check">…</svg>
+    </button>
+    <button type="button" role="menuitemradio" aria-checked="false">
+      <span>A–Z</span><svg class="check">…</svg>
+    </button>
+  </div>
+</div>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import "@liquid-web/blur/style.css";
+import { createMorph } from "@liquid-web/morph";
+
+const sort = document.getElementById("sort")!;
+const panel = document.getElementById("sort-panel")!;
+
+const morph = createMorph({
+  states: [sort, panel],
+  onStart: (to) => sort.setAttribute("aria-expanded", String(to === panel)),
+});
+
+sort.addEventListener("click", () => morph.to(morph.current === panel ? sort : panel));
+
+// A pick relabels the pill and moves the match to its label: that's the one that flies back
+panel.addEventListener("click", (e) => {
+  const pick = (e.target as Element).closest<HTMLElement>("[role=menuitemradio]");
+  if (!pick) return;
+  for (const option of panel.querySelectorAll<HTMLElement>("[role=menuitemradio]")) {
+    option.setAttribute("aria-checked", String(option === pick));
+    const label = option.querySelector("span")!;
+    if (option === pick) label.dataset.lwMatch = "sort";
+    else delete label.dataset.lwMatch;
+  }
+  sort.querySelector("span")!.textContent = pick.textContent!.trim();
+  morph.to(sort);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") morph.to(sort);
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.scene { position: relative; height: 340px; }
+
+#sort,
+#sort-panel {
+  position: absolute;
+  inset: auto 0 24px;
+  margin: 0 auto;
+}
+
+/* As wide as its label: the shape follows when it changes */
+#sort {
+  width: fit-content;
+  height: 44px;
+  padding: 0 20px 0 16px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#sort-panel {
+  z-index: 2;
+  width: 264px;
+  height: fit-content;
+  display: grid;
+  padding: 8px;
+  border-radius: 32px;
+  visibility: hidden;
+}
+#sort-panel p {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+#sort-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 18px 0 16px;
+  border-radius: 999px;
+}
+.check { visibility: hidden; }
+[aria-checked="true"] > .check { visibility: visible; }
+```
+
+</Fragment>
+</Example>
+
+In the smaller state it stays where it is; in the bigger one it keeps to the edge it's nearest (or the middle), so a label by the left edge stays by it however the shape grows. Its size changes with the shape's, keeping its proportions. Move the attribute when what's shared changes, as the pick does here: the morph reads it each time it sets off or turns around.
+
+</Section>
+
+<Section id="states" title="More than two states">
+
+A morph takes any number of states, and flows from whichever is shown to whichever is asked for. Here a button grows into a bar, and the bar into a card; the tabs jump straight between any two. The play button is shared by all three, the artwork and the title by the bar and the card: a match flies only between two states that both have it.
+
+<Example>
+<MorphExample kind="steps" />
+
+<Fragment slot="html">
+
+```html
+<div class="scene">
+  <button id="dot" class="lb lb-interactive" type="button" aria-label="Now playing">
+    <svg data-lw-match="play">…</svg>
+  </button>
+
+  <div id="bar" class="lb">
+    <button id="expand" type="button" aria-label="Open player">
+      <span class="art" data-lw-match="art"></span>
+      <span class="meta">
+        <strong data-lw-match="title">Surface Tension</strong>
+        <span>Lumen</span>
+      </span>
+    </button>
+    <button class="icon" type="button" aria-label="Play"><svg data-lw-match="play">…</svg></button>
+  </div>
+
+  <div id="card" class="lb" role="dialog" aria-label="Now playing">
+    <button id="collapse" class="icon" type="button" aria-label="Minimize"><svg>…</svg></button>
+    <span class="art" data-lw-match="art"></span>
+    <span class="meta">
+      <strong data-lw-match="title">Surface Tension</strong>
+      <span>Lumen — Neon Tides</span>
+    </span>
+    <div class="controls">
+      <button class="icon" type="button" aria-label="Previous"><svg>…</svg></button>
+      <button class="icon" type="button" aria-label="Play"><svg data-lw-match="play">…</svg></button>
+      <button class="icon" type="button" aria-label="Next"><svg>…</svg></button>
+    </div>
+  </div>
+</div>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import "@liquid-web/blur/style.css";
+import { createMorph } from "@liquid-web/morph";
+
+const dot = document.getElementById("dot")!;
+const bar = document.getElementById("bar")!;
+const card = document.getElementById("card")!;
+const states = [dot, bar, card];
+
+const morph = createMorph({
+  states,
+  onStart(to, from) {
+    // Focus follows into the state on its way in
+    if (from.contains(document.activeElement)) {
+      const target = to === dot ? dot : to.querySelector<HTMLElement>("#expand, #collapse");
+      target?.focus({ preventScroll: true });
+    }
+  },
+});
+
+// One step in by the states themselves, one step out by Escape
+dot.addEventListener("click", () => morph.to(bar));
+document.getElementById("expand")!.addEventListener("click", () => morph.to(card));
+document.getElementById("collapse")!.addEventListener("click", () => morph.to(bar));
+document.addEventListener("keydown", (e) => {
+  const step = states.indexOf(morph.current);
+  if (e.key === "Escape" && step > 0) morph.to(states[step - 1]);
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.scene { position: relative; height: 420px; }
+
+#dot,
+#bar,
+#card {
+  position: absolute;
+  inset: auto 0 24px;
+  margin: 0 auto;
+}
+
+/* The two not shown: hidden, and above the shape */
+#bar,
+#card {
+  z-index: 2;
+  visibility: hidden;
+}
+
+#dot,
+.icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 24px;
+}
+
+#bar {
+  width: 288px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 32px;
+  box-sizing: border-box;
+}
+#expand {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  height: 48px;
+  padding: 0;
+  text-align: left;
+}
+#bar .art {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+}
+
+#card {
+  width: 288px;
+  height: fit-content;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px 16px 12px;
+  border-radius: 36px;
+  box-sizing: border-box;
+}
+#collapse {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+#card .art {
+  width: 152px;
+  height: 152px;
+  border-radius: 24px;
+}
+#card .meta { text-align: center; }
+.controls { display: flex; gap: 16px; }
+
+.art { background: linear-gradient(135deg, #ff7a59, #b5179e); }
+.meta { display: grid; }
+```
+
+</Fragment>
+</Example>
+
+Each flight is between two states, the smaller riding as a copy and the bigger flying itself. Sent back mid-way, it turns around; sent to the third, it starts over from where the shape is.
 
 </Section>
 
@@ -177,23 +712,20 @@ A button in a merged toolbar. The panel opens over the neighboring buttons, so t
 
 | Option | Meaning |
 | --- | --- |
-| `source: HTMLElement` | The control it opens from, with a parent in the DOM |
-| `content: HTMLElement` | The panel's content, laid out where it opens, measurable |
-| `container?: HTMLElement` | Where to put the animated copy instead of next to the control. Use it when the control's parent has `overflow: hidden` |
-| `spring?: { open?, close? }` | Springs for opening and closing; anything left out uses `defaultMorphSprings` |
-| `initialOpen?: boolean` | Start open, without calling `onStart` or `onRest` |
-| `dismiss?: boolean \| { escape?, outside? }` | Close on Escape and on a press outside the panel and the control. `true` turns on both; off by default |
-| `onStart?: (open: boolean) => void` | Called when the morph starts opening or closing, including when it reverses mid-way |
-| `onRest?: (open: boolean) => void` | Called when the morph comes to rest, open or closed |
+| `states: HTMLElement[]` | The elements it flows between, each with a parent in the DOM, laid out where it is at rest |
+| `initial?: HTMLElement` | The one shown at the start; the first state by default |
+| `container?: HTMLElement` | Where to put the shape instead of next to the smaller state. Use it when that state's parent has `overflow: hidden` |
+| `spring?: { grow?, shrink? }` | Springs for flowing into a bigger box and into a smaller one; anything left out uses `defaultMorphSprings` |
+| `onStart?: (to, from) => void` | Called when a flight sets off, including when it turns around or heads elsewhere mid-way |
+| `onRest?: (at) => void` | Called when it comes to rest as a state |
 
-Each direction has five channels: `x` and `y` move the center, `width` and `height` change the size, and `progress` drives the corners, the control's icon and the content. Pass only the channels you change; `defaultMorphSprings` is exported as a starting point. A spring is `{ duration, bounce, settle? }`: `duration` in seconds, `bounce` from `0` (no overshoot) to `1`, and `settle` the bounce after the first overshoot, `bounce` by default.
+Each direction has five channels: `x` and `y` move the center, `width` and `height` change the size, and `progress` drives the corners, the contents and shared elements. Pass only the channels you change; `defaultMorphSprings` is exported as a starting point. A spring is `{ duration, bounce, settle? }`: `duration` in seconds, `bounce` from `0` (no overshoot) to `1`, and `settle` the bounce after the first overshoot, `bounce` by default. Shrinking from rest, the shape holds a beat while the contents go first.
 
 ```ts
 const morph = createMorph({
-  source,
-  content,
+  states: [button, panel],
   spring: {
-    open: { y: { duration: 0.4, bounce: 0.3, settle: 0.1 } },
+    grow: { y: { duration: 0.4, bounce: 0.3, settle: 0.1 } },
   },
 });
 ```
@@ -204,13 +736,13 @@ const morph = createMorph({
 
 | Member | Meaning |
 | --- | --- |
-| `isOpen` | The requested state; changes immediately |
-| `phase` | `"closed"`, `"opening"`, `"open"` or `"closing"`: where the animation actually is |
-| `open(move?)`, `close(move?)`, `toggle(move?)` | A `Promise<boolean>`: `true` once it rests where asked, `false` if it turned around or was destroyed first. `{ instant: true }` swaps at once, as with reduced motion |
-| `update()` | Measures the control and the panel again and follows the new positions |
-| `destroy()` | Stops the animation, removes the copies, restores the content's inline styles, shows the control and removes its `aria-expanded`. Later calls do nothing |
+| `current` | The state asked for; changes immediately |
+| `moving` | Whether a flight is under way |
+| `to(state, move?)` | A `Promise<boolean>`: `true` once it rests there, `false` if it was sent elsewhere or destroyed first. `{ instant: true }` swaps at once, as with reduced motion |
+| `update()` | Measures the states again and follows them mid-flight |
+| `destroy()` | Stops the flight, removes the shape and gives every state its own inline styles back. Later calls do nothing |
 
-Reversing mid-way keeps the current speed. While open, the glass follows the content when its size or the window size changes; call `update()` after anything else moves the content or the control. `destroy()` doesn't remove your own event listeners.
+Sent back mid-way, it turns around keeping its speed. Sent to a third state mid-way, it starts over from where the shape is. During a flight it follows scrolling and window resizes by itself; call `update()` after anything else moves a state. `destroy()` doesn't remove your own event listeners.
 
 </Section>
 
@@ -218,38 +750,38 @@ Reversing mid-way keeps the current speed. While open, the glass follows the con
 
 <Rows>
 <Row>
-<Cell title="The content">
+<Cell title="The bigger state">
 
-A separate element above the glass. Hide it with `visibility: hidden`, not `display: none` or `hidden`, so it can be measured. While animating, the morph sets its inline `transform`, `opacity`, `filter` and `clip-path`, so don't transition those. Its own translation, such as `translate: -50% -50%` for centering, is kept.
+Flies itself, either way: the real element, moved through its inline `transform`, `opacity`, `filter` and `clip-path` alone, so its text never reflows and it stays live (pressed, typed into, playing). Don't transition those. Its own translation, such as `translate: -50% -50%` for centering, is kept. Its surface steps aside for the shape meanwhile, so it has to be above it (`z-index: 2`).
+
+</Cell>
+<Cell title="The smaller state">
+
+Rides in the shape as a copy, taken as it is when the shape sets off or turns around, staying where it is and fading as the shape leaves it. The copy keeps its classes and attributes, so style states with them: selectors through the state's parent don't reach it.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Surfaces">
+
+The shape is the bigger state's surface the whole way. Where the smaller one's is another as drawn (fill, border, shadow, backdrop, pseudo-elements), it lies over it and fades as the shape grows: a solid control dissolves into glass, a tint into none.
 
 </Cell>
 <Cell title="The corners">
 
-Each corner animates from the control's radius to the panel's and stays circular, so a sheet rounded only on top stays square below. Percentages resolve against the box; an elliptical corner uses the smaller of its two radii. Where `corner-shape` is supported, the shape animates too.
+Each corner animates from one state's radius to the other's and stays circular, so a sheet rounded only on top stays square below. Percentages resolve against the box; an elliptical corner uses the smaller of its two radii. Where `corner-shape` is supported, the shape animates too.
 
 </Cell>
 </Row>
 <Row>
-<Cell title="The copy">
+<Cell title="Hidden states">
 
-Built from the control's classes, not its inline styles or `id`, so style the control with classes. It's added to the control's parent only while the panel is open or moving, so `:last-child` and similar selectors still match at rest. Press behaviors aren't copied.
-
-</Cell>
-<Cell title="The control">
-
-While the panel is out, the control is hidden (`opacity: 0`, with `data-lw-away`) but stays focusable and in the accessibility tree, so its `aria-expanded` is still announced. Its own inline `opacity` is restored afterwards.
-
-</Cell>
-</Row>
-<Row>
-<Cell title="Focus and keys">
-
-Morph sets `aria-expanded`, and `dismiss` handles Escape and outside presses. Moving focus and keyboard navigation inside a menu or dialog are up to you; do it in `onStart` and `onRest`.
+A state not shown is hidden (`opacity: 0`, `visibility: hidden`, with `data-lw-away`) and takes no presses. One that holds focus as it goes keeps it: it's only made transparent, so a control's `aria-expanded` is still announced. Pressing the shape on its way presses the smallest state under it, so a button can be pressed again before the shape is home.
 
 </Cell>
 <Cell title="Mounting">
 
-Can be imported on the server. Create the morph in the browser after mounting or hydration, and call `destroy()` on unmount. With reduced motion, the panel and the control switch instantly.
+Can be imported on the server. Create the morph in the browser after mounting or hydration, and call `destroy()` on unmount. The shape is added next to the smaller state only while it flies, so `:last-child` and similar selectors still match at rest. With reduced motion, the states swap instantly.
 
 </Cell>
 </Row>
@@ -259,14 +791,14 @@ Can be imported on the server. Create the morph in the browser after mounting or
 
 <Section id="glass" title="With Liquid Blur">
 
-Inside a Liquid Blur [glass group](/blur#groups), the behavior depends on where the panel opens:
+Inside a Liquid Blur [glass group](/blur#groups), the shape is placed by the state in the group, and the behavior depends on where the other one is:
 
-- **Beside the neighbors:** the copy stays in the group and merges with the neighboring glass as it moves.
-- **Over a neighbor:** the copy leaves the group and animates as separate glass above it (`z-index: 1`). A second copy stays in the control's place and shrinks away, so the connection to the neighbors fades out gradually.
+- **Beside the neighbors:** the shape stays in the group and merges with the neighboring glass as it moves.
+- **Over a neighbor:** the shape leaves the group and flies as separate glass above it (`z-index: 1`). A stub stays in the state's place and shrinks away, so the connection to the neighbors fades out gradually.
 
-The two packages don't import each other; they coordinate through attributes in the DOM.
+In a group the shape wears the bigger state's classes, as the group needs to melt it, so surfaces don't dissolve into each other there. The two packages don't import each other; they coordinate through attributes in the DOM.
 
-If a parent clips with `overflow: hidden`, the panel would be cut off. Pass a `container` and the copy is placed there instead. It then inherits theme and custom properties from the container, and selectors through the control's parent don't reach it, so style the control with classes.
+If a parent clips with `overflow: hidden`, the shape would be cut off. Pass a `container` and it's placed there instead. It then inherits theme and custom properties from the container.
 
 </Section>
 
@@ -278,42 +810,48 @@ A small hook creates the morph on mount and destroys it on unmount. Keep the pan
 import { useEffect, useRef, useState } from "react";
 import { createMorph, type Morph, type MorphOptions } from "@liquid-web/morph";
 
-/** Options are read once, on mount */
-export function useMorph(options: Omit<MorphOptions, "source" | "content"> = {}) {
-  const source = useRef<HTMLButtonElement>(null);
-  const content = useRef<HTMLDivElement>(null);
+/** A button and its panel; options are read once, on mount */
+export function useMorph(options: Omit<MorphOptions, "states"> = {}) {
+  const button = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const morph = useRef<Morph | null>(null);
-  const [open, setOpen] = useState(options.initialOpen ?? false);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     const m = createMorph({
       ...options,
-      source: source.current!,
-      content: content.current!,
-      onStart(next) {
-        setOpen(next);
-        options.onStart?.(next);
+      states: [button.current!, panel.current!],
+      onStart(to, from) {
+        setOpen(to === panel.current);
+        options.onStart?.(to, from);
       },
     });
     morph.current = m;
     return () => m.destroy();
   }, []);
   return {
-    source,
-    content,
+    button,
+    panel,
     open,
-    toggle: () => morph.current?.toggle(),
-    close: () => morph.current?.close(),
+    toggle: () => morph.current?.to(open ? button.current! : panel.current!),
+    close: () => morph.current?.to(button.current!),
   };
 }
 
 export function More() {
-  const morph = useMorph({ dismiss: true });
+  const morph = useMorph();
   return (
     <div className="morph-scene">
-      <button ref={morph.source} className="lb" type="button" aria-controls="panel" onClick={morph.toggle}>
+      <button
+        ref={morph.button}
+        className="lb"
+        type="button"
+        aria-controls="panel"
+        aria-expanded={morph.open}
+        onClick={morph.toggle}
+      >
         More
       </button>
-      <div ref={morph.content} id="panel" role="menu">
+      <div ref={morph.panel} id="panel" className="lb" role="menu">
         <button type="button" onClick={morph.close}>Close</button>
       </div>
     </div>
@@ -331,9 +869,10 @@ Any browser with ES2022 and `clip-path: inset()`. Corner shapes animate where `c
 
 <Section id="limitations" title="Limitations">
 
-- Scrolling during the animation isn't followed.
-- Rotated or scaled ancestors aren't supported, and the panel can't have a transform of its own other than a translation.
+- Rotated or scaled ancestors aren't supported, and the bigger state can't have a transform of its own other than a translation.
+- The smaller state's copy is a snapshot: a video or a field in it doesn't play or update on the way.
+- The bigger state's pseudo-elements stay drawn while its surface steps aside.
 - Corners animate as circular arcs; the corner shape follows the top-left corner.
-- While the copy merges with a glass group, its corners are round.
+- While the shape merges with a glass group, its corners are round.
 
 </Section>

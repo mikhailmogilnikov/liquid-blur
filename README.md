@@ -11,7 +11,7 @@ on its own, on plain DOM; where two meet, they read attributes the other sets (`
 | Package | What |
 | --- | --- |
 | [`@liquid-web/blur`](packages/blur/README.md) | A glass material: backdrop blur, fill, rims, press behaviors, glass that melts between shapes |
-| [`@liquid-web/morph`](packages/morph/README.md) | A control grows into a panel and shrinks back, on interruptible springs; any element |
+| [`@liquid-web/morph`](packages/morph/README.md) | One element flows into another and back, on interruptible springs; any element |
 | [`@liquid-web/core`](packages/core/README.md) | What they share: the spring, and the DOM contract |
 
 `apps/docs` is the docs site: one page per package, written in MDX in
