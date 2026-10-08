@@ -1,30 +1,35 @@
 ---
+import { getCollection } from "astro:content";
 import Icon from "./Icon.astro";
 import ThemeSwitch from "./ThemeSwitch.astro";
 
 interface Props {
-  current: "home" | "docs";
+  /** The page being read: "home" or a package's id ("blur") */
+  current: string;
 }
 
 const { current } = Astro.props;
+const packages = (await getCollection("docs"))
+  .filter((p) => p.id !== "core")
+  .sort((a, b) => a.data.order - b.data.order);
+const here = (id: string) => (current === id ? "page" : undefined);
 ---
 
 <header class="nav">
   <div class="nav__bar lb">
-    <a class="brand" href="/" aria-label="Liquid Blur, home">
+    <a class="brand" href="/" aria-label="Liquid Web, home">
       <span class="mark"><span class="lb"></span></span>
-      Liquid Blur <span class="brand__by">by Mikhail Mogilnikov</span>
+      Liquid Web <span class="brand__by">by Mikhail Mogilnikov</span>
     </a>
-    <nav class="nav__links" aria-label="Sections">
-      <a href="/#playground">Playground</a>
-      <a href="/docs" aria-current={current === "docs" ? "page" : undefined}>Docs</a>
-      <a href="/docs#api">API</a>
-      <a href="/docs#faq">FAQ</a>
+    <nav class="nav__links" aria-label="Packages">
+      {packages.map((p) => <a href={`/${p.id}`} aria-current={here(p.id)}>{p.data.name}</a>)}
     </nav>
     <div class="nav__end">
-      <a class="nav__docs" href="/docs" aria-current={current === "docs" ? "page" : undefined}>Docs</a>
+      <a class="nav__docs" href="/blur" aria-current={packages.some((p) => p.id === current) ? "page" : undefined}>
+        Docs
+      </a>
       <ThemeSwitch />
-      <a class="icon-link" href="https://github.com/mikhailmogilnikov" aria-label="Mikhail Mogilnikov on GitHub">
+      <a class="icon-link" href="https://github.com/mikhailmogilnikov/liquid-web" aria-label="liquid-web on GitHub">
         <Icon name="github" size={19} />
       </a>
     </div>

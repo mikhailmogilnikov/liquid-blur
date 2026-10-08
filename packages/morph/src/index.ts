@@ -317,9 +317,14 @@ export function createMorph({
       if (!spot) return;
       let piece: HTMLElement | SVGElement;
       if (node.nodeType === 3) {
-        // Loose text gets a box to carry its place and opacity
+        /*
+         * Loose text gets a box to carry its place and opacity. Its spot is the text's own box,
+         * shorter than a line: a line as tall as that keeps the glyphs where they were, not
+         * lowered by the half-leading of the inherited line-height.
+         */
         piece = doc.createElement("span");
         piece.style.whiteSpace = "nowrap";
+        piece.style.lineHeight = `${spot.height}px`;
         piece.append(node);
       } else {
         piece = node as HTMLElement | SVGElement;

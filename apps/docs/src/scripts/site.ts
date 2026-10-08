@@ -42,17 +42,19 @@ setTheme((root.dataset.theme ?? "auto") as Theme);
 // ── Install command, per package manager ──
 
 const COMMANDS: Record<string, [string, string]> = {
-  pnpm: ["pnpm", "add @liquid-web/blur"],
-  npm: ["npm", "install @liquid-web/blur"],
-  yarn: ["yarn", "add @liquid-web/blur"],
-  bun: ["bun", "add @liquid-web/blur"],
+  pnpm: ["pnpm", "add"],
+  npm: ["npm", "install"],
+  yarn: ["yarn", "add"],
+  bun: ["bun", "add"],
 };
 
 for (const block of document.querySelectorAll<HTMLElement>("[data-install]")) {
   const out = block.querySelector<HTMLElement>("code")!;
+  // The package to install: `data-install="@liquid-web/morph"`
+  const pkg = block.dataset.install || "@liquid-web/blur";
   const show = (pm: string) => {
-    const [cmd, rest] = COMMANDS[pm] ?? COMMANDS.pnpm;
-    out.innerHTML = `<span class="tk-cmd">${cmd}</span> ${rest}`;
+    const [cmd, verb] = COMMANDS[pm] ?? COMMANDS.pnpm;
+    out.innerHTML = `<span class="tk-cmd">${cmd}</span> ${verb} ${pkg}`;
   };
   let saved = "pnpm";
   try {
@@ -88,6 +90,12 @@ document.addEventListener("click", async (event) => {
   }, 1600);
 });
 
+// ── Hints: gone once their scene is touched ──
+
+for (const scene of document.querySelectorAll("[data-hints]")) {
+  scene.addEventListener("pointerdown", () => scene.classList.add("is-tried"), { once: true });
+}
+
 // ── Reveal on scroll ──
 
 const reveal = new IntersectionObserver(
@@ -111,7 +119,17 @@ for (const el of document.querySelectorAll(".bd-aurora, .bd-stripes")) live.obse
 
 // ── Contents: the section being read ──
 
-const links = [...document.querySelectorAll<HTMLAnchorElement>(".toc a[href^='#']")];
+const links = [...document.querySelectorAll<HTMLAnchorElement>(":is(.toc, .toc-fold) a[href^='#']")];
+const fold = document.querySelector<HTMLDetailsElement>("[data-toc-fold]");
+const foldCurrent = document.querySelector<HTMLElement>("[data-toc-current]");
+
+// The folded contents close on a pick, or on a press anywhere else
+fold?.addEventListener("click", (e) => {
+  if ((e.target as Element).closest("a")) fold.open = false;
+});
+document.addEventListener("pointerdown", (e) => {
+  if (fold?.open && !fold.contains(e.target as Node)) fold.open = false;
+});
 const sections = links
   .map((a) => document.getElementById(a.hash.slice(1)))
   .filter((el): el is HTMLElement => el !== null);
@@ -129,6 +147,7 @@ const markCurrent = () => {
     current = sections[sections.length - 1];
   }
   for (const a of links) a.setAttribute("aria-current", String(a.hash === `#${current?.id}`));
+  if (foldCurrent) foldCurrent.textContent = links.find((a) => a.hash === `#${current?.id}`)?.textContent ?? "";
 };
 if (sections.length) {
   window.addEventListener(

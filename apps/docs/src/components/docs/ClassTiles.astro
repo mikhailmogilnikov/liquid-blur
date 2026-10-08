@@ -1,0 +1,68 @@
+---
+/** Every class, each on a piece of glass to press */
+const classes = [
+  {
+    name: "lb",
+    text: "The material. Backdrop blur, a fill, volume, rims, an edge and a shadow. Required.",
+    sample: "lb",
+    bd: "bd-aurora",
+  },
+  {
+    name: "lb-clear",
+    text: "At least transparency 1. For glass over photos and video, where the content is the point.",
+    sample: "lb lb-clear",
+    bd: "bd-stripes",
+  },
+  {
+    name: "lb-tinted",
+    text: "The fill is --lb-tint and the text is --lb-tint-text. Volume and rims stay.",
+    sample: "lb lb-tinted",
+    bd: "bd-aurora",
+  },
+  {
+    name: "lb-highlight",
+    text: "Lights up where it's pressed and follows the finger. Press it.",
+    sample: "lb lb-highlight",
+    bd: "bd-dots",
+  },
+  {
+    name: "lb-swell",
+    text: "Grows while pressed, on a spring that can turn around mid-flight. Small glass grows more, big glass barely.",
+    sample: "lb lb-swell lb-highlight",
+    bd: "bd-aurora",
+  },
+  {
+    name: "lb-stretch",
+    text: "Pulls toward the finger and stretches along the drag. Small glass is lively, big glass is heavy. Drag it.",
+    sample: "lb lb-stretch lb-highlight",
+    bd: "bd-stripes",
+  },
+  {
+    name: "lb-interactive",
+    text: "All three at once, the usual set for a button, chip or icon. Press it, drag it.",
+    sample: "lb lb-interactive",
+    bd: "bd-aurora",
+  },
+];
+---
+
+<div class="rows">
+  {
+    classes.map((c) => (
+      <div class="row">
+        <div class="cell">
+          <b>
+            <code>{c.name}</code>
+          </b>
+          {c.text}
+        </div>
+        <div class="tile">
+          <div class={`bd ${c.bd}`} />
+          <button class={c.sample} type="button">
+            {c.name}
+          </button>
+        </div>
+      </div>
+    ))
+  }
+</div>

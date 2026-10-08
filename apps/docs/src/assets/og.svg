@@ -7,8 +7,8 @@
   </defs>
   <rect width="1200" height="630" fill="url(#ambient)"/>
   <g font-family="Inter, Helvetica Neue, Arial, sans-serif">
-    <text x="74" y="320" fill="#fafafa" font-size="104" font-weight="600" letter-spacing="-5">Liquid Blur</text>
-    <text x="80" y="378" fill="#92929b" font-size="28" font-weight="400" letter-spacing="-.4">Expressive material for the web</text>
+    <text x="74" y="320" fill="#fafafa" font-size="104" font-weight="600" letter-spacing="-5">Liquid Web</text>
+    <text x="80" y="378" fill="#92929b" font-size="28" font-weight="400" letter-spacing="-.4">Fluid interfaces for the web</text>
   </g>
   <svg xmlns="http://www.w3.org/2000/svg" x="642" y="32" width="512" height="512" viewBox="0 0 64 64">
   <defs>

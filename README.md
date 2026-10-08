@@ -2,7 +2,9 @@
 
 A family of small, framework-agnostic libraries for fluid interfaces on the web. Each package works
 on its own, on plain DOM; where two meet, they read attributes the other sets (`data-lw-*`, see
-[the contract](packages/core/README.md#contract)) instead of importing each other.
+[the contract](https://liquid-web.mogilnikov.dev/core#contract)) instead of importing each other.
+
+**[Documentation](https://liquid-web.mogilnikov.dev)**
 
 ## Packages
 
@@ -12,7 +14,8 @@ on its own, on plain DOM; where two meet, they read attributes the other sets (`
 | [`@liquid-web/morph`](packages/morph/README.md) | A control grows into a panel and shrinks back, on interruptible springs; any element |
 | [`@liquid-web/core`](packages/core/README.md) | What they share: the spring, and the DOM contract |
 
-`apps/docs` is the Astro demo and docs site.
+`apps/docs` is the docs site: one page per package, written in MDX in
+`apps/docs/src/content/docs/`, with live demos.
 
 ## Development
 

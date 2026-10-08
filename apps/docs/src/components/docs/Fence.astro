@@ -1,0 +1,14 @@
+---
+import Icon from "../Icon.astro";
+
+/** A Markdown code block, highlighted at build time, with a copy button as on every code block */
+const props = Astro.props;
+---
+
+<div class="code">
+  <pre {...props}><slot /></pre>
+  <button class="code__copy" type="button" data-copy aria-label="Copy code">
+    <Icon name="copy" class="is-idle" />
+    <Icon name="check" class="is-done" />
+  </button>
+</div>

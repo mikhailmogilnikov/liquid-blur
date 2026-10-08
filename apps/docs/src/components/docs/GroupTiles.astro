@@ -1,0 +1,96 @@
+---
+import Icon from "../Icon.astro";
+import GroupDock from "../GroupDock.astro";
+
+/** Glass groups at work: one moved by a transition, one by the fingers, one by keyframes */
+---
+
+<div class="rows">
+  <div class="row">
+    <div class="cell">
+      <b>Split and dock</b>
+      Press the search button. It moves with a plain CSS <code>transition</code>, and the glass
+      follows it out and back, neck and all.
+    </div>
+    <div class="tile tile--group">
+      <div class="bd bd-aurora"></div>
+      <GroupDock />
+    </div>
+  </div>
+  <div class="row">
+    <div class="cell">
+      <b>Pull it</b>
+      Press and drag any piece. Stretch and swell bend the outline between them as they go.
+    </div>
+    <div class="tile tile--group">
+      <div class="bd bd-stripes"></div>
+      <div class="lb lb-group demo-group">
+        <button class="lb lb-highlight lb-stretch demo-pill" type="button">Library</button>
+        <button class="lb lb-interactive round" type="button" aria-label="Add">
+          <Icon name="plus" size={20} />
+        </button>
+        <button class="lb lb-interactive round" type="button" aria-label="More">
+          <Icon name="more" size={20} />
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="cell">
+      <b>Drops</b>
+      A CSS <code>@keyframes</code> animation, nothing else: the drop pulls away from the pill and
+      falls back in. With reduced motion it stays put.
+    </div>
+    <div class="tile tile--group">
+      <div class="bd bd-aurora"></div>
+      <div class="lb lb-group demo-group">
+        <div class="lb demo-pill">Liquid</div>
+        <div class="lb demo-drop"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tile--group { height: 176px; }
+  .tile .demo-group.lb {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .tile .demo-group .round { width: 52px; height: 52px; padding: 0; }
+  .tile .demo-group .lb.demo-pill {
+    display: grid;
+    place-items: center;
+    height: 52px;
+    padding: 0 24px;
+    font-weight: 600;
+  }
+
+
+  .tile .demo-drop.lb {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin-left: -8px;
+    animation: demo-drip 3.6s ease-in-out infinite;
+  }
+  @keyframes demo-drip {
+    0%, 100% { translate: -6px 0; }
+    45%, 55% { translate: 48px -26px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile .demo-drop.lb { animation: none; }
+  }
+</style>
+
+<script>
+  import { installGlassGroups } from "@liquid-web/blur/melt";
+
+  installGlassGroups();
+</script>

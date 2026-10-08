@@ -1,0 +1,23 @@
+---
+/**
+ * A handwritten note under something to try, its arrow pointing straight up at it. `style` puts
+ * the arrow's tip, centered on `left`, at `top`; fades once the scene inside `[data-hints]` is
+ * touched.
+ */
+interface Props {
+  text: string;
+  /** Light text, for a vivid backdrop */
+  light?: boolean;
+  style?: string;
+}
+
+const { text, light = false, style } = Astro.props;
+---
+
+<span class:list={["hint", { "hint--light": light }]} style={style} aria-hidden="true">
+  <svg class="hint__arrow" viewBox="0 0 28 40" width="28" height="40" fill="none">
+    <path d="M18 38C9 30 9 15 14 3" />
+    <path d="M7.5 9.5L14 3l5.5 7.5" />
+  </svg>
+  <span class="hint__text">{text}</span>
+</span>

@@ -1,0 +1,13 @@
+---
+/** A named thing and what it does; the text is Markdown */
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="cell">
+  {title && <b set:html={title} />}
+  <slot />
+</div>

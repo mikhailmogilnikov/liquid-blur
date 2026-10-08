@@ -1,0 +1,76 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Fence from "../components/docs/Fence.astro";
+import Icon from "../components/Icon.astro";
+import Playground from "../components/Playground.astro";
+import MorphDemo from "../components/MorphDemo.astro";
+
+/** A package's documentation, from `src/content/docs/<package>.mdx` */
+export async function getStaticPaths() {
+  const pages = await getCollection("docs");
+  return pages.map((page) => ({ params: { pkg: page.id }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const { Content } = await render(page);
+
+/** A package's own demo, under its opening */
+const Demo = ({ blur: Playground, morph: MorphDemo } as Record<string, typeof Playground>)[page.id];
+
+/** The contents, from the page's own sections */
+const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs]) => {
+  const attr = (name: string) => new RegExp(`\\b${name}="([^"]*)"`).exec(attrs)?.[1];
+  return [attr("id")!, attr("title")!] as const;
+});
+---
+
+<Base title={`${page.data.name} — Liquid Web`} description={page.data.description}>
+  <Nav current={page.id} />
+
+  <main>
+    <section class="docs-head">
+      <!-- Only the name rises: an animated ancestor would keep the mark's glass from blurring -->
+      <h1 class="docs-head__title">
+        <span class="mark mark--hero"><span class="lb"></span></span>
+        <span class="rise">{page.data.name}</span>
+      </h1>
+      <p class="docs-head__lead rise" style="--i: 1" set:html={page.data.intro} />
+    </section>
+
+    {
+      Demo && (
+        <section class="docs-demo rise" style="--i: 2" aria-label="Demo">
+          <Demo />
+        </section>
+      )
+    }
+
+    <div class="docs">
+      <aside class="toc" aria-label="On this page">
+        <span class="toc__title">On this page</span>
+        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      </aside>
+
+      <!-- Narrower screens: the same contents, folded, under the nav -->
+      <details class="toc-fold lb" data-toc-fold>
+        <summary>
+          <span class="toc-fold__label">On this page</span>
+          <span class="toc-fold__current" data-toc-current></span>
+          <Icon name="plus" size={18} />
+        </summary>
+        <nav aria-label="On this page">
+          {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+        </nav>
+      </details>
+
+      <div class="docs__body">
+        <Content components={{ pre: Fence }} />
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Base>

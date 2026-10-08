@@ -1,0 +1,339 @@
+---
+package: "@liquid-web/morph"
+name: Morph
+order: 2
+description: "A control grows into a panel and shrinks back: one shape the whole way, on interruptible springs. Works on any element; with Liquid Blur, it's the same glass."
+intro: "A control grows into a panel and back, on springs you can turn around mid-way. Any element; with <a href=\"/blur\">Liquid Blur</a>, the same glass."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Rows from "../../components/docs/Rows.astro";
+import Row from "../../components/docs/Row.astro";
+import Cell from "../../components/docs/Cell.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import MorphExample from "../../components/MorphExample.astro";
+
+<Section id="start" title="Get started">
+
+You need two elements: the control, and the panel's content, laid out where the panel opens. The shape that animates is a copy of the control, so the content doesn't need a background.
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="@liquid-web/morph" />
+
+</Step>
+<Step>
+
+**Lay out the panel** at its open position and size, and hide it with `visibility: hidden` so it can still be measured. Put it above the control (`z-index: 2`). Its `border-radius` sets the open panel's corners. Here the control is [Liquid Blur](/blur) glass, but any styled control works.
+
+```html
+<div class="morph-scene">
+  <button id="more" class="lb" type="button" aria-controls="panel">More</button>
+  <div id="panel">
+    <p>Panel content</p>
+    <button id="close-panel" type="button">Close</button>
+  </div>
+</div>
+
+<style>
+  .morph-scene { position: relative; min-height: 240px; }
+  #more { width: 88px; height: 44px; border-radius: 22px; }
+  #panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: min(280px, 100%);
+    height: 220px;
+    box-sizing: border-box;
+    padding: 20px;
+    border-radius: 28px;
+    visibility: hidden;
+    z-index: 2;
+  }
+</style>
+```
+
+</Step>
+<Step>
+
+**Create the morph** after the elements are in the DOM, and open and close it from your own handlers.
+
+```ts
+import "@liquid-web/blur/style.css"; // the glass, if the control is glass
+import { createMorph } from "@liquid-web/morph";
+
+const source = document.getElementById("more")!;
+const content = document.getElementById("panel")!;
+const close = document.getElementById("close-panel")!;
+
+const morph = createMorph({
+  source,
+  content,
+  // Escape and a press outside close it
+  dismiss: true,
+  // Focus moves into the panel when it opens, and back to the control after it closes
+  onStart(open) {
+    if (open) close.focus({ preventScroll: true });
+  },
+  onRest(open) {
+    if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
+  },
+});
+
+const toggle = () => morph.toggle();
+const dismiss = () => morph.close();
+source.addEventListener("click", toggle);
+close.addEventListener("click", dismiss);
+
+// On unmount:
+// source.removeEventListener("click", toggle);
+// close.removeEventListener("click", dismiss);
+// morph.destroy();
+```
+
+</Step>
+</Steps>
+
+</Section>
+
+<Section id="examples" title="Examples">
+
+The animated shape takes the control's look, so the result depends on what the control is made of.
+
+### Plain CSS
+
+Without Liquid Blur: a solid pill grows into a solid panel.
+
+<MorphExample kind="plain" />
+
+```css
+#share {
+  width: 116px;
+  height: 44px;
+  border-radius: 22px;
+  background: #171717;
+  color: #fff;
+}
+#share-panel { color: #fff; } /* no background: the copy behind it is the panel */
+```
+
+### From solid to glass
+
+The control is glass covered by a solid layer. The copy has the control's classes plus `data-lw-part`, so CSS can fade that layer out while the panel opens.
+
+<MorphExample kind="glassify" />
+
+```css
+#share { position: relative; isolation: isolate; color: #fff; }
+#share::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #171717;
+  transition: opacity 0.4s;
+}
+.scene.is-open #share[data-lw-part]::after { opacity: 0; }
+```
+
+```ts
+createMorph({
+  source,
+  content,
+  onStart(open) {
+    // The copy exists now; read its style first so the class change below animates
+    scene.querySelector("[data-lw-part]")?.getBoundingClientRect();
+    scene.classList.toggle("is-open", open);
+  },
+});
+```
+
+### In a glass group
+
+A button in a merged toolbar. The panel opens over the neighboring buttons, so the copy leaves the group and animates as separate glass. See [With Liquid Blur](#glass).
+
+<MorphExample kind="group" />
+
+```html
+<div class="lb lb-group">
+  <button class="lb">Back</button>
+  <button class="lb">Play</button>
+  <button class="lb" id="share">Share</button>
+</div>
+<div id="share-panel">…</div>
+```
+
+</Section>
+
+<Section id="options" title="Options">
+
+`createMorph(options: MorphOptions): Morph`
+
+| Option | Meaning |
+| --- | --- |
+| `source: HTMLElement` | The control it opens from, with a parent in the DOM |
+| `content: HTMLElement` | The panel's content, laid out where it opens, measurable |
+| `container?: HTMLElement` | Where to put the animated copy instead of next to the control. Use it when the control's parent has `overflow: hidden` |
+| `spring?: { open?, close? }` | Springs for opening and closing; anything left out uses `defaultMorphSprings` |
+| `initialOpen?: boolean` | Start open, without calling `onStart` or `onRest` |
+| `dismiss?: boolean \| { escape?, outside? }` | Close on Escape and on a press outside the panel and the control. `true` turns on both; off by default |
+| `onStart?: (open: boolean) => void` | Called when the morph starts opening or closing, including when it reverses mid-way |
+| `onRest?: (open: boolean) => void` | Called when the morph comes to rest, open or closed |
+
+Each direction has five channels: `x` and `y` move the center, `width` and `height` change the size, and `progress` drives the corners, the control's icon and the content. Pass only the channels you change; `defaultMorphSprings` is exported as a starting point. A spring is `{ duration, bounce, settle? }`: `duration` in seconds, `bounce` from `0` (no overshoot) to `1`, and `settle` the bounce after the first overshoot, `bounce` by default.
+
+```ts
+const morph = createMorph({
+  source,
+  content,
+  spring: {
+    open: { y: { duration: 0.4, bounce: 0.3, settle: 0.1 } },
+  },
+});
+```
+
+</Section>
+
+<Section id="api" title="API">
+
+| Member | Meaning |
+| --- | --- |
+| `isOpen` | The requested state; changes immediately |
+| `phase` | `"closed"`, `"opening"`, `"open"` or `"closing"`: where the animation actually is |
+| `open(move?)`, `close(move?)`, `toggle(move?)` | A `Promise<boolean>`: `true` once it rests where asked, `false` if it turned around or was destroyed first. `{ instant: true }` swaps at once, as with reduced motion |
+| `update()` | Measures the control and the panel again and follows the new positions |
+| `destroy()` | Stops the animation, removes the copies, restores the content's inline styles, shows the control and removes its `aria-expanded`. Later calls do nothing |
+
+Reversing mid-way keeps the current speed. While open, the glass follows the content when its size or the window size changes; call `update()` after anything else moves the content or the control. `destroy()` doesn't remove your own event listeners.
+
+</Section>
+
+<Section id="layout" title="Layout">
+
+<Rows>
+<Row>
+<Cell title="The content">
+
+A separate element above the glass. Hide it with `visibility: hidden`, not `display: none` or `hidden`, so it can be measured. While animating, the morph sets its inline `transform`, `opacity`, `filter` and `clip-path`, so don't transition those. Its own translation, such as `translate: -50% -50%` for centering, is kept.
+
+</Cell>
+<Cell title="The corners">
+
+Each corner animates from the control's radius to the panel's and stays circular, so a sheet rounded only on top stays square below. Percentages resolve against the box; an elliptical corner uses the smaller of its two radii. Where `corner-shape` is supported, the shape animates too.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="The copy">
+
+Built from the control's classes, not its inline styles or `id`, so style the control with classes. It's added to the control's parent only while the panel is open or moving, so `:last-child` and similar selectors still match at rest. Press behaviors aren't copied.
+
+</Cell>
+<Cell title="The control">
+
+While the panel is out, the control is hidden (`opacity: 0`, with `data-lw-away`) but stays focusable and in the accessibility tree, so its `aria-expanded` is still announced. Its own inline `opacity` is restored afterwards.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Focus and keys">
+
+Morph sets `aria-expanded`, and `dismiss` handles Escape and outside presses. Moving focus and keyboard navigation inside a menu or dialog are up to you; do it in `onStart` and `onRest`.
+
+</Cell>
+<Cell title="Mounting">
+
+Can be imported on the server. Create the morph in the browser after mounting or hydration, and call `destroy()` on unmount. With reduced motion, the panel and the control switch instantly.
+
+</Cell>
+</Row>
+</Rows>
+
+</Section>
+
+<Section id="glass" title="With Liquid Blur">
+
+Inside a Liquid Blur [glass group](/blur#groups), the behavior depends on where the panel opens:
+
+- **Beside the neighbors:** the copy stays in the group and merges with the neighboring glass as it moves.
+- **Over a neighbor:** the copy leaves the group and animates as separate glass above it (`z-index: 1`). A second copy stays in the control's place and shrinks away, so the connection to the neighbors fades out gradually.
+
+The two packages don't import each other; they coordinate through attributes in the DOM.
+
+If a parent clips with `overflow: hidden`, the panel would be cut off. Pass a `container` and the copy is placed there instead. It then inherits theme and custom properties from the container, and selectors through the control's parent don't reach it, so style the control with classes.
+
+</Section>
+
+<Section id="react" title="React">
+
+A small hook creates the morph on mount and destroys it on unmount. Keep the panel's `visibility: hidden` in CSS, not inline, so a re-render doesn't override the morph.
+
+```tsx
+import { useEffect, useRef, useState } from "react";
+import { createMorph, type Morph, type MorphOptions } from "@liquid-web/morph";
+
+/** Options are read once, on mount */
+export function useMorph(options: Omit<MorphOptions, "source" | "content"> = {}) {
+  const source = useRef<HTMLButtonElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const morph = useRef<Morph | null>(null);
+  const [open, setOpen] = useState(options.initialOpen ?? false);
+  useEffect(() => {
+    const m = createMorph({
+      ...options,
+      source: source.current!,
+      content: content.current!,
+      onStart(next) {
+        setOpen(next);
+        options.onStart?.(next);
+      },
+    });
+    morph.current = m;
+    return () => m.destroy();
+  }, []);
+  return {
+    source,
+    content,
+    open,
+    toggle: () => morph.current?.toggle(),
+    close: () => morph.current?.close(),
+  };
+}
+
+export function More() {
+  const morph = useMorph({ dismiss: true });
+  return (
+    <div className="morph-scene">
+      <button ref={morph.source} className="lb" type="button" aria-controls="panel" onClick={morph.toggle}>
+        More
+      </button>
+      <div ref={morph.content} id="panel" role="menu">
+        <button type="button" onClick={morph.close}>Close</button>
+      </div>
+    </div>
+  );
+}
+```
+
+</Section>
+
+<Section id="support" title="Browser support">
+
+Any browser with ES2022 and `clip-path: inset()`. Corner shapes animate where `corner-shape` is supported; elsewhere corners stay round.
+
+</Section>
+
+<Section id="limitations" title="Limitations">
+
+- Scrolling during the animation isn't followed.
+- Rotated or scaled ancestors aren't supported, and the panel can't have a transform of its own other than a translation.
+- Corners animate as circular arcs; the corner shape follows the top-left corner.
+- While the copy merges with a glass group, its corners are round.
+
+</Section>

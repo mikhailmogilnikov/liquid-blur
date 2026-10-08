@@ -2,27 +2,18 @@
 import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Stage from "../components/Stage.astro";
-import Playground from "../components/Playground.astro";
-import CodeBlock from "../components/CodeBlock.astro";
+import GroupDock from "../components/GroupDock.astro";
+import MorphDemo from "../components/MorphDemo.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
+import Hint from "../components/Hint.astro";
 
-const GITHUB = "https://github.com/mikhailmogilnikov";
-
-/** The docs, one door per topic */
-const topics = [
-  ["/docs#classes", "Classes", "Seven of them: the material, its character, and how it answers a touch."],
-  ["/docs#customize", "Customize", "One inherited knob per idea — transparency, depth, colors, springs."],
-  ["/docs#theming", "Theming", "Light and dark from one number, wired to any theme switch you have."],
-  ["/docs#tailwind", "Tailwind", "Cascade layers that let your utilities win, in one line."],
-  ["/docs#accessibility", "Accessibility", "Every system setting that asks for less glass, honored."],
-  ["/docs#api", "API", "installPress and the spring that powers the presses."],
-] as const;
+const REPO = "https://github.com/mikhailmogilnikov/liquid-web";
 ---
 
 <Base
-  title="Liquid Blur — a glass material for the web"
-  description="Backdrop blur, a fill, rims and springy press behaviors. Plain CSS classes and one optional script. No refraction."
+  title="Liquid Web — fluid interfaces for the web"
+  description="Small, framework-agnostic libraries for fluid interfaces: a glass material, and a control that becomes a panel."
 >
   <Nav current="home" />
 
@@ -30,89 +21,55 @@ const topics = [
     <section class="hero">
       <div class="mark mark--hero"><span class="lb"></span></div>
       <p class="lead rise" style="--i: 1">
-        <b>Liquid Blur</b> is a glass material for the web. <b>Plain CSS classes</b>, one optional script,
-        and <b>no refraction</b> — just a calm, blurred surface built from what every browser renders the
-        same way. Light and dark, <b>springy to the touch</b>, and polite to people who'd rather it stepped
-        aside.
+        <b>Liquid Web</b> is a set of small libraries for fluid interfaces: a glass material in plain CSS,
+        and controls that grow into panels of it. No framework needed.
       </p>
       <div class="actions rise" style="--i: 2">
-        <a class="button button--ink breathe" href="/docs">Get started</a>
-        <a class="button button--wash" href="#playground">Playground</a>
+        <a class="button button--ink breathe" href="/blur">Get started</a>
+        <a class="button button--wash" href={REPO}><Icon name="github" size={18} />GitHub</a>
       </div>
-      <p class="fine rise" style="--i: 3">MIT · 14.5 KB of CSS · no dependencies</p>
     </section>
 
-    <Stage />
-
-    <section class="block" id="playground">
-      <p class="lead reveal">
-        <b>Tune it by hand.</b> Two numbers carry the material: transparency and depth. Pick a backdrop, press
-        the glass, let the two buttons <a href="/docs#groups">melt into one</a>, and take the markup with you.
-      </p>
+    <section class="block showcase" aria-label="Demos and libraries">
       <div class="reveal">
-        <Playground />
+        <Stage />
       </div>
-    </section>
 
-    <section class="block" id="start">
-      <p class="lead reveal">
-        <b>Three lines to glass.</b> Install the package, import the stylesheet once, and put
-        <code>lb</code> on anything.
-      </p>
-      <div class="quick">
-        <div class="reveal" style="--d: 0ms">
-          <p class="quick__step"><b>1</b> Install</p>
-          <div class="code" data-install>
-            <div class="code__bar">
-              <div class="seg" role="group" aria-label="Package manager">
-                <span class="seg__thumb" aria-hidden="true"></span>
-                <button type="button" data-value="pnpm" aria-pressed="true">pnpm</button>
-                <button type="button" data-value="npm" aria-pressed="false">npm</button>
-                <button type="button" data-value="yarn" aria-pressed="false">yarn</button>
-                <button type="button" data-value="bun" aria-pressed="false">bun</button>
-              </div>
-            </div>
-            <pre><code><span class="tk-cmd">pnpm</span> add @liquid-web/blur</code></pre>
-            <button class="code__copy" type="button" data-copy aria-label="Copy command">
-              <Icon name="copy" class="is-idle" />
-              <Icon name="check" class="is-done" />
-            </button>
+      <div class="libs">
+        <article class="lib reveal">
+          <div class="lib__scene" data-hints>
+            <div class="bd bd-aurora"></div>
+            <GroupDock />
+            <Hint text="try to drag it" light style="top: calc(50% + 34px); left: calc(50% - 31px)" />
           </div>
-        </div>
-        <div class="reveal" style="--d: 80ms">
-          <p class="quick__step"><b>2</b> Import the stylesheet</p>
-          <CodeBlock code={`import "@liquid-web/blur/style.css";`} lang="ts" />
-        </div>
-        <div class="reveal" style="--d: 160ms">
-          <p class="quick__step"><b>3</b> Add the class</p>
-          <CodeBlock code={`<button class="lb">Glass</button>`} lang="html" />
-        </div>
+          <div class="lib__body">
+            <a class="lib__head" href="/blur">
+              <b>Liquid Blur</b><code>@liquid-web/blur</code><Icon name="arrow" size={16} />
+            </a>
+            <p>A glass material in plain CSS. Press behaviors, and pieces of glass that melt together.</p>
+          </div>
+        </article>
+
+        <article class="lib reveal" style="--d: 80ms">
+          <MorphDemo hue={200} hint={false}>
+            <Hint text="tap it, or drag it" light style="top: calc(50% + 36px); left: 50%" />
+          </MorphDemo>
+          <div class="lib__body">
+            <a class="lib__head" href="/morph">
+              <b>Morph</b><code>@liquid-web/morph</code><Icon name="arrow" size={16} />
+            </a>
+            <p>A control grows into a panel and back, on springs you can turn around mid-way.</p>
+          </div>
+        </article>
       </div>
-      <ul class="topics">
-        {
-          topics.map(([href, title, text], i) => (
-            <li class="reveal" style={`--d: ${(i % 3) * 80}ms`}>
-              <a href={href}>
-                <b>
-                  {title}
-                  <Icon name="arrow" size={16} />
-                </b>
-                <span>{text}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
     </section>
 
     <section class="end">
       <div class="mark mark--hero mark--on-reveal" style="--s: 3"><span class="lb"></span></div>
-      <p class="lead reveal">
-        <b>Glass for the web,</b> in 14.5 KB of CSS. Free and open source, under the MIT license.
-      </p>
+      <p class="lead reveal"><b>Make your interface fluid.</b> Free and open source, MIT.</p>
       <div class="actions reveal">
-        <a class="button button--ink breathe" href="/docs">Read the docs</a>
-        <a class="button button--wash" href={GITHUB}><Icon name="github" size={18} />GitHub</a>
+        <a class="button button--ink breathe" href="/blur">Read the docs</a>
+        <a class="button button--wash" href={REPO}><Icon name="github" size={18} />GitHub</a>
       </div>
     </section>
   </main>

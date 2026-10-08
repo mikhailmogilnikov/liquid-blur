@@ -1,0 +1,446 @@
+---
+package: "@liquid-web/blur"
+name: Liquid Blur
+order: 1
+description: "A glass material for the web: backdrop blur, fill, rims, springy press behaviors and glass that melts between shapes. Plain CSS classes and optional scripts. No refraction."
+intro: "Glass for the web. One class to make it, two numbers to tune it."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Rows from "../../components/docs/Rows.astro";
+import Row from "../../components/docs/Row.astro";
+import Cell from "../../components/docs/Cell.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import Faq from "../../components/docs/Faq.astro";
+import Question from "../../components/docs/Question.astro";
+import ClassTiles from "../../components/docs/ClassTiles.astro";
+import VarTable from "../../components/docs/VarTable.astro";
+import A11yGrid from "../../components/docs/A11yGrid.astro";
+import GroupTiles from "../../components/docs/GroupTiles.astro";
+
+<Section id="start" title="Get started">
+
+Install the package, import the stylesheet once, and put `lb` on anything.
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="@liquid-web/blur" />
+
+</Step>
+<Step>
+
+**Import the stylesheet**, once, anywhere in your app.
+
+```ts
+import "@liquid-web/blur/style.css";
+```
+
+</Step>
+<Step>
+
+**Add the class.**
+
+```html
+<button class="lb">Glass</button>
+```
+
+</Step>
+<Step>
+
+**Install press** if you use the press classes (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`). It adds one listener to the document, so elements added later work too, with any framework. On the server it does nothing.
+
+```ts
+import { installPress } from "@liquid-web/blur/press";
+
+installPress();
+```
+
+</Step>
+</Steps>
+
+No build step? Link the stylesheet and load the `auto` entry, which installs press itself. With a bundler, `import "@liquid-web/blur/auto"` does the same.
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@liquid-web/blur@1/dist/style.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/@liquid-web/blur@1/dist/auto.js/+esm"></script>
+```
+
+</Section>
+
+<Section id="entries" title="Entries">
+
+The material is plain CSS. Press and melt are optional scripts, each in its own entry: import only what you use. They work independently of each other.
+
+<Rows>
+<Row>
+<Cell title="Material <code>@liquid-web/blur/style.css</code>">
+
+The glass: `lb`, its variants, and the styles press and melt rely on.
+
+</Cell>
+<Cell title="Press <code>@liquid-web/blur/press</code>">
+
+Exports `installPress`. Runs highlight, swell and stretch on springs.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Melt <code>@liquid-web/blur/melt</code>">
+
+Exports `installGlassGroups`, `createGlassGroup` and the type `GlassGroup`. Merges nearby glass into one surface; needs the stylesheet.
+
+</Cell>
+<Cell title="Auto <code>@liquid-web/blur/auto</code>">
+
+Installs press on import. No named exports. For pages without a build step.
+
+</Cell>
+</Row>
+</Rows>
+
+To grow a control into a panel of the same glass, use [Morph](/morph). It works inside glass groups.
+
+</Section>
+
+<Section id="classes" title="Classes">
+
+`lb` is the material. `lb-clear` and `lb-tinted` change its look. `lb-highlight`, `lb-swell` and `lb-stretch` react to presses, and `lb-interactive` turns on all three. Combine them freely.
+
+<ClassTiles />
+
+Set the shape with `border-radius`; the default is a capsule.
+
+```html
+<button class="lb lb-interactive">Press me</button>
+<div class="lb lb-highlight lb-stretch">A bar: lights and stretches, doesn't swell</div>
+<button class="lb lb-tinted lb-highlight">Tinted</button>
+<div class="lb lb-clear">Over a photo</div>
+<div class="lb" style="border-radius: 24px; padding: 16px">Card</div>
+```
+
+</Section>
+
+<Section id="layers" title="Layers">
+
+The glass is built from these layers, back to front. It uses only features that every browser engine renders the same way, and no pseudo-elements, so `::before` and `::after` stay free for you.
+
+1. **Backdrop**: blur and saturate.
+2. **Fill**: one color, or the tint, at a computed opacity.
+3. **Volume**: the surface darkens toward its edges on a smooth curve and catches a little light just under the top and bottom rims.
+4. **Rims**: light hairlines along the top and bottom; inset shadows, so on a capsule they fade toward the ends.
+5. **Edge**: a dark hairline just outside.
+6. **Drop shadow.**
+
+</Section>
+
+<Section id="customize" title="Customize">
+
+All variables inherit: set one on any ancestor and every glass element inside uses it.
+
+<VarTable />
+
+```css
+.toolbar {
+  --lb-transparency: 0.8;
+  --lb-depth: 0.3;
+}
+
+.danger {
+  --lb-tint: #ff3b30;
+}
+```
+
+Everything prefixed `--_` is internal calibration and may change without notice.
+
+</Section>
+
+<Section id="colors" title="Colors">
+
+Colors are resolved on each glass element, so they follow whichever theme applies there. Transparency and depth still control how strongly a color shows.
+
+```css
+/* Your own neutral, per theme */
+:root {
+  --lb-fill-light: #f5f5f7;
+  --lb-fill-dark: #1c1c1e;
+}
+
+/* Warm glass: fill, shading and rims all lean amber */
+.warm {
+  --lb-fill-light: #ffe08a;
+  --lb-shade-color: #5a2a00;
+  --lb-shine-color: #fff4c0;
+}
+
+/* Same fill in both themes */
+.brand {
+  --lb-fill: #0a3;
+}
+
+/* A light tint needs dark text */
+.warning {
+  --lb-tint: #ffcc00;
+  --lb-tint-text: #111;
+}
+```
+
+Glass picks a text color that contrasts with its fill. To override it, set `color` on the element, or `--lb-text`.
+
+</Section>
+
+<Section id="theming" title="Theming">
+
+The theme is one inherited variable, `--lb-dark`: `0` is light, `1` is dark. By default it follows the system setting. `data-theme="light"` or `"dark"` on any element switches everything inside it.
+
+```html
+<html data-theme="dark">
+  <section data-theme="light">
+    <button class="lb">Always light</button>
+  </section>
+</html>
+```
+
+To connect another theme switcher, set `--lb-dark` where it marks the dark theme:
+
+```css
+/* Tailwind, shadcn, next-themes with attribute="class" */
+.dark { --lb-dark: 1; }
+
+/* daisyUI and other named themes */
+[data-theme="dracula"] { --lb-dark: 1; }
+```
+
+</Section>
+
+<Section id="tailwind" title="Tailwind & layers">
+
+All styles are in `@layer liquid-blur`, so your unlayered CSS overrides them without `!important`. Among layers, the one declared first has the lowest priority. Tailwind v4 declares its layers when imported, so glass imported after it would override utilities such as `rounded-xl`. Declare the layer order once, before both imports:
+
+```css
+@layer liquid-blur, theme, base, components, utilities;
+@import "tailwindcss";
+@import "@liquid-web/blur/style.css";
+```
+
+</Section>
+
+<Section id="accessibility" title="Accessibility">
+
+Glass follows the system's accessibility settings on its own; no code needed.
+
+<A11yGrid />
+
+</Section>
+
+<Section id="press" title="Press behaviors">
+
+The press classes need `installPress()` (see [Get started](#start)). Without it, highlight and swell fall back to `:active`, centered on the element.
+
+<Rows>
+<Row>
+<Cell title="Pressed state">
+
+While pressed, the element has `data-lb-pressed`, which you can style. On touch it appears after a short delay, so starting a scroll doesn't trigger it; a quick tap still flashes briefly on release.
+
+</Cell>
+<Cell title="Highlight">
+
+A soft glow under the finger. Its size grows with the element, up to a limit on large panels. `--lb-highlight-size` multiplies it.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Springs">
+
+Highlight and swell run on springs that can reverse mid-way. While they move, the script sets `scale`, the highlight strength and the press point (`--lb-press-x`, `--lb-press-y`) inline, and removes them at rest. Swell multiplies your own `scale`.
+
+</Cell>
+<Cell title="Size">
+
+Larger glass swells and stretches less, moves slower and bounces less. `--lb-swell` and `--lb-stretch` adjust the strength.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Stretch">
+
+Writes only `transform`, once per frame, without reading layout. Your own transform is kept and the stretch is added after it; your inline `transform` and `will-change` are restored at rest. Stretch sets `touch-action: none` and disables text selection on the element.
+
+</Cell>
+<Cell title="Release outside">
+
+Releasing more than 32px outside the element cancels the click.
+
+</Cell>
+</Row>
+</Rows>
+
+Don't put a CSS `transition` on `scale` for swell elements or on `transform` for stretch elements: the script updates them every frame and a transition would lag behind. Use press classes on single controls, not containers: highlight lights the whole element on a press anywhere inside it, and stretch blocks scrolling and text selection in its whole subtree.
+
+</Section>
+
+<Section id="groups" title="Glass groups">
+
+Glass elements inside an `lb-group` merge into one surface when they get close and separate as they move apart. The group draws one backdrop clipped to the merged outline, so overlaps aren't blurred twice.
+
+<GroupTiles />
+
+```html
+<div class="lb lb-group">
+  <div class="lb">…</div>
+  <button class="lb lb-interactive">…</button>
+</div>
+
+<script type="module">
+  import { installGlassGroups } from "@liquid-web/blur/melt";
+
+  installGlassGroups();
+</script>
+```
+
+<Rows>
+<Row>
+<Cell title="Optional script">
+
+Groups need the `@liquid-web/blur/melt` entry. Without it, or while the children are far apart, they render as ordinary glass.
+
+</Cell>
+<Cell title="Merge distance">
+
+Children start to merge when they are closer than `--lb-merge`, `18px` by default. Set it on the group.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Tracking movement">
+
+The group follows its children's springs, inline style and class changes, size changes, and CSS transitions and animations. For anything else that moves them, call `update()`.
+
+</Cell>
+<Cell title="Same material">
+
+The group uses the same variables as any glass. While it draws the shared surface, the root has `data-lb-melted`. An `lb-tinted` child keeps its tint on top.
+
+</Cell>
+</Row>
+</Rows>
+
+**Server rendering.** The entry can be imported on the server; `installGlassGroups()` does nothing there. In React, Vue or Svelte, call it after hydration (in an effect), because the group adds its own elements to the root. Write both `lb lb-group` in the markup, so a re-render that sets the class doesn't drop `lb`.
+
+```tsx
+import { useEffect } from "react";
+import { installGlassGroups } from "@liquid-web/blur/melt";
+
+export function Toolbar() {
+  // After hydration: the group adds its own elements to the root
+  useEffect(() => installGlassGroups(), []);
+  return (
+    // "lb" in the markup too, so a re-render keeps it
+    <div className="lb lb-group">
+      <div className="lb">…</div>
+      <button className="lb lb-interactive">…</button>
+    </div>
+  );
+}
+```
+
+</Section>
+
+<Section id="api" title="API">
+
+The functions behind press and melt. What each entry exports is listed under [Entries](#entries).
+
+**`installPress(root?: Document): () => void`**<br />
+Installs press behaviors on `root` (default `document`) and returns a function that uninstalls them. Calling it again returns the same function. While installed, `<html>` has `data-lb-interaction`. Works inside open shadow roots; for an iframe, pass its `contentDocument`. Does nothing without a DOM.
+
+```ts
+const uninstall = installPress();
+
+// An iframe has its own document
+installPress(frame.contentDocument);
+
+// Later, if the page goes away
+uninstall();
+```
+
+**`installGlassGroups(root?: Document): () => void`**<br />
+Turns every `.lb-group` in the document into a group, including ones added later, and releases a group when its root leaves the document. Returns a cleanup that destroys the groups it created; calling it again returns the same cleanup. Does nothing without a DOM.
+
+**`createGlassGroup(root: HTMLElement): GlassGroup`**<br />
+Creates a group for one element you manage yourself. Adds `lb` and `lb-group` to `root` if missing. Calling it again for the same root returns the existing group.
+
+```ts
+import { createGlassGroup } from "@liquid-web/blur/melt";
+
+const group = createGlassGroup(toolbar);
+
+// A child moved by something the group can't see
+group.update();
+
+// Later
+group.destroy();
+```
+
+</Section>
+
+<Section id="support" title="Browser support">
+
+Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@property` (Firefox before 128) the glass still renders, but some settings inherit into nested glass and the press highlight doesn't fade. Groups also need `clip-path: path()`, `mask` with an inline SVG, and Canvas 2D. The JavaScript is ESM targeting ES2022.
+
+</Section>
+
+<Section id="limitations" title="Limitations">
+
+- **Backdrop roots.** Glass blurs only what's inside its backdrop root. An ancestor with `filter`, `opacity` below 1, `mask`, `clip-path`, `mix-blend-mode` or its own `backdrop-filter` cuts the glass off from everything behind that ancestor.
+- **Transforms on groups.** Scaling a group or its ancestors works; rotating doesn't. Movement the group can't see needs `update()`. The merged outline uses circular arcs, even for squircle children.
+- **Clipping around a group.** In Chromium, an ancestor with `overflow: hidden` (or `clip`, or paint containment) and a `corner-shape` other than `round` shows a blurred rectangle around merged glass. Put the shape on the ancestor's background instead and leave it unclipped. Clipping with plain `border-radius` is fine.
+- **No refraction.** See the [FAQ](#faq).
+
+</Section>
+
+<Section id="faq" title="FAQ">
+
+<Faq>
+<Question q="Why no refraction?">
+
+Refraction on the web needs SVG filters, which only one browser engine applies to a backdrop, and they are expensive on every frame of scrolling. Liquid Blur uses only what renders the same in every browser.
+
+</Question>
+<Question q="Does it need JavaScript?">
+
+No. The material is plain CSS. The optional scripts add press behaviors and glass groups.
+
+</Question>
+<Question q="How do I use it with React, Vue or Svelte?">
+
+Use the classes as they are, and install press once at the root. It returns its own cleanup.
+
+```tsx
+import { useEffect } from "react";
+import { installPress } from "@liquid-web/blur/press";
+
+export function App() {
+  useEffect(() => installPress(), []);
+  return <button className="lb lb-highlight">Glass</button>;
+}
+```
+
+</Question>
+<Question q="How fast is it?">
+
+A backdrop filter costs GPU time in proportion to the area of glass on screen: a toolbar is cheap, a full-page panel is not. While animating, the script writes only transforms and two custom properties per frame and never reads layout.
+
+</Question>
+<Question q="Is this Apple's Liquid Glass?">
+
+No. It's inspired by it, but has no lensing or refraction and uses only what browsers support today.
+
+</Question>
+</Faq>
+
+</Section>

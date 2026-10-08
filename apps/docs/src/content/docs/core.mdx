@@ -1,0 +1,67 @@
+---
+package: "@liquid-web/core"
+name: Core
+order: 3
+description: "What the Liquid Web packages share: an interruptible, velocity-keeping spring, and the DOM contract they meet by."
+intro: "The spring every moving part runs on, and the attributes the packages recognize each other by."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Install from "../../components/docs/Install.astro";
+
+<Section id="spring" title="Spring">
+
+`SpringAnimator` animates several numbers at once with springs set by a duration in seconds and a bounce from 0 to 1. It's exact at any frame rate. Changing the target keeps the current velocity, so reversing mid-way stays smooth, which CSS transitions can't do.
+
+<Install pkg="@liquid-web/core" />
+
+```ts
+import { SpringAnimator } from "@liquid-web/core";
+
+const spring = new SpringAnimator(
+  { width: 100, radius: 12 },
+  { duration: 0.4, bounce: 0.2 },
+  ({ width, radius }) => {
+    el.style.width = `${width}px`;
+    el.style.borderRadius = `${radius}px`;
+  },
+  () => console.log("at rest"), // optional
+);
+
+spring.to({ width: 240, radius: 24 });
+spring.to({ width: 100, radius: 12 }, { duration: 0.6, bounce: 0 }); // new springs are optional
+spring.retarget({ width: 110, radius: 12 }); // adjust the current movement, no new bounce
+spring.values(); // where it is now
+spring.stop();
+```
+
+Each channel can have a spring of its own:
+
+```ts
+new SpringAnimator(
+  { opacity: 0, scale: 1 },
+  {
+    opacity: { duration: 0.15, bounce: 0 },
+    scale: { duration: 0.45, bounce: 0.3 },
+  },
+  ({ opacity, scale }) => {
+    /* … */
+  },
+);
+```
+
+`SpringParams` is `{ duration, bounce, settle? }`. `duration` is how long the motion feels, in seconds; it isn't a hard deadline. `bounce` runs from `0` (no overshoot) to `1`; below `1` the spring comes to rest. `settle` is the bounce after the first overshoot, `bounce` by default: a bouncy spring with a low `settle` overshoots once and then comes back without swinging. `to()` starts a new movement, with its bounce; `retarget()` changes the target of the current one without a new bounce.
+
+</Section>
+
+<Section id="contract" title="Contract">
+
+The packages never import each other. Instead, each marks what it does with attributes in the DOM and reads the attributes the others set, so each works alone and any two work together. The names are exported as constants and change only in a major version of every package.
+
+| Attribute | Constant | Set by | Meaning |
+| --- | --- | --- | --- |
+| `data-lw-surface` | `SURFACE` | Liquid Blur's melt, on a group's root while it runs | Its children share one surface: a morph from one of them lifts its glass over the others or melts with them |
+| `data-lw-part` | `PART` | Melt and morph, on elements they create | Not content: a morph doesn't count it as a neighbor, press doesn't press it |
+| `data-lw-away` | `AWAY` | Morph, on the control while its panel is out | Unseen but still focusable; melt leaves it out |
+
+</Section>

@@ -1,0 +1,231 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * A morph to try: a glass button in the corner of a scene grows into its menu. Escape, a press
+ * outside or a pick closes it.
+ */
+interface Props {
+  /** Hue of the backdrop, in degrees */
+  hue?: number;
+  /** The line telling what to do, at the bottom of the scene */
+  hint?: boolean;
+}
+
+const { hue = 60, hint = true } = Astro.props;
+const art =
+  "radial-gradient(circle at 20% 25%, #ffd36e 0, transparent 40%), radial-gradient(circle at 80% 30%, #2f7bff 0, transparent 45%), radial-gradient(circle at 60% 85%, #1fd1a5 0, transparent 45%), radial-gradient(circle at 15% 90%, #ff4f81 0, transparent 40%), linear-gradient(135deg, #b5179e, #3a0ca3)";
+---
+
+<div class="mdemo" data-morph-demo data-hints data-at="center">
+  <div class="mdemo__art" style={`background: ${art}; filter: hue-rotate(${hue}deg)`}></div>
+  <span class="mdemo__pulse" aria-hidden="true"></span>
+  <button class="mdemo__src lb lb-highlight lb-swell" type="button" aria-label="Create" aria-haspopup="menu" data-source>
+    <Icon name="plus" size={26} />
+  </button>
+  <div class="mdemo__panel" role="menu" aria-label="Create" data-content>
+    <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share</button>
+    <button type="button" role="menuitem"><Icon name="heart" size={18} />Add to Favorites</button>
+    <button type="button" role="menuitem"><Icon name="copy" size={18} />Copy Link</button>
+    <hr />
+    <button type="button" role="menuitem"><Icon name="plus" size={18} />New Tab</button>
+  </div>
+  <slot />
+  {hint && <p class="mdemo__hint">Press the button, or drag it to a corner. Press again mid-way: it turns around.</p>}
+</div>
+
+<style>
+  .mdemo {
+    position: relative;
+    height: var(--mdemo-height, 360px);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .mdemo__art {
+    position: absolute;
+    inset: -20%;
+  }
+  .mdemo__hint {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    margin: 0;
+    text-align: center;
+    font-size: 14px;
+    color: rgb(255 255 255 / 0.85);
+    pointer-events: none;
+  }
+
+  /* The button and its menu share the middle of the scene: auto margins, never `transform` */
+  .mdemo__src,
+  .mdemo__panel,
+  .mdemo__pulse {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+  }
+  .mdemo__src {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 0;
+    border-radius: 28px;
+    font: inherit;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  /* Dragged to a corner, the button and its menu sit there, the menu opening inward */
+  .mdemo[data-at="tl"] :is(.mdemo__src, .mdemo__panel, .mdemo__pulse) { inset: 20px auto auto 20px; margin: 0; }
+  .mdemo[data-at="tr"] :is(.mdemo__src, .mdemo__panel, .mdemo__pulse) { inset: 20px 20px auto auto; margin: 0; }
+  .mdemo[data-at="bl"] :is(.mdemo__src, .mdemo__panel, .mdemo__pulse) { inset: auto auto 20px 20px; margin: 0; }
+  .mdemo[data-at="br"] :is(.mdemo__src, .mdemo__panel, .mdemo__pulse) { inset: auto 20px 20px auto; margin: 0; }
+  .mdemo__src { touch-action: none; }
+  .mdemo.is-dragging .mdemo__src { cursor: grabbing; z-index: 3; }
+  .mdemo[data-at^="b"] .mdemo__hint { opacity: 0; }
+
+  /* Laid out where it opens, hidden until the morph takes it */
+  .mdemo__panel {
+    z-index: 2;
+    width: 264px;
+    height: fit-content;
+    box-sizing: border-box;
+    display: grid;
+    align-content: start;
+    padding: 8px;
+    border-radius: 32px;
+    color: var(--ink);
+    visibility: hidden;
+  }
+
+  /* Rings out from behind the button until the scene is touched; a sibling, so the glass still blurs */
+  .mdemo__pulse {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid rgb(255 255 255 / 0.7);
+    pointer-events: none;
+    animation: mdemo-pulse 2.2s var(--glide) infinite;
+  }
+  :global(.is-tried) > .mdemo__pulse { display: none; }
+  @keyframes mdemo-pulse {
+    from { transform: scale(1); opacity: 0.9; }
+    to { transform: scale(2.2); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mdemo__pulse { animation: none; opacity: 0; }
+  }
+
+  .mdemo__panel button {
+    all: unset;
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 18px 0 16px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .mdemo__panel button:hover { background: color-mix(in srgb, currentColor 13%, transparent); }
+  .mdemo__panel button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .mdemo__panel hr {
+    width: calc(100% - 24px);
+    margin: 4px 12px;
+    border: 0;
+    border-top: 1px solid rgb(127 127 127 / 0.25);
+  }
+</style>
+
+<script>
+  import { createMorph } from "@liquid-web/morph";
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-morph-demo]")) {
+    const source = scene.querySelector<HTMLElement>("[data-source]")!;
+    const content = scene.querySelector<HTMLElement>("[data-content]")!;
+    const morph = createMorph({
+      source,
+      content,
+      dismiss: true,
+      onStart(open) {
+        if (open) content.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+      },
+      onRest(open) {
+        if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
+      },
+    });
+
+    /*
+     * Drag the button to a corner or the middle: it lands on the nearest one, and the menu opens
+     * from there. Only while closed; a drag is no press.
+     */
+    let drag: { x: number; y: number; id: number; moved: boolean } | null = null;
+    let dragged = false;
+
+    source.addEventListener("pointerdown", (e) => {
+      dragged = false;
+      if (morph.phase !== "closed" || e.button !== 0) return;
+      drag = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+    });
+    source.addEventListener("pointermove", (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      if (!drag.moved) {
+        if (Math.hypot(dx, dy) < 6) return;
+        drag.moved = true;
+        source.setPointerCapture(e.pointerId);
+        source.style.transition = "none";
+        scene.classList.add("is-dragging");
+      }
+      source.style.translate = `${dx}px ${dy}px`;
+    });
+    const drop = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const { moved } = drag;
+      drag = null;
+      if (!moved) return;
+      // The click that ends a drag isn't a press; touch may send none, so it doesn't wait for it
+      dragged = true;
+      setTimeout(() => (dragged = false), 300);
+      scene.classList.remove("is-dragging");
+
+      const area = scene.getBoundingClientRect();
+      const from = source.getBoundingClientRect();
+      const x = (from.left + from.width / 2 - area.left) / area.width;
+      const y = (from.top + from.height / 2 - area.top) / area.height;
+      scene.dataset.at =
+        Math.abs(x - 0.5) < 0.2 && Math.abs(y - 0.5) < 0.2 ? "center" : `${y < 0.5 ? "t" : "b"}${x < 0.5 ? "l" : "r"}`;
+
+      // From where it was let go to where it lands
+      source.style.translate = "";
+      const to = source.getBoundingClientRect();
+      source.style.translate = `${from.left - to.left}px ${from.top - to.top}px`;
+      source.getBoundingClientRect();
+      source.style.transition = "translate 0.5s cubic-bezier(0.3, 1.3, 0.5, 1)";
+      source.style.translate = "0px 0px";
+      const settle = () => {
+        source.style.transition = "";
+        source.style.translate = "";
+      };
+      source.addEventListener("transitionend", settle, { once: true });
+      setTimeout(settle, 600);
+    };
+    source.addEventListener("pointerup", drop);
+    source.addEventListener("pointercancel", drop);
+
+    source.addEventListener("click", () => {
+      if (dragged) {
+        dragged = false;
+        return;
+      }
+      morph.toggle();
+    });
+    content.addEventListener("click", (e) => {
+      if ((e.target as Element).closest("button")) morph.close();
+    });
+  }
+</script>

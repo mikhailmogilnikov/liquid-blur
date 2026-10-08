@@ -11,7 +11,7 @@ interface Props {
 const { title, description } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL(ogImage.src, Astro.site);
-const socialImageAlt = "Liquid Blur. Expressive material for the web. A blurred glass capsule over pink and blue circles.";
+const socialImageAlt = "Liquid Web. Fluid interfaces for the web. A blurred glass capsule over pink and blue circles.";
 ---
 
 <!doctype html>
@@ -23,7 +23,7 @@ const socialImageAlt = "Liquid Blur. Expressive material for the web. A blurred 
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Liquid Blur" />
+    <meta property="og:site_name" content="Liquid Web" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
@@ -42,7 +42,7 @@ const socialImageAlt = "Liquid Blur. Expressive material for the web. A blurred 
     <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..600&family=Caveat:wght@600&display=swap" />
     <!-- Before first paint: the saved theme, so the page never flashes the other one -->
     <script is:inline>
       try {

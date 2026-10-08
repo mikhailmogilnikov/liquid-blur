@@ -45,7 +45,7 @@ const features = [
 ];
 ---
 
-<section class="stage" aria-label="Live demo">
+<div class="stage">
   <div class="stage__panel">
     <div class="screen">
       <div class="feed" data-feed>
@@ -104,10 +104,28 @@ const features = [
             <button type="button" data-value="artists" aria-pressed="false">Artists</button>
           </div>
         </div>
-        <div class="pair lb lb-highlight lb-stretch">
+        <div class="pair lb lb-highlight lb-stretch" data-stage-pair>
           <button type="button" aria-label="Search"><Icon name="search" /></button>
-          <button type="button" aria-label="More"><Icon name="more" /></button>
+          <button
+            type="button"
+            aria-label="More"
+            aria-haspopup="menu"
+            aria-controls="stage-menu"
+            aria-expanded="false"
+            data-stage-more
+          >
+            <Icon name="more" />
+          </button>
         </div>
+      </div>
+
+      <!-- The menu the pair grows into from its more button: laid out where it opens, hidden until then -->
+      <div class="stage-menu" id="stage-menu" role="menu" aria-label="More" data-stage-menu>
+        <button type="button" role="menuitem"><Icon name="plus" size={18} />Add to Library</button>
+        <button type="button" role="menuitem"><Icon name="heart" size={18} />Love</button>
+        <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share Album</button>
+        <hr />
+        <button type="button" role="menuitem"><Icon name="copy" size={18} />Copy Link</button>
       </div>
 
       <div class="screen__bottom lb lb-group">
@@ -129,11 +147,11 @@ const features = [
       </div>
     </div>
   </div>
-  <p class="stage__hint">It's live: press the glass, drag it.</p>
-</section>
+</div>
 
 <script>
   import { installGlassGroups } from "@liquid-web/blur/melt";
+  import { createMorph } from "@liquid-web/morph";
   import { segmented } from "../scripts/segmented";
 
   // The player and the like button share one piece of glass
@@ -142,6 +160,32 @@ const features = [
   const feed = document.querySelector<HTMLElement>("[data-feed]");
   const seg = document.querySelector<HTMLElement>("[data-demo-seg]");
   if (seg) segmented(seg);
+
+  /*
+   * The whole pair of glass grows into the menu, but only the more button opens it. Escape, a
+   * press outside or a pick closes it.
+   */
+  const pair = document.querySelector<HTMLElement>("[data-stage-pair]");
+  const more = document.querySelector<HTMLElement>("[data-stage-more]");
+  const menu = document.querySelector<HTMLElement>("[data-stage-menu]");
+  if (pair && more && menu) {
+    const morph = createMorph({
+      source: pair,
+      content: menu,
+      dismiss: true,
+      onStart(open) {
+        more.setAttribute("aria-expanded", String(open));
+        if (open) menu.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+      },
+      onRest(open) {
+        if (!open && menu.contains(document.activeElement)) more.focus({ preventScroll: true });
+      },
+    });
+    more.addEventListener("click", () => morph.toggle());
+    menu.addEventListener("click", (e) => {
+      if ((e.target as Element).closest("button")) morph.close();
+    });
+  }
 
   // Play / pause on the mini player
   const play = document.querySelector<HTMLButtonElement>("[data-play]");

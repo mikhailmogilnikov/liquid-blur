@@ -1,0 +1,25 @@
+---
+import Icon from "../Icon.astro";
+
+/** Every system setting the material honors */
+const a11y = [
+  ["eye", "Reduced transparency", "With the system setting on, glass turns opaque and the backdrop filter goes away."],
+  ["contrast", "Increased contrast", "Opaque glass with a stronger edge, so every control keeps its outline."],
+  ["frame", "Forced colors", "Windows High Contrast drops backgrounds and shadows; an outline takes their place, one around a melted group."],
+  ["motion", "Reduced motion", "No swell, no stretch; morphs switch immediately. Presses still light up."],
+  ["keyboard", "Keyboard", "Enter and Space on a focused glass press it, until that same key comes up."],
+  ["layers", "Solid material", '<code>data-lb-material="solid"</code> on any ancestor makes all glass inside it opaque.'],
+] as const;
+---
+
+<ul class="grid grid--doc">
+  {
+    a11y.map(([icon, title, text]) => (
+      <li>
+        <Icon name={icon} size={24} />
+        <b>{title}</b>
+        <p set:html={text} />
+      </li>
+    ))
+  }
+</ul>

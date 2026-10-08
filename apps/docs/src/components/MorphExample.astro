@@ -1,0 +1,188 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * One of Morph's examples, live:
+ *   - plain: no Liquid Blur, a solid pill grows into a solid panel
+ *   - glassify: the same solid pill, but glass under it, uncovered as it opens
+ *   - group: a glass button in a melted toolbar, lifted out over its neighbors
+ */
+interface Props {
+  kind: "plain" | "glassify" | "group";
+}
+
+const { kind } = Astro.props;
+const items = [
+  ["arrow", "Messages"],
+  ["copy", "Copy Link"],
+  ["heart", "Add to Favorites"],
+] as const;
+---
+
+<div class:list={["mx", `mx--${kind}`]} data-mx>
+  {kind !== "plain" && <div class="bd bd-aurora"></div>}
+
+  {
+    kind === "group" ? (
+      <div class="mx__bar lb lb-group">
+        <button class="lb lb-interactive mx__round" type="button" aria-label="Back">
+          <Icon name="back" size={20} />
+        </button>
+        <button class="lb lb-interactive mx__round" type="button" aria-label="Play">
+          <Icon name="play" size={20} />
+        </button>
+        <button class="lb lb-interactive mx__round" type="button" aria-label="Share" aria-haspopup="menu" data-source>
+          <Icon name="arrow" size={20} />
+        </button>
+      </div>
+    ) : (
+      <button
+        class:list={["mx__pill", { lb: kind === "glassify" }]}
+        type="button"
+        aria-haspopup="menu"
+        data-source
+      >
+        <Icon name="arrow" size={18} />
+        Share
+      </button>
+    )
+  }
+
+  <div class="mx__panel" role="menu" aria-label="Share" data-content>
+    {
+      items.map(([icon, label]) => (
+        <button type="button" role="menuitem">
+          <Icon name={icon} size={18} />
+          {label}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .mx {
+    position: relative;
+    height: 300px;
+    border-radius: 20px;
+    background: var(--wash);
+    isolation: isolate;
+  }
+
+  /* Everything sits at the bottom middle, laid out where it is: auto margins, never `transform` */
+  .mx__pill,
+  .mx__bar,
+  .mx__panel {
+    position: absolute;
+    inset: auto 0 24px;
+    margin: 0 auto;
+  }
+
+  .mx__pill {
+    width: 116px;
+    height: 44px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+
+  /* Plain CSS: a solid pill, and so a solid panel */
+  .mx--plain .mx__pill {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+  .mx--plain .mx__panel { color: var(--on-ink); }
+
+  /*
+   * Solid ink laid over the glass, under the label. The copy that morphs has the control's classes
+   * and `data-lw-part`: open, its ink fades and the glass shows.
+   */
+  .mx--glassify .mx__pill {
+    color: #fff;
+    isolation: isolate;
+  }
+  .mx--glassify .mx__pill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: #171717;
+    transition: opacity 0.4s var(--glide);
+  }
+  .mx--glassify.is-open .mx__pill[data-lw-part]::after { opacity: 0; }
+
+  .mx__bar {
+    width: fit-content;
+    display: flex;
+    gap: 8px;
+  }
+  .mx__round {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+  }
+
+  /* Hidden until the morph takes it; above a copy lifted out of the group */
+  .mx__panel {
+    z-index: 2;
+    width: 264px;
+    height: fit-content;
+    display: grid;
+    padding: 8px;
+    border-radius: 32px;
+    color: var(--ink);
+    visibility: hidden;
+  }
+  .mx__panel button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 18px 0 16px;
+    border-radius: 999px;
+    text-align: left;
+  }
+  .mx__panel button:hover { background: color-mix(in srgb, currentColor 13%, transparent); }
+  .mx__panel button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
+  @supports (corner-shape: squircle) {
+    .mx { border-radius: 26px; corner-shape: squircle; }
+  }
+</style>
+
+<script>
+  import { createMorph } from "@liquid-web/morph";
+  import { installGlassGroups } from "@liquid-web/blur/melt";
+
+  installGlassGroups();
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-mx]:not([data-mx-ready])")) {
+    scene.dataset.mxReady = "";
+    const source = scene.querySelector<HTMLElement>("[data-source]")!;
+    const content = scene.querySelector<HTMLElement>("[data-content]")!;
+    const morph = createMorph({
+      source,
+      content,
+      dismiss: true,
+      onStart(open) {
+        // The copy is in place now: its style first, so the class below transitions it
+        scene.querySelector("[data-lw-part]")?.getBoundingClientRect();
+        scene.classList.toggle("is-open", open);
+        if (open) content.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+      },
+      onRest(open) {
+        if (!open && content.contains(document.activeElement)) source.focus({ preventScroll: true });
+      },
+    });
+    source.addEventListener("click", () => morph.toggle());
+    content.addEventListener("click", (e) => {
+      if ((e.target as Element).closest("button")) morph.close();
+    });
+  }
+</script>

@@ -1,0 +1,27 @@
+---
+import Icon from "../Icon.astro";
+
+/** The install command for a package, in the package manager the reader picked last */
+interface Props {
+  pkg: string;
+}
+
+const { pkg } = Astro.props;
+---
+
+<div class="code" data-install={pkg}>
+  <div class="code__bar">
+    <div class="seg" role="group" aria-label="Package manager">
+      <span class="seg__thumb" aria-hidden="true"></span>
+      <button type="button" data-value="pnpm" aria-pressed="true">pnpm</button>
+      <button type="button" data-value="npm" aria-pressed="false">npm</button>
+      <button type="button" data-value="yarn" aria-pressed="false">yarn</button>
+      <button type="button" data-value="bun" aria-pressed="false">bun</button>
+    </div>
+  </div>
+  <pre><code><span class="tk-cmd">pnpm</span> add {pkg}</code></pre>
+  <button class="code__copy" type="button" data-copy aria-label="Copy command">
+    <Icon name="copy" class="is-idle" />
+    <Icon name="check" class="is-done" />
+  </button>
+</div>

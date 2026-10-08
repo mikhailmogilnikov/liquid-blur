@@ -1,0 +1,15 @@
+---
+import Icon from "../Icon.astro";
+
+/** One question, opened on demand; the answer is Markdown */
+interface Props {
+  q: string;
+}
+
+const { q } = Astro.props;
+---
+
+<details>
+  <summary>{q}<Icon name="plus" /></summary>
+  <div class="answer"><slot /></div>
+</details>
