@@ -129,13 +129,22 @@ const features = [
       </div>
 
       <div class="screen__bottom lb lb-group">
-        <div class="player lb lb-highlight lb-stretch">
-          <span class="player__art" style={`background: ${albums[0].art}`}></span>
-          <span class="player__meta">
-            <strong>Surface Tension</strong>
-            <span>Lumen — Neon Tides</span>
-          </span>
-          <button type="button" data-play aria-pressed="true" aria-label="Pause">
+        <div class="player lb lb-highlight lb-stretch" data-player>
+          <button
+            class="player__open"
+            type="button"
+            aria-label="Now playing: Surface Tension"
+            aria-haspopup="dialog"
+            aria-controls="stage-now"
+            data-player-open
+          >
+            <span class="player__art" style={`background: ${albums[0].art}`} data-lw-match="art"></span>
+            <span class="player__meta">
+              <strong data-lw-match="title">Surface Tension</strong>
+              <span>Lumen — Neon Tides</span>
+            </span>
+          </button>
+          <button class="play-toggle" type="button" data-play data-lw-match="play" aria-pressed="true" aria-label="Pause">
             <Icon name="play" size={20} class="is-play" />
             <Icon name="pause" size={20} class="is-pause" />
           </button>
@@ -144,6 +153,27 @@ const features = [
         <button class="lb lb-interactive round" type="button" aria-label="Like">
           <Icon name="heart" size={22} />
         </button>
+      </div>
+
+      <!-- The player grows into it from the bar, lifted over the like button: hidden until then -->
+      <div class="now lb" id="stage-now" role="dialog" aria-label="Now playing" data-stage-now>
+        <button class="now__close" type="button" aria-label="Minimize" data-now-close>
+          <Icon name="chevron" size={22} />
+        </button>
+        <span class="now__art" style={`background: ${albums[0].art}`} data-lw-match="art"></span>
+        <span class="now__meta">
+          <strong data-lw-match="title">Surface Tension</strong>
+          <span>Lumen — Neon Tides</span>
+        </span>
+        <span class="now__track" aria-hidden="true"><i></i></span>
+        <div class="now__controls">
+          <button type="button" aria-label="Previous"><Icon name="back" size={24} /></button>
+          <button class="now__play play-toggle" type="button" data-play data-lw-match="play" aria-pressed="true" aria-label="Pause">
+            <Icon name="play" size={30} class="is-play" />
+            <Icon name="pause" size={30} class="is-pause" />
+          </button>
+          <button type="button" aria-label="Next"><Icon name="next" size={24} /></button>
+        </div>
       </div>
     </div>
   </div>
@@ -176,13 +206,30 @@ const features = [
     });
   }
 
-  // Play / pause on the mini player
-  const play = document.querySelector<HTMLButtonElement>("[data-play]");
-  play?.addEventListener("click", () => {
-    const on = play.getAttribute("aria-pressed") !== "true";
-    play.setAttribute("aria-pressed", String(on));
-    play.setAttribute("aria-label", on ? "Pause" : "Play");
-  });
+  /*
+   * The player grows into the now playing card, its artwork, title and play button flying across;
+   * the minimize button, Escape or a press outside bring it back.
+   */
+  const player = document.querySelector<HTMLElement>("[data-player]");
+  const open = document.querySelector<HTMLElement>("[data-player-open]");
+  const now = document.querySelector<HTMLElement>("[data-stage-now]");
+  if (player && open && now) {
+    const card = disclosure(player, now, { trigger: open });
+    open.addEventListener("click", () => card.open());
+    now.querySelector("[data-now-close]")!.addEventListener("click", () => card.close());
+  }
+
+  // Play / pause, the same in the bar and the card
+  const plays = [...document.querySelectorAll<HTMLButtonElement>("[data-play]")];
+  for (const play of plays) {
+    play.addEventListener("click", () => {
+      const on = play.getAttribute("aria-pressed") !== "true";
+      for (const p of plays) {
+        p.setAttribute("aria-pressed", String(on));
+        p.setAttribute("aria-label", on ? "Pause" : "Play");
+      }
+    });
+  }
 
   /*
    * The feed drifts on its own so the glass always has something moving under it; it can't be

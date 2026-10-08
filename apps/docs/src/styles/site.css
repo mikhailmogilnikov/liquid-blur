@@ -776,9 +776,104 @@ code {
   height: 40px;
   border-radius: 999px;
 }
-.player [data-play] .is-pause,
-.player [data-play][aria-pressed="true"] .is-play { display: none; }
-.player [data-play][aria-pressed="true"] .is-pause { display: block; }
+.player .player__open {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  height: 48px;
+  margin-left: -4px;
+  padding: 0 4px;
+  border-radius: 12px;
+  text-align: left;
+}
+.player__open:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+/*
+ * By the button alone: its copy flying between the bar and the card is in neither, and keeps only
+ * its own classes and attributes
+ */
+.play-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+[data-play] .is-pause,
+[data-play][aria-pressed="true"] .is-play { display: none; }
+[data-play][aria-pressed="true"] .is-pause { display: block; }
+
+/* Now playing: what the player grows into, at the bottom middle over the like button */
+.now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  z-index: 2;
+  width: min(360px, calc(100% - 28px));
+  box-sizing: border-box;
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 28px 20px 16px;
+  border-radius: 40px;
+  color: var(--ink);
+  visibility: hidden;
+}
+.now__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--ink-2);
+}
+.now__art {
+  width: min(208px, 60vw);
+  aspect-ratio: 1;
+  border-radius: 22px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+}
+.now__meta {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.now__meta strong { font-size: 18px; font-weight: 600; }
+.now__meta span { color: var(--ink-3); font-size: 14px; }
+.now__track {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hair);
+}
+.now__track i {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+.now__controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.now__controls button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+}
+.now__controls .now__play { width: 60px; height: 60px; }
+:is(.now__close, .now__controls button):hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+:is(.now__close, .now__controls button):focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 
 .screen__bottom .round { width: 56px; height: 56px; }
 
