@@ -398,6 +398,8 @@
   }
   .lb-group > .lb-group__glass {
     position: absolute;
+    /* The volume overhangs it by a sample: clip, so the page doesn't count it (clip-path doesn't) */
+    overflow: clip;
     pointer-events: none;
     background: var(--_fill);
     -webkit-backdrop-filter: var(--_backdrop);

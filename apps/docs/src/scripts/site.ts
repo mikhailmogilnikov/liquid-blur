@@ -110,12 +110,12 @@ const reveal = new IntersectionObserver(
 );
 for (const el of document.querySelectorAll(".reveal, .mark--on-reveal")) reveal.observe(el);
 
-// ── Moving backdrops: animate only while on screen ──
+// ── Stripes: slide only while on screen ──
 
 const live = new IntersectionObserver((entries) => {
   for (const entry of entries) entry.target.classList.toggle("is-live", entry.isIntersecting);
 });
-for (const el of document.querySelectorAll(".bd-aurora, .bd-stripes")) live.observe(el);
+for (const el of document.querySelectorAll(".bd-stripes")) live.observe(el);
 
 // ── Contents: the section being read ──
 

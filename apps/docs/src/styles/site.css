@@ -444,12 +444,10 @@ code {
 .bd[hidden] { display: none; }
 
 /*
- * The moving backdrops slide a pre-painted layer with transform, so the compositor does the work
- * instead of repainting big gradients every frame. Off screen they stand still (see site.ts).
+ * Stripes slide a pre-painted layer with transform, so the compositor does the work instead of
+ * repainting a big gradient every frame. Off screen they stand still (see site.ts).
  */
-.bd-aurora,
 .bd-stripes { contain: strict; }
-.bd-aurora::before,
 .bd-stripes::before {
   content: "";
   position: absolute;
@@ -459,26 +457,14 @@ code {
 }
 .js .bd:not(.is-live)::before { animation-play-state: paused; }
 
-.bd-aurora { background: #f4ecff; }
-.bd-aurora::before {
-  width: 160%;
-  height: 160%;
-  background:
-    radial-gradient(38% 55% at 18% 28%, #ff4f81 0, transparent 70%),
-    radial-gradient(42% 50% at 78% 22%, #ffb020 0, transparent 70%),
-    radial-gradient(48% 60% at 62% 82%, #2f7bff 0, transparent 70%),
-    radial-gradient(36% 48% at 14% 86%, #1fd1a5 0, transparent 70%),
-    radial-gradient(30% 40% at 46% 46%, #b45cff 0, transparent 70%);
-  animation: drift 22s ease-in-out infinite alternate;
-}
-:root[data-theme="dark"] .bd-aurora { background-color: #120a22; }
+/*
+ * A mesh gradient: a small pre-rendered picture of smooth color, stretched. It stands still, so it's
+ * painted once and the glass over it never has to blur a moving picture.
+ */
+.bd-aurora { background: #fbeaf2 url("../assets/mesh-light.png") center / cover; }
+:root[data-theme="dark"] .bd-aurora { background-color: #4a2088; background-image: url("../assets/mesh-dark.png"); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .bd-aurora { background-color: #120a22; }
-}
-@keyframes drift {
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(-37.5%, -11.25%); }
-  100% { transform: translate(-15%, -37.5%); }
+  :root:not([data-theme="light"]) .bd-aurora { background-color: #4a2088; background-image: url("../assets/mesh-dark.png"); }
 }
 
 .bd-stripes::before {
@@ -524,7 +510,6 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bd-aurora::before,
   .bd-stripes::before { animation: none; }
 }
 

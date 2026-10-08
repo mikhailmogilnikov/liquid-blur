@@ -117,8 +117,9 @@ type Look = {
 
 /**
  * One element resolves the material's values through properties that compute calc() to a plain
- * length: amounts are scaled by 1000px and read back. Colors come back as colors. Scaled to
- * nothing, so a box thousands of pixels wide doesn't widen the page: a hidden one still does.
+ * length: amounts are scaled by 1000px and read back. Colors come back as colors. It sits in a
+ * holder of no size that clips it: a hidden box thousands of pixels wide, or its margins, would
+ * still widen the page.
  */
 const PROBE =
   "position: absolute; visibility: hidden; pointer-events: none; box-sizing: content-box; " +
@@ -374,6 +375,9 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   glass.setAttribute(PART, "");
   const probe = doc.createElement("span");
   probe.style.cssText = PROBE;
+  const probeHolder = doc.createElement("span");
+  probeHolder.style.cssText = "position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none";
+  probeHolder.append(probe);
   // Resized to ask for a redraw in the frame's resize-observer step: see `schedule`
   const pulse = doc.createElement("span");
   pulse.style.cssText = "position: absolute; width: 0; height: 0; visibility: hidden; pointer-events: none";
@@ -407,7 +411,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
   });
   let turn = 0;
   let outlineKey = "";
-  glass.append(probe, pulse, ...(masked ? [svg] : []), volume);
+  glass.append(probeHolder, pulse, ...(masked ? [svg] : []), volume);
   const paint = doc.createElement("canvas");
   paint.className = "lb-group__paint";
   paint.setAttribute("aria-hidden", "true");
@@ -462,18 +466,25 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
 
   /**
    * Moves and sizes the glass and the canvases when `want` outgrows them; sets the canvas's scale
-   * and the volume's grid step
+   * and the volume's grid step. Nothing goes right of `limit` (the viewport's edge), so the slack
+   * never widens the page: there the page would scroll sideways, on iOS even when it clips.
    */
-  const place = (want: Bounds, scale: number, step: number) => {
-    if (contains(frameBox, want) && frameBox.width * frameBox.height <= 4 * Math.max(1, want.width * want.height)) {
+  const place = (want: Bounds, scale: number, step: number, limit: number) => {
+    const right = (box: Bounds) => box.x + box.width;
+    if (
+      contains(frameBox, want) &&
+      right(frameBox) <= Math.max(limit, right(want)) &&
+      frameBox.width * frameBox.height <= 4 * Math.max(1, want.width * want.height)
+    ) {
       if (scale !== dpr) rescale(scale);
       if (step !== grid.step) regrid(step);
       return;
     }
+    const x = Math.floor(want.x - SLACK);
     frameBox = {
-      x: Math.floor(want.x - SLACK),
+      x,
       y: Math.floor(want.y - SLACK),
-      width: Math.ceil(want.width + 2 * SLACK),
+      width: Math.ceil(Math.min(right(want) + SLACK, Math.max(limit, right(want))) - x),
       height: Math.ceil(want.height + 2 * SLACK),
     };
     for (const el of [glass, paint]) {
@@ -603,7 +614,11 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
       });
     }
 
-    const key = `${forced}|${merge}|${win.devicePixelRatio}|${shapes.map((s) => `${s.x},${s.y},${s.width},${s.height},${s.radius}`).join(";")}`;
+    // The viewport's right edge in the root's pixels. The edge and the shadow past it are off
+    // screen anyway; the glass itself is never cut.
+    const limit = local(doc.documentElement.clientWidth - origin.left, sx) - root.clientLeft;
+
+    const key = `${forced}|${merge}|${win.devicePixelRatio}|${Math.round(limit)}|${shapes.map((s) => `${s.x},${s.y},${s.width},${s.height},${s.radius}`).join(";")}`;
     if (key === drawn) return;
     drawn = key;
 
@@ -624,8 +639,9 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
 
     const moving = inMotion();
     const b = blob.bounds;
-    const want = { x: b.x - MARGIN, y: b.y - MARGIN, width: b.width + 2 * MARGIN, height: b.height + 2 * MARGIN };
-    place(want, win.devicePixelRatio || 1, moving ? MOVING_STEP : STEP);
+    const wantRight = Math.min(b.x + b.width + MARGIN, Math.max(limit, b.x + b.width));
+    const want = { x: b.x - MARGIN, y: b.y - MARGIN, width: wantRight - (b.x - MARGIN), height: b.height + 2 * MARGIN };
+    place(want, win.devicePixelRatio || 1, moving ? MOVING_STEP : STEP, limit);
     const d = blobPath(blob, frameBox.x, frameBox.y);
     // The mask's scale goes with the glass's size, which may change while the path doesn't
     const shape = `${d} ${frameBox.width} ${frameBox.height}`;
@@ -798,6 +814,8 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
     ),
   ];
   for (const m of media) m.addEventListener("change", restyle);
+  // The viewport's edge bounds the glass: a narrower one may leave it past the edge
+  win.addEventListener("resize", schedule);
   // Off screen, nothing is drawn; coming back, everything is
   const sight = new IntersectionObserver(
     ([entry]) => {
@@ -827,6 +845,7 @@ export function createGlassGroup(root: HTMLElement): GlassGroup {
       moves.disconnect();
       themes.disconnect();
       for (const m of media) m.removeEventListener("change", restyle);
+      win.removeEventListener("resize", schedule);
       glass.remove();
       paint.remove();
       root.removeAttribute("data-lb-melted");

@@ -6,19 +6,15 @@ import Icon from "./Icon.astro";
  * outside or a pick closes it.
  */
 interface Props {
-  /** Hue of the backdrop, in degrees */
-  hue?: number;
   /** The line telling what to do, at the bottom of the scene */
   hint?: boolean;
 }
 
-const { hue = 60, hint = true } = Astro.props;
-const art =
-  "radial-gradient(circle at 20% 25%, #ffd36e 0, transparent 40%), radial-gradient(circle at 80% 30%, #2f7bff 0, transparent 45%), radial-gradient(circle at 60% 85%, #1fd1a5 0, transparent 45%), radial-gradient(circle at 15% 90%, #ff4f81 0, transparent 40%), linear-gradient(135deg, #b5179e, #3a0ca3)";
+const { hint = true } = Astro.props;
 ---
 
 <div class="mdemo" data-morph-demo data-hints data-at="center">
-  <div class="mdemo__art" style={`background: ${art}; filter: hue-rotate(${hue}deg)`}></div>
+  <div class="mdemo__art"></div>
   <span class="mdemo__pulse" aria-hidden="true"></span>
   <button class="mdemo__src lb lb-highlight lb-swell" type="button" aria-label="Create" aria-haspopup="menu" data-source>
     <Icon name="plus" size={26} />
@@ -41,9 +37,21 @@ const art =
     border-radius: var(--radius);
     overflow: hidden;
   }
+  /* A still mesh gradient, as under blur's demos in other colors: painted once, nothing to re-blur */
   .mdemo__art {
     position: absolute;
-    inset: -20%;
+    inset: 0;
+    background: #eef0ff url("../assets/mesh-morph-light.png") center / cover;
+  }
+  :global(:root[data-theme="dark"]) .mdemo__art {
+    background-color: #2a3c9a;
+    background-image: url("../assets/mesh-morph-dark.png");
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .mdemo__art {
+      background-color: #2a3c9a;
+      background-image: url("../assets/mesh-morph-dark.png");
+    }
   }
   .mdemo__hint {
     position: absolute;
