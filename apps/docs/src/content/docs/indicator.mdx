@@ -1,5 +1,5 @@
 ---
-package: "@fluidkit/indicator"
+package: "@fluidkit/core"
 name: Indicator
 order: 3
 description: "A single element that moves to whatever is hovered, pressed or selected: a menu highlight, a tab thumb. Uses interruptible springs and motion blur."
@@ -29,7 +29,7 @@ An indicator is an element you add to a container of items. It moves to the item
 
 **Install.**
 
-<Install pkg="@fluidkit/indicator" />
+<Install pkg="@fluidkit/core" />
 
 </Step>
 <Step>
@@ -66,7 +66,7 @@ An indicator is an element you add to a container of items. It moves to the item
 **Create the indicator** once the elements are in the DOM. By default, the container's children are the items, except the indicator itself and separators.
 
 ```ts
-import { createIndicator } from "@fluidkit/indicator";
+import { createIndicator } from "@fluidkit/core";
 
 const highlight = createIndicator({
   container: document.querySelector(".menu")!,
@@ -86,9 +86,9 @@ const highlight = createIndicator({
 <Steps>
 <Step>
 
-**Install.** The React components are included in the package (React 18+).
+**Install.** The React components and hooks, with all of core (React 18+).
 
-<Install pkg="@fluidkit/indicator" />
+<Install pkg="@fluidkit/react" />
 
 </Step>
 <Step>
@@ -96,7 +96,7 @@ const highlight = createIndicator({
 **Add the parts.** The root is the container, the thumb is the element that moves, and each item has a `value`. The parts handle positioning and put the thumb behind the items; the look is up to you.
 
 ```tsx
-import { Indicator } from "@fluidkit/indicator/react";
+import { Indicator } from "@fluidkit/react";
 
 export function Tabs() {
   const [tab, setTab] = useState("overview");
@@ -128,9 +128,9 @@ Components are marked `"use client"`. On the server they render plain markup.
 <Steps>
 <Step>
 
-**Install.** The Vue components are included in the package (Vue 3.5+).
+**Install.** The Vue components and composables, with all of core (Vue 3.5+).
 
-<Install pkg="@fluidkit/indicator" />
+<Install pkg="@fluidkit/vue" />
 
 </Step>
 <Step>
@@ -140,7 +140,7 @@ Components are marked `"use client"`. On the server they render plain markup.
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Indicator } from "@fluidkit/indicator/vue";
+import { Indicator } from "@fluidkit/vue";
 
 const tab = ref("overview");
 </script>
@@ -172,9 +172,9 @@ On the server, including Nuxt, the components render plain markup.
 <Steps>
 <Step>
 
-**Install.** The Svelte components are included in the package (Svelte 5.29+).
+**Install.** The Svelte components and runes, with all of core (Svelte 5.29+).
 
-<Install pkg="@fluidkit/indicator" />
+<Install pkg="@fluidkit/svelte" />
 
 </Step>
 <Step>
@@ -183,7 +183,7 @@ On the server, including Nuxt, the components render plain markup.
 
 ```svelte
 <script lang="ts">
-  import { Indicator } from "@fluidkit/indicator/svelte";
+  import { Indicator } from "@fluidkit/svelte";
 
   let tab = $state("overview");
 </script>
@@ -238,8 +238,8 @@ The highlight follows the mouse and gets darker while pressed (`data-pressed`). 
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createIndicator } from "@fluidkit/indicator";
+import "@fluidkit/core/style.css";
+import { createIndicator } from "@fluidkit/core";
 
 createIndicator({
   container: document.querySelector(".menu")!,
@@ -251,8 +251,8 @@ createIndicator({
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
-import { Indicator } from "@fluidkit/indicator/react";
+import "@fluidkit/react/style.css";
+import { Indicator } from "@fluidkit/react";
 
 // Default trigger: hover for mouse, press and drag for touch
 export function AlbumMenu() {
@@ -275,8 +275,8 @@ export function AlbumMenu() {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
-import { Indicator } from "@fluidkit/indicator/vue";
+import "@fluidkit/vue/style.css";
+import { Indicator } from "@fluidkit/vue";
 </script>
 
 <!-- Default trigger: hover for mouse, press and drag for touch -->
@@ -298,8 +298,8 @@ import { Indicator } from "@fluidkit/indicator/vue";
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Indicator } from "@fluidkit/indicator/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Indicator } from "@fluidkit/svelte";
 </script>
 
 <!-- Default trigger: hover for mouse, press and drag for touch -->
@@ -376,7 +376,7 @@ iOS-style tabs: the thumb sits on the selected tab (`rest`; in React, `value`; i
 <Fragment slot="js">
 
 ```ts
-import { createIndicator } from "@fluidkit/indicator";
+import { createIndicator } from "@fluidkit/core";
 
 const list = document.querySelector<HTMLElement>(".tabs")!;
 const tabs = [...list.querySelectorAll<HTMLElement>("[role='tab']")];
@@ -403,7 +403,7 @@ for (const tab of tabs) {
 
 ```tsx
 import { useState } from "react";
-import { Indicator } from "@fluidkit/indicator/react";
+import { Indicator } from "@fluidkit/react";
 
 const tabs = { overview: "Overview", releases: "Releases", audience: "Audience" };
 
@@ -429,7 +429,7 @@ export function ArtistTabs() {
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Indicator } from "@fluidkit/indicator/vue";
+import { Indicator } from "@fluidkit/vue";
 
 const tabs = { overview: "Overview", releases: "Releases", audience: "Audience" };
 const tab = ref("overview");
@@ -451,7 +451,7 @@ const tab = ref("overview");
 
 ```svelte
 <script lang="ts">
-  import { Indicator } from "@fluidkit/indicator/svelte";
+  import { Indicator } from "@fluidkit/svelte";
 
   const tabs = { overview: "Overview", releases: "Releases", audience: "Audience" };
   let tab = $state("overview");
@@ -719,7 +719,7 @@ Changing props never recreates the indicator; a new `trigger` applies immediatel
 Use `useIndicator(options)` when the parts don't fit your markup. It takes the same options as `Indicator.Root` and returns refs.
 
 ```tsx
-import { useIndicator } from "@fluidkit/indicator/react";
+import { useIndicator } from "@fluidkit/react";
 
 const nav = useIndicator({ value: page, onValueChange: setPage });
 
@@ -747,7 +747,7 @@ Use `useIndicator(options)` when the parts don't fit your markup. Options can be
 
 ```vue
 <script setup lang="ts">
-import { useIndicator } from "@fluidkit/indicator/vue";
+import { useIndicator } from "@fluidkit/vue";
 
 const page = ref("home");
 const nav = useIndicator(() => ({ value: page.value, onValueChange: (v) => (page.value = v) }));
@@ -779,7 +779,7 @@ Use `useIndicator(() => options)` when the parts don't fit your markup. Call it 
 
 ```svelte
 <script lang="ts">
-  import { useIndicator } from "@fluidkit/indicator/svelte";
+  import { useIndicator } from "@fluidkit/svelte";
 
   let page = $state("home");
   const nav = useIndicator(() => ({ value: page, onValueChange: (v) => (page = v) }));

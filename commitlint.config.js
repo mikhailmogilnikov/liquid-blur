@@ -1,6 +1,6 @@
 /**
- * Conventional commits: `type(scope): subject`. The scope is optional; when given, it's a package
- * or a part of the repo, so the history reads by package.
+ * Conventional commits: `type(scope): subject`. The scope is optional; when given, it's a package,
+ * a feature or a part of the repo, so the history reads by package and by feature.
  */
 export default {
   extends: ["@commitlint/config-conventional"],
@@ -10,7 +10,24 @@ export default {
     "scope-enum": [
       2,
       "always",
-      ["core", "blur", "morph", "indicator", "drag", "lift", "layout", "docs", "repo", "ci", "deps", "release"],
+      [
+        "core",
+        "react",
+        "vue",
+        "svelte",
+        "blur",
+        "morph",
+        "indicator",
+        "drag",
+        "lift",
+        "layout",
+        "motion",
+        "docs",
+        "repo",
+        "ci",
+        "deps",
+        "release",
+      ],
     ],
   },
 };

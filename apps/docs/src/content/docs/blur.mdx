@@ -1,5 +1,5 @@
 ---
-package: "@fluidkit/blur"
+package: "@fluidkit/core"
 name: Liquid Blur
 order: 1
 description: "A glass material for the web: backdrop blur, fill, rims, springy press effects, and glass that merges between shapes. Plain CSS classes plus optional scripts. No refraction."
@@ -33,7 +33,7 @@ Install the package, import the stylesheet once, and add the `lb` class to any e
 
 **Install.**
 
-<Install pkg="@fluidkit/blur" />
+<Install pkg="@fluidkit/core" />
 
 </Step>
 <Step>
@@ -41,7 +41,7 @@ Install the package, import the stylesheet once, and add the `lb` class to any e
 **Import the stylesheet** once, anywhere in your app.
 
 ```ts
-import "@fluidkit/blur/style.css";
+import "@fluidkit/core/style.css";
 ```
 
 </Step>
@@ -59,7 +59,7 @@ import "@fluidkit/blur/style.css";
 **Set up press effects** if you use the press classes (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`). It adds a single listener to the document, so elements added later work too, in any framework. On the server it does nothing.
 
 ```ts
-import { installPress } from "@fluidkit/blur/press";
+import { installPress } from "@fluidkit/core";
 
 installPress();
 ```
@@ -73,9 +73,9 @@ installPress();
 <Steps>
 <Step>
 
-**Install.** The React components are included in the package (React 18+).
+**Install.** The React components and hooks, with all of core (React 18+).
 
-<Install pkg="@fluidkit/blur" />
+<Install pkg="@fluidkit/react" />
 
 </Step>
 <Step>
@@ -83,7 +83,7 @@ installPress();
 **Import the stylesheet** once, in your app's root (a layout or `main.tsx`).
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 ```
 
 </Step>
@@ -92,7 +92,7 @@ import "@fluidkit/blur/style.css";
 **Use `Glass`.** Variants are props, and `render` lets you use your own element. Press props (`interactive`, `highlight`, `swell`, `stretch`) set up press effects automatically.
 
 ```tsx
-import { Glass } from "@fluidkit/blur/react";
+import { Glass } from "@fluidkit/react";
 
 <Glass render={<nav />}>…</Glass>
 <Glass interactive render={<button type="button" />}>Follow</Glass>
@@ -109,9 +109,9 @@ The classes are plain CSS, so `className="lb lb-interactive"` also works. In tha
 <Steps>
 <Step>
 
-**Install.** The Vue components are included in the package (Vue 3.5+).
+**Install.** The Vue components and composables, with all of core (Vue 3.5+).
 
-<Install pkg="@fluidkit/blur" />
+<Install pkg="@fluidkit/vue" />
 
 </Step>
 <Step>
@@ -119,7 +119,7 @@ The classes are plain CSS, so `className="lb lb-interactive"` also works. In tha
 **Import the stylesheet** once, in your app's entry (`main.ts`, or Nuxt's `css` option).
 
 ```ts
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 ```
 
 </Step>
@@ -129,7 +129,7 @@ import "@fluidkit/blur/style.css";
 
 ```vue
 <script setup lang="ts">
-import { Glass } from "@fluidkit/blur/vue";
+import { Glass } from "@fluidkit/vue";
 </script>
 
 <template>
@@ -149,9 +149,9 @@ The classes are plain CSS, so `class="lb lb-interactive"` also works. In that ca
 <Steps>
 <Step>
 
-**Install.** The Svelte components are included in the package (Svelte 5.29+).
+**Install.** The Svelte components and runes, with all of core (Svelte 5.29+).
 
-<Install pkg="@fluidkit/blur" />
+<Install pkg="@fluidkit/svelte" />
 
 </Step>
 <Step>
@@ -159,7 +159,7 @@ The classes are plain CSS, so `class="lb lb-interactive"` also works. In that ca
 **Import the stylesheet** once, in your root layout (`src/routes/+layout.svelte` in SvelteKit) or your app's entry.
 
 ```ts
-import "@fluidkit/blur/style.css";
+import "@fluidkit/svelte/style.css";
 ```
 
 </Step>
@@ -169,7 +169,7 @@ import "@fluidkit/blur/style.css";
 
 ```svelte
 <script lang="ts">
-  import { Glass } from "@fluidkit/blur/svelte";
+  import { Glass } from "@fluidkit/svelte";
 </script>
 
 <Glass>
@@ -189,11 +189,11 @@ The classes are plain CSS, so `class="lb lb-interactive"` also works. In that ca
 
 <Only js>
 
-No build step? Link the stylesheet and load the `auto` entry, which sets up press effects for you. With a bundler, `import "@fluidkit/blur/auto"` does the same.
+No build step? Link the stylesheet and load the `auto` entry, which sets up press effects for you. With a bundler, `import "@fluidkit/core/auto"` does the same.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fluidkit/blur@1/dist/style.css" />
-<script type="module" src="https://cdn.jsdelivr.net/npm/@fluidkit/blur@1/dist/auto.js/+esm"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fluidkit/core@2/dist/style.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/@fluidkit/core@2/dist/auto.js/+esm"></script>
 ```
 
 </Only>
@@ -202,30 +202,30 @@ No build step? Link the stylesheet and load the `auto` entry, which sets up pres
 
 <Section id="entries" title="Entries">
 
-The material is plain CSS. Press effects and glass groups are optional scripts in separate entries, so you only load what you use.
+The material is plain CSS. Press effects and glass groups are optional scripts: what you don't import isn't in your bundle.
 
 <Rows>
 <Row>
-<Cell title="Material <code>@fluidkit/blur/style.css</code>">
+<Cell title="Material <code>@fluidkit/core/style.css</code>">
 
-The glass: `lb`, its variants, and the styles the scripts rely on.
+The glass: `lb`, its variants, and the styles the scripts rely on, with [Motion](/motion)'s springs and transitions. Each framework's package has it as its own `style.css`.
 
 </Cell>
-<Cell title="Press <code>@fluidkit/blur/press</code>">
+<Cell title="Press <code>installPress</code>">
 
-Exports `installPress`: animated highlight, swell and stretch.
+Animated highlight, swell and stretch.
 
 </Cell>
 </Row>
 <Row>
-<Cell title="Melt <code>@fluidkit/blur/melt</code>">
+<Cell title="Melt <code>installGlassGroups</code>">
 
-Exports `installGlassGroups`, `createGlassGroup` and the `GlassGroup` type. Merges nearby glass into one surface. Needs the stylesheet.
+With `createGlassGroup` and the `GlassGroup` type. Merges nearby glass into one surface. Needs the stylesheet.
 
 </Cell>
-<Cell title="Auto <code>@fluidkit/blur/auto</code>">
+<Cell title="Auto <code>@fluidkit/core/auto</code>">
 
-Sets up press effects on import, for pages without a build step. Doesn't set up glass groups; for those, also load `melt` and call `installGlassGroups()`.
+Sets up press effects on import, for pages without a build step. Doesn't set up glass groups; for those, also call `installGlassGroups()`.
 
 </Cell>
 </Row>
@@ -233,17 +233,17 @@ Sets up press effects on import, for pages without a build step. Doesn't set up 
 
 <Only react>
 
-The React entry, `@fluidkit/blur/react`, provides `Glass`, `Glass.Group` and a few hooks. See [Components](#components). It sets up press effects and groups for you.
+`@fluidkit/react` provides `Glass`, `Glass.Group` and a few hooks. See [Components](#components). It sets up press effects and groups for you.
 
 </Only>
 <Only vue>
 
-The Vue entry, `@fluidkit/blur/vue`, provides `Glass`, `Glass.Group` and a few composables. See [Components](#components). It sets up press effects and groups for you.
+`@fluidkit/vue` provides `Glass`, `Glass.Group` and a few composables. See [Components](#components). It sets up press effects and groups for you.
 
 </Only>
 <Only svelte>
 
-The Svelte entry, `@fluidkit/blur/svelte`, provides `Glass`, `Glass.Group` and a few functions. See [Components](#components). It sets up press effects and groups for you.
+`@fluidkit/svelte` provides `Glass`, `Glass.Group` and a few functions. See [Components](#components). It sets up press effects and groups for you.
 
 </Only>
 
@@ -445,7 +445,7 @@ All styles are in `@layer liquid-blur`, so your own unlayered CSS overrides them
 ```css
 @layer liquid-blur, theme, base, components, utilities;
 @import "tailwindcss";
-@import "@fluidkit/blur/style.css";
+@import "@fluidkit/core/style.css";
 ```
 
 </Section>
@@ -538,7 +538,7 @@ Glass elements inside `lb-group` merge into one surface when they get close, and
 </div>
 
 <script type="module">
-  import { installGlassGroups } from "@fluidkit/blur/melt";
+  import { installGlassGroups } from "@fluidkit/core";
 
   installGlassGroups();
 </script>
@@ -548,7 +548,7 @@ Glass elements inside `lb-group` merge into one surface when they get close, and
 <Only react>
 
 ```tsx
-import { Glass } from "@fluidkit/blur/react";
+import { Glass } from "@fluidkit/react";
 
 <Glass.Group className="toolbar">
   <Glass>…</Glass>
@@ -561,7 +561,7 @@ import { Glass } from "@fluidkit/blur/react";
 
 ```vue
 <script setup lang="ts">
-import { Glass } from "@fluidkit/blur/vue";
+import { Glass } from "@fluidkit/vue";
 </script>
 
 <template>
@@ -577,7 +577,7 @@ import { Glass } from "@fluidkit/blur/vue";
 
 ```svelte
 <script lang="ts">
-  import { Glass } from "@fluidkit/blur/svelte";
+  import { Glass } from "@fluidkit/svelte";
 </script>
 
 <Glass.Group class="toolbar">
@@ -594,7 +594,7 @@ import { Glass } from "@fluidkit/blur/vue";
 <Row>
 <Cell title="Optional script">
 
-Groups need the `@fluidkit/blur/melt` entry. Without it, or while the children are far apart, they look like ordinary glass.
+Groups need `installGlassGroups()`; the components set them up for you. Without it, or while the children are far apart, they look like ordinary glass.
 
 </Cell>
 <Cell title="Merge distance">
@@ -623,7 +623,7 @@ The group uses the same variables as any glass. While it draws the merged surfac
 
 ```tsx
 import { useEffect } from "react";
-import { installGlassGroups } from "@fluidkit/blur/melt";
+import { installGlassGroups } from "@fluidkit/core";
 
 export function Toolbar() {
   // After hydration, since the group adds its own elements to the root
@@ -698,7 +698,7 @@ Press props set up press effects automatically, including inside iframes.
 - `useGlassGroup()` returns a ref for a group root (with `lb lb-group`) and the group itself, so you can call `update()`.
 
 ```tsx
-import { glass, useGlassGroup, usePress } from "@fluidkit/blur/react";
+import { glass, useGlassGroup, usePress } from "@fluidkit/react";
 
 const { className, style } = glass({ interactive: true, tint: "#0a84ff" });
 <Link className={className} style={style} href="/follow">Follow</Link>;
@@ -742,7 +742,7 @@ Press props set up press effects automatically, including inside iframes.
 
 ```vue
 <script setup lang="ts">
-import { glass, useGlassGroup } from "@fluidkit/blur/vue";
+import { glass, useGlassGroup } from "@fluidkit/vue";
 
 const { root, group } = useGlassGroup();
 </script>
@@ -792,7 +792,7 @@ Press props set up press effects automatically, including inside iframes.
 
 ```svelte
 <script lang="ts">
-  import { glass, useGlassGroup } from "@fluidkit/blur/svelte";
+  import { glass, useGlassGroup } from "@fluidkit/svelte";
 
   const toolbar = useGlassGroup();
 </script>
@@ -829,7 +829,7 @@ Turns every `.lb-group` in the document into a group, including ones added later
 Creates a group for a single element you manage yourself. Adds `lb` and `lb-group` to `root` if missing. Calling it again for the same root returns the existing group.
 
 ```ts
-import { createGlassGroup } from "@fluidkit/blur/melt";
+import { createGlassGroup } from "@fluidkit/core";
 
 const group = createGlassGroup(toolbar);
 
@@ -879,7 +879,7 @@ In React, Vue and Svelte, use `Glass` (see [Components](#components) with your f
 
 ```tsx
 import { useEffect } from "react";
-import { installPress } from "@fluidkit/blur/press";
+import { installPress } from "@fluidkit/core";
 
 export function App() {
   useEffect(() => installPress(), []);

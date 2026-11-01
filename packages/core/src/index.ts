@@ -1,24 +1,13 @@
 /**
- * What the Fluid Kit packages share: the spring every moving part runs on, springs and transitions
- * by name (for CSS too), boxes read as the
- * browser draws them, the DOM attributes they recognize each other by, and dropping the click a
- * gesture would make or the text selection it would start. Nothing here touches the page by itself.
+ * Fluid Kit without a framework: every engine, on the shared ground they're built on. Each one works
+ * on any element; they meet through the DOM attributes in `base`, never through each other. Nothing
+ * here touches the page by itself (but `@fluidkit/core/auto`), and what an app doesn't import isn't
+ * in its bundle.
  */
-export { SpringAnimator, type SpringConfig, type SpringParams } from "./springAnimator.js";
-export { springCss, springs, transitions, type SpringOptions, type TransitionParams } from "./motion.js";
-export {
-  cornerOf,
-  cornerShapeOf,
-  drawsCornerShape,
-  fitRadii,
-  measureBox,
-  px,
-  radiiCss,
-  radiiOf,
-  still,
-  type Box,
-  type Radii,
-} from "./box.js";
-export { AWAY, PART, SURFACE } from "./contract.js";
-export { swallowClick } from "./click.js";
-export { holdSelection } from "./select.js";
+export * from "./base.js";
+export * from "./blur/index.js";
+export * from "./drag/index.js";
+export * from "./indicator/index.js";
+export * from "./layout/index.js";
+export * from "./lift/index.js";
+export * from "./morph/index.js";

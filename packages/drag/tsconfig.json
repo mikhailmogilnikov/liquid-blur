@@ -1,6 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "include": ["src", "test", "vite.config.ts"],
-  // Svelte's own: its components and runes are checked by svelte-check (tsconfig.svelte.json)
-  "exclude": ["src/svelte", "test/svelte*"]
-}

@@ -11,15 +11,9 @@ import LiftCases from "../components/playground/LiftCases.astro";
 import MotionCases from "../components/playground/MotionCases.astro";
 import { CASES, PACKAGES } from "../playground/cases";
 import core from "../../../../packages/core/package.json";
-import blur from "../../../../packages/blur/package.json";
-import morph from "../../../../packages/morph/package.json";
-import indicator from "../../../../packages/indicator/package.json";
-import drag from "../../../../packages/drag/package.json";
-import layout from "../../../../packages/layout/package.json";
-import lift from "../../../../packages/lift/package.json";
 
-/** The packages as built here, for an issue's report */
-const versions = [core, blur, morph, indicator, drag, lift, layout].map((p) => `${p.name}@${p.version}`).join(", ");
+/** The engines as built here, for an issue's report: the framework packages are always at its version */
+const versions = `${core.name}@${core.version}`;
 const first = CASES[0];
 ---
 

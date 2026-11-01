@@ -1,11 +1,5 @@
 <script lang="ts">
-  import { Glass, glass } from "@fluidkit/blur/svelte";
-  import { Drag, useDrag } from "@fluidkit/drag/svelte";
-  import { Indicator, useIndicator } from "@fluidkit/indicator/svelte";
-  import { transitions } from "@fluidkit/core";
-  import { Layout } from "@fluidkit/layout/svelte";
-  import { Lift, useLift } from "@fluidkit/lift/svelte";
-  import { Morph, useMorph } from "@fluidkit/morph/svelte";
+  import { Glass, glass, Drag, useDrag, Indicator, useIndicator, transitions, Layout, Lift, useLift, Morph, useMorph } from "@fluidkit/svelte";
 
   let { log }: { log: (line: string) => void } = $props();
 

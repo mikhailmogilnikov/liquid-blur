@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Glass, glass } from "@fluidkit/blur/vue";
-import { Drag, useDrag } from "@fluidkit/drag/vue";
-import { Indicator, useIndicator } from "@fluidkit/indicator/vue";
-import { transitions } from "@fluidkit/core";
-import { Layout } from "@fluidkit/layout/vue";
-import { Lift, useLift } from "@fluidkit/lift/vue";
-import { Morph, useMorph } from "@fluidkit/morph/vue";
+import {
+  Glass,
+  glass,
+  Drag,
+  useDrag,
+  Indicator,
+  useIndicator,
+  transitions,
+  Layout,
+  Lift,
+  useLift,
+  Morph,
+  useMorph,
+} from "@fluidkit/vue";
 
 const { log } = defineProps<{ log: (line: string) => void }>();
 

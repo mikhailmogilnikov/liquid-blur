@@ -3,24 +3,27 @@ description: Something looks or behaves wrong
 labels: [bug]
 body:
   - type: dropdown
-    id: package
+    id: feature
     attributes:
-      label: Package
+      label: Feature
       options:
-        - "@fluidkit/blur"
-        - "@fluidkit/morph"
-        - "@fluidkit/indicator"
-        - "@fluidkit/drag"
-        - "@fluidkit/lift"
-        - "@fluidkit/core"
+        - Liquid Blur
+        - Scroll Edge
+        - Morph
+        - Indicator
+        - Drag
+        - Lift
+        - Layout
+        - Motion
+        - Core (the spring, measurement)
         - The docs site
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Version
-      placeholder: "1.0.0"
+      label: Package and version
+      placeholder: "@fluidkit/react 2.0.0"
   - type: textarea
     id: what
     attributes:

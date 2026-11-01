@@ -2,13 +2,28 @@
 package: "@fluidkit/core"
 name: Core
 order: 10
-description: "Shared building blocks of the Fluid Kit packages: an interruptible spring that keeps its velocity, element measurement, and the DOM attributes the packages use to work together."
-intro: "The spring behind every animation, element measurement, and the DOM attributes the packages use to work together."
+description: "Fluid Kit's packages, and what every feature is built on: an interruptible spring that keeps its velocity, element measurement, and the DOM attributes the features use to work together."
+intro: "Every feature without a framework, and what they're built on: the spring behind every animation, element measurement, and the DOM attributes the features use to work together."
 frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
 import Install from "../../components/docs/Install.astro";
+
+<Section id="packages" title="Packages">
+
+Fluid Kit is four packages, always at the same version. An app installs one of them.
+
+| Package | What's in it |
+| --- | --- |
+| `@fluidkit/core` | Every feature without a framework (`createMorph`, `createDrag`, `installPress`…), [Motion](/motion), what's on this page, and the stylesheet, `@fluidkit/core/style.css` |
+| `@fluidkit/react` | Every feature's components and hooks, and all of core besides: its own `style.css` too (React 18+) |
+| `@fluidkit/vue` | Every feature's components and composables, and all of core besides (Vue 3.5+) |
+| `@fluidkit/svelte` | Every feature's components and runes, and all of core besides (Svelte 5.29+) |
+
+What an app doesn't import isn't in its bundle. The features don't import each other: they meet through the DOM attributes [below](#contract). Core's engine types named as the components are, `Drag`, `Indicator`, `Layout`, `Lift` and `Morph`, are in the framework packages as `DragEngine` and so on.
+
+</Section>
 
 <Section id="spring" title="Spring">
 
@@ -113,7 +128,7 @@ Gestures can cause unwanted side effects. Releasing a drag over the button where
 
 <Section id="react" title="React" only="react">
 
-`@fluidkit/core/react` has the helpers the packages' React components are built from. You can use them for your own components on top of an engine.
+`@fluidkit/react` has the helpers Fluid Kit's React components are built from. You can use them for your own components on top of an engine.
 
 | Export | Description |
 | --- | --- |
@@ -126,8 +141,7 @@ Gestures can cause unwanted side effects. Releasing a drag over the button where
 | `useLatest(value)`, `useBatched(fn)`, `useIsomorphicLayoutEffect` | The latest value for callbacks; runs `fn` once at the end of the current task; a layout effect that doesn't warn on the server |
 
 ```tsx
-import { SpringAnimator } from "@fluidkit/core";
-import { renderPart, useAttach, type RenderProp } from "@fluidkit/core/react";
+import { SpringAnimator, renderPart, useAttach, type RenderProp } from "@fluidkit/react";
 
 function Spinner({ render }: { render?: RenderProp<{}> }) {
   const ref = useAttach<HTMLElement>((el) => {
@@ -143,7 +157,7 @@ function Spinner({ render }: { render?: RenderProp<{}> }) {
 
 <Section id="vue" title="Vue" only="vue">
 
-`@fluidkit/core/vue` has the helpers the packages' Vue components are built from. You can use them for your own components on top of an engine.
+`@fluidkit/vue` has the helpers Fluid Kit's Vue components are built from. You can use them for your own components on top of an engine.
 
 | Export | Description |
 | --- | --- |
@@ -156,8 +170,7 @@ function Spinner({ render }: { render?: RenderProp<{}> }) {
 
 ```ts
 import { defineComponent } from "vue";
-import { SpringAnimator } from "@fluidkit/core";
-import { attachRef, renderPart } from "@fluidkit/core/vue";
+import { SpringAnimator, attachRef, renderPart } from "@fluidkit/vue";
 
 const Spinner = defineComponent({
   props: { asChild: Boolean },
@@ -176,7 +189,7 @@ const Spinner = defineComponent({
 
 <Section id="svelte" title="Svelte" only="svelte">
 
-`@fluidkit/core/svelte` has the helpers the packages' Svelte components are built from. You can use them for your own components on top of an engine.
+`@fluidkit/svelte` has the helpers Fluid Kit's Svelte components are built from. You can use them for your own components on top of an engine.
 
 | Export | Description |
 | --- | --- |
@@ -189,8 +202,7 @@ const Spinner = defineComponent({
 ```svelte
 <script lang="ts">
   import { createAttachmentKey } from "svelte/attachments";
-  import { SpringAnimator } from "@fluidkit/core";
-  import { mergeProps, type PartProps } from "@fluidkit/core/svelte";
+  import { SpringAnimator, mergeProps, type PartProps } from "@fluidkit/svelte";
 
   let { child, children, ...rest }: PartProps = $props();
 

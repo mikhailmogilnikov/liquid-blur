@@ -183,7 +183,7 @@ const tabs = [
 </style>
 
 <script>
-  import { createIndicator } from "@fluidkit/indicator";
+  import { createIndicator } from "@fluidkit/core";
 
   for (const scene of document.querySelectorAll<HTMLElement>("[data-ix]:not([data-ix-ready])")) {
     scene.dataset.ixReady = "";

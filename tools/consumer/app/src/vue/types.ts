@@ -1,6 +1,5 @@
 // Types an app leans on, checked and never run: what must compile, and what mustn't
-import { useIndicator } from "@fluidkit/indicator/vue";
-import { useMorph } from "@fluidkit/morph/vue";
+import { useIndicator, useMorph } from "@fluidkit/vue";
 
 export function types() {
   // The states' type is the one given, not read from the first state

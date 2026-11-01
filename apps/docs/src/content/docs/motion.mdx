@@ -3,7 +3,7 @@ package: "@fluidkit/core"
 name: Motion
 order: 8
 frameworks: []
-description: "Apple's springs and transitions by name: for any Fluid Kit package, and for CSS as easings and classes that bring elements in and out. Each one ready to tune."
+description: "Apple's springs and transitions by name: for every Fluid Kit feature, and for CSS as easings and classes that bring elements in and out. Each one ready to tune."
 intro: "Springs and transitions by name, as SwiftUI has them: <code>springs.snappy()</code>, <code>transitions.blurReplace()</code>. The same in CSS, as easings and classes that bring an element in and out. Part of <a href=\"/core\">Core</a>."
 ---
 
@@ -14,7 +14,7 @@ import Install from "../../components/docs/Install.astro";
 
 <Section id="start" title="Get started">
 
-Motion is part of `@fluidkit/core`, which every package already depends on. Use it from TypeScript, from CSS, or both: the values are the same.
+Motion is part of `@fluidkit/core`, and of each framework's package with it. Use it from TypeScript, from CSS, or both: the values are the same.
 
 <Steps>
 <Step>
@@ -26,11 +26,10 @@ Motion is part of `@fluidkit/core`, which every package already depends on. Use 
 </Step>
 <Step>
 
-**In TypeScript, pass a spring and a transition** to any package. Every package's `spring` takes a spring, and Layout's `enter` and `exit` take a transition.
+**In TypeScript, pass a spring and a transition** to any feature. Every feature's `spring` takes a spring, and Layout's `enter` and `exit` take a transition.
 
 ```ts
-import { springs, transitions } from "@fluidkit/core";
-import { createLayout } from "@fluidkit/layout";
+import { springs, transitions, createLayout } from "@fluidkit/core";
 
 createLayout({
   root: list,
@@ -46,7 +45,7 @@ createLayout({
 **In CSS, import the stylesheet** once, and use a spring as an easing or bring an element in and out with classes.
 
 ```ts
-import "@fluidkit/core/motion.css";
+import "@fluidkit/core/style.css";
 ```
 
 ```html
@@ -65,7 +64,7 @@ import "@fluidkit/core/motion.css";
 
 <Section id="springs" title="Springs">
 
-Each spring is a function: called as it is, it gives the preset; given options, it tunes it, as SwiftUI's `.snappy(duration:extraBounce:)` does. It returns `SpringParams`, `{ duration, bounce }`, so it fits the `spring` of every package, and `SpringAnimator`.
+Each spring is a function: called as it is, it gives the preset; given options, it tunes it, as SwiftUI's `.snappy(duration:extraBounce:)` does. It returns `SpringParams`, `{ duration, bounce }`, so it fits the `spring` of every feature, and `SpringAnimator`.
 
 | Spring | Duration, bounce | For |
 | --- | --- | --- |
@@ -80,7 +79,7 @@ springs.bouncy({ extraBounce: 0.1 }); // bouncier: 0.4
 springs.smooth({ extraBounce: -1 }); // the bounce stays between 0 and 0.99
 ```
 
-They're quicker than SwiftUI's own, half a second there: on the web, where springs move rows and buttons more than whole screens, that pace reads as sluggish. The packages that came before Motion keep the springs they were tuned with, and take these as well.
+They're quicker than SwiftUI's own, half a second there: on the web, where springs move rows and buttons more than whole screens, that pace reads as sluggish. The features that came before Motion keep the springs they were tuned with, and take these as well.
 
 </Section>
 
@@ -111,7 +110,7 @@ Layout puts an item it blurs on a layer of its own while the blur changes (`will
 
 ### Springs
 
-`motion.css` has each spring as an easing: the spring's own curve written with `linear()`, and how long it takes to come to rest, a little longer than its duration above.
+The stylesheet has each spring as an easing: the spring's own curve written with `linear()`, and how long it takes to come to rest, a little longer than its duration above.
 
 | Variable | Is |
 | --- | --- |
@@ -128,7 +127,7 @@ const { duration, easing } = springCss(springs.bouncy({ extraBounce: 0.1 }));
 card.style.transition = `scale ${duration} ${easing}`;
 ```
 
-A CSS transition interrupted starts over from where it is, with no speed; the packages' springs keep theirs. For something a hand moves and lets go, use a package.
+A CSS transition interrupted starts over from where it is, with no speed; the engines' springs keep theirs. For something a hand moves and lets go, use an engine.
 
 ### In and out
 

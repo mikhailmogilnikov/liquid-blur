@@ -486,7 +486,7 @@ const start = card ? "bouncy" : "snappy";
         ].join("\n");
         noteText.innerHTML = tunedSpring
           ? "Tap the curve. A spring of your own is written by <code>springCss()</code>; the presets come with <code>motion.css</code>."
-          : "Tap the curve: the spring draws it, and the toast comes in on it as <code>hidden</code> comes off, or goes out. Plain CSS with <code>@fluidkit/core/motion.css</code>.";
+          : "Tap the curve: the spring draws it, and the toast comes in on it as <code>hidden</code> comes off, or goes out. Plain CSS with <code>@fluidkit/core/style.css</code>.";
       } else {
         code.innerHTML = [
           `<span class="tk-mute">import</span> { springs, transitions } <span class="tk-mute">from</span> ${str('"@fluidkit/core"')};`,

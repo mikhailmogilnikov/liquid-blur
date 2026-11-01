@@ -1,5 +1,4 @@
-import { createIndicator } from "@fluidkit/indicator";
-import { createLift, type Lift, type LiftOptions } from "@fluidkit/lift";
+import { createIndicator, createLift, type Lift, type LiftOptions } from "@fluidkit/core";
 import { expect, first, liftLayer, same, sample, scaled } from "./check";
 import type { Kit, Setup } from "./kit";
 

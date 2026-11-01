@@ -523,7 +523,7 @@ const sliders = [
 </style>
 
 <script>
-  import { createDrag, type Drag } from "@fluidkit/drag";
+  import { createDrag, type Drag } from "@fluidkit/core";
 
   for (const scene of document.querySelectorAll<HTMLElement>("[data-dx]:not([data-dx-ready])")) {
     scene.dataset.dxReady = "";

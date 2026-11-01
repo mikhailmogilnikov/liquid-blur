@@ -1,5 +1,4 @@
-import "@fluidkit/blur/style.css";
-import "@fluidkit/core/motion.css";
+import "@fluidkit/svelte/style.css";
 import "../scene.css";
 import { mount } from "svelte";
 import App from "./App.svelte";

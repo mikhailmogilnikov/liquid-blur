@@ -187,27 +187,9 @@ importers:
       '@astrojs/mdx':
         specifier: ^8.1.0
         version: 8.1.0(@astrojs/markdown-satteri@0.4.4)(astro@7.4.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@fluidkit/blur':
-        specifier: workspace:*
-        version: link:../../packages/blur
       '@fluidkit/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@fluidkit/drag':
-        specifier: workspace:*
-        version: link:../../packages/drag
-      '@fluidkit/indicator':
-        specifier: workspace:*
-        version: link:../../packages/indicator
-      '@fluidkit/layout':
-        specifier: workspace:*
-        version: link:../../packages/layout
-      '@fluidkit/lift':
-        specifier: workspace:*
-        version: link:../../packages/lift
-      '@fluidkit/morph':
-        specifier: workspace:*
-        version: link:../../packages/morph
       astro:
         specifier: ^7.4.1
         version: 7.4.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1)
@@ -225,60 +207,24 @@ importers:
         specifier: ^6
         version: 6.0.3
 
-  packages/blur:
-    dependencies:
-      '@fluidkit/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@fluidkit/svelte-tools':
-        specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@testing-library/react':
-        specifier: 16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      '@vue/test-utils':
-        specifier: 2.5.1
-        version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
-      happy-dom:
-        specifier: ^21.0.4
-        version: 21.0.4
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      svelte:
-        specifier: 5.57.3
-        version: 5.57.3
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      vite-plus:
-        specifier: ^1.3.0
-        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
-      vue:
-        specifier: 3.5.44
-        version: 3.5.44(typescript@7.0.2)
-
   packages/core:
     devDependencies:
-      '@fluidkit/svelte-tools':
+      happy-dom:
+        specifier: ^21.0.4
+        version: 21.0.4
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vite-plus:
+        specifier: ^1.3.0
+        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
+
+  packages/react:
+    dependencies:
+      '@fluidkit/core':
         specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
+        version: link:../core
+    devDependencies:
       '@testing-library/react':
         specifier: 16.3.3
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -288,9 +234,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
-      '@vue/test-utils':
-        specifier: 2.5.1
-        version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
       happy-dom:
         specifier: ^21.0.4
         version: 21.0.4
@@ -300,6 +243,28 @@ importers:
       react-dom:
         specifier: 19.3.1
         version: 19.3.1(react@19.3.1)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vite-plus:
+        specifier: ^1.3.0
+        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
+
+  packages/svelte:
+    dependencies:
+      '@fluidkit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@fluidkit/svelte-tools':
+        specifier: workspace:*
+        version: link:../../tools/svelte
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 7.3.1
+        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
+      happy-dom:
+        specifier: ^21.0.4
+        version: 21.0.4
       svelte:
         specifier: 5.57.3
         version: 5.57.3
@@ -309,233 +274,19 @@ importers:
       vite-plus:
         specifier: ^1.3.0
         version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
-      vue:
-        specifier: 3.5.44
-        version: 3.5.44(typescript@7.0.2)
 
-  packages/drag:
+  packages/vue:
     dependencies:
       '@fluidkit/core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@fluidkit/svelte-tools':
-        specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@testing-library/react':
-        specifier: 16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.3.0
-        version: 19.3.0(@types/react@19.3.0)
       '@vue/test-utils':
         specifier: 2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
       happy-dom:
         specifier: ^21.0.4
         version: 21.0.4
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      svelte:
-        specifier: 5.57.3
-        version: 5.57.3
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      vite-plus:
-        specifier: ^1.3.0
-        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
-      vue:
-        specifier: 3.5.44
-        version: 3.5.44(typescript@7.0.2)
-
-  packages/indicator:
-    dependencies:
-      '@fluidkit/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@fluidkit/svelte-tools':
-        specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@testing-library/react':
-        specifier: 16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      '@vue/test-utils':
-        specifier: 2.5.1
-        version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
-      happy-dom:
-        specifier: ^21.0.4
-        version: 21.0.4
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      svelte:
-        specifier: 5.57.3
-        version: 5.57.3
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      vite-plus:
-        specifier: ^1.3.0
-        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
-      vue:
-        specifier: 3.5.44
-        version: 3.5.44(typescript@7.0.2)
-
-  packages/layout:
-    dependencies:
-      '@fluidkit/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@fluidkit/svelte-tools':
-        specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@testing-library/react':
-        specifier: 16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      '@vue/test-utils':
-        specifier: 2.5.1
-        version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
-      happy-dom:
-        specifier: ^21.0.4
-        version: 21.0.4
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      svelte:
-        specifier: 5.57.3
-        version: 5.57.3
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      vite-plus:
-        specifier: ^1.3.0
-        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
-      vue:
-        specifier: 3.5.44
-        version: 3.5.44(typescript@7.0.2)
-
-  packages/lift:
-    dependencies:
-      '@fluidkit/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@fluidkit/svelte-tools':
-        specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@testing-library/react':
-        specifier: 16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      '@vue/test-utils':
-        specifier: 2.5.1
-        version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
-      happy-dom:
-        specifier: ^21.0.4
-        version: 21.0.4
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      svelte:
-        specifier: 5.57.3
-        version: 5.57.3
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      vite-plus:
-        specifier: ^1.3.0
-        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(playwright@1.64.1)(svelte@5.57.3)(typescript@7.0.2)(yaml@2.9.1)
-      vue:
-        specifier: 3.5.44
-        version: 3.5.44(typescript@7.0.2)
-
-  packages/morph:
-    dependencies:
-      '@fluidkit/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@fluidkit/blur':
-        specifier: workspace:*
-        version: link:../blur
-      '@fluidkit/svelte-tools':
-        specifier: workspace:*
-        version: link:../../tools/svelte
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 7.3.1
-        version: 7.3.1(svelte@5.57.3)(vite@8.3.5(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1))
-      '@testing-library/react':
-        specifier: 16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@types/react':
-        specifier: 19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      '@vue/test-utils':
-        specifier: 2.5.1
-        version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@7.0.2))
-      happy-dom:
-        specifier: ^21.0.4
-        version: 21.0.4
-      react:
-        specifier: 19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: 19.3.1
-        version: 19.3.1(react@19.3.1)
-      svelte:
-        specifier: 5.57.3
-        version: 5.57.3
       typescript:
         specifier: ^7.0.2
         version: 7.0.2

@@ -170,7 +170,7 @@ When the label changes, torph animates its width along with the letters. The gla
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
+import "@fluidkit/core/style.css";
 import { TextMorph } from "torph";
 
 const button = document.querySelector<HTMLButtonElement>(".pill")!;
@@ -187,9 +187,9 @@ button.addEventListener("click", () => {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 import { useState } from "react";
-import { Glass } from "@fluidkit/blur/react";
+import { Glass } from "@fluidkit/react";
 import { TextMorph } from "torph/react";
 
 export function FollowButton() {
@@ -207,9 +207,9 @@ export function FollowButton() {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 import { ref } from "vue";
-import { Glass } from "@fluidkit/blur/vue";
+import { Glass } from "@fluidkit/vue";
 import { TextMorph } from "torph/vue";
 
 const on = ref(false);
@@ -229,8 +229,8 @@ const on = ref(false);
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Glass } from "@fluidkit/blur/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Glass } from "@fluidkit/svelte";
   import { TextMorph } from "torph/svelte";
 
   let on = $state(false);
@@ -258,7 +258,7 @@ Tabs sized to their labels, each with a count. When new mail arrives, the count 
 <Fragment slot="js">
 
 ```ts
-import { createIndicator } from "@fluidkit/indicator";
+import { createIndicator } from "@fluidkit/core";
 import { TextMorph } from "torph";
 
 const thumb = createIndicator({ container: tabs, indicator, trigger: "manual", rest: tabs.children[1] });
@@ -273,7 +273,7 @@ unread.update(`Unread ${count}`);
 
 ```tsx
 import { useState } from "react";
-import { Indicator } from "@fluidkit/indicator/react";
+import { Indicator } from "@fluidkit/react";
 import { TextMorph } from "torph/react";
 
 export function MailTabs() {
@@ -301,7 +301,7 @@ export function MailTabs() {
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Indicator } from "@fluidkit/indicator/vue";
+import { Indicator } from "@fluidkit/vue";
 import { TextMorph } from "torph/vue";
 
 const tab = ref("unread");
@@ -326,7 +326,7 @@ const unread = ref(3);
 
 ```svelte
 <script lang="ts">
-  import { Indicator } from "@fluidkit/indicator/svelte";
+  import { Indicator } from "@fluidkit/svelte";
   import { TextMorph } from "torph/svelte";
 
   let tab = $state("unread");

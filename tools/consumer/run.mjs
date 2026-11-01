@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { chromium, firefox, webkit } from "playwright";
 
 const PORT = 4331;
-const PACKAGES = ["core", "blur", "morph", "indicator", "drag", "lift", "layout"];
+const PACKAGES = ["core", "react", "vue", "svelte"];
 const FRAMEWORKS = ["react", "vue", "svelte"];
 const BROWSERS = { chromium, webkit, firefox };
 const args = process.argv.slice(2);

@@ -1,38 +1,64 @@
 # @fluidkit/core
 
-Shared building blocks of the [Fluid Kit](https://fluidkit.mogilnikov.dev) packages: an
-interruptible spring that keeps its velocity, element measurement, and the DOM attributes the
-packages use to work together, and Apple's springs and transitions by name. It comes with every
-other package; install it on its own if you only need the spring.
+[Fluid Kit](https://fluidkit.mogilnikov.dev) without a framework: Liquid Blur's glass, morph,
+indicator, drag, lift and layout, on interruptible springs that keep their speed, and Apple's springs
+and transitions by name, for CSS too. Each feature works on any element; what you don't import isn't
+in your bundle. With React, Vue or Svelte, install [`@fluidkit/react`](https://www.npmjs.com/package/@fluidkit/react),
+[`@fluidkit/vue`](https://www.npmjs.com/package/@fluidkit/vue) or
+[`@fluidkit/svelte`](https://www.npmjs.com/package/@fluidkit/svelte) instead: each has all of this too.
 
-**[Documentation](https://fluidkit.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
+**[Documentation](https://fluidkit.mogilnikov.dev)** · [Changelog](CHANGELOG.md)
 
 ```bash
 npm install @fluidkit/core
 ```
 
+Import the stylesheet once: the glass, and the springs and transitions for CSS.
+
 ```js
-import { SpringAnimator } from "@fluidkit/core";
-
-const spring = new SpringAnimator({ width: 100 }, { duration: 0.4, bounce: 0.2 }, ({ width }) => {
-  el.style.width = `${width}px`;
-});
-
-spring.to({ width: 240 });
+import "@fluidkit/core/style.css";
 ```
 
-Springs and transitions by name, as SwiftUI has them, for any package and for CSS
-([Motion](https://fluidkit.mogilnikov.dev/motion)):
+```html
+<button class="lb lb-interactive">Follow</button>
+```
 
 ```js
-import { springs, transitions } from "@fluidkit/core";
-import "@fluidkit/core/motion.css";
+import { createDrag, createLayout, createLift, installPress, springs, transitions } from "@fluidkit/core";
 
-createLayout({ root, spring: springs.bouncy(), enter: transitions.blurReplace() });
+// Glass that lights up, swells and stretches under the finger
+installPress();
+
+// A sheet with snap points, let go at the finger's speed
+createDrag({ element: sheet, axis: "y", snaps: () => [0, innerHeight / 2, innerHeight - 88] });
+
+// A long press lifts the photo and opens its menu
+createLift({ element: photo, menu });
+
+// Rows put in, taken out or reordered move to their new places
+createLayout({ root: list, spring: springs.snappy(), enter: transitions.blurReplace() });
 ```
 
 ```html
 <div popover class="fk-transition fk-blur-replace fk-bouncy">…</div>
+```
+
+| Feature | Docs |
+| --- | --- |
+| Liquid Blur: glass, press, groups that melt | [blur](https://fluidkit.mogilnikov.dev/blur), [scroll edge](https://fluidkit.mogilnikov.dev/edge) |
+| Morph: one element into another and back | [morph](https://fluidkit.mogilnikov.dev/morph) |
+| Indicator: one element over whatever is hovered, pressed or selected | [indicator](https://fluidkit.mogilnikov.dev/indicator) |
+| Drag: rubber-band edges, flick-aware snap points | [drag](https://fluidkit.mogilnikov.dev/drag) |
+| Lift: the iOS context menu | [lift](https://fluidkit.mogilnikov.dev/lift) |
+| Layout: elements move to their new places | [layout](https://fluidkit.mogilnikov.dev/layout) |
+| Motion: springs and transitions by name, for CSS too | [motion](https://fluidkit.mogilnikov.dev/motion) |
+| The spring, measurement and the DOM contract underneath | [core](https://fluidkit.mogilnikov.dev/core) |
+
+No build step? `@fluidkit/core/auto` installs press on import:
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fluidkit/core@2/dist/style.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/@fluidkit/core@2/dist/auto.js/+esm"></script>
 ```
 
 ## License

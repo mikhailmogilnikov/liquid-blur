@@ -318,8 +318,7 @@ const apps = [
 </style>
 
 <script>
-  import { createIndicator } from "@fluidkit/indicator";
-  import { createLift } from "@fluidkit/lift";
+  import { createIndicator, createLift } from "@fluidkit/core";
 
   for (const scene of document.querySelectorAll<HTMLElement>("[data-lx]:not([data-lx-ready])")) {
     scene.dataset.lxReady = "";

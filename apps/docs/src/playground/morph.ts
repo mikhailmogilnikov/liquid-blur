@@ -1,4 +1,4 @@
-import { createMorph, type Morph } from "@fluidkit/morph";
+import { createMorph, type Morph } from "@fluidkit/core";
 import { unseen } from "./check";
 import type { Kit, Setup } from "./kit";
 

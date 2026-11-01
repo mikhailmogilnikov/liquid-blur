@@ -1,15 +1,21 @@
-import "@fluidkit/blur/style.css";
-import "@fluidkit/core/motion.css";
+import "@fluidkit/react/style.css";
 import "../scene.css";
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Glass, glass } from "@fluidkit/blur/react";
-import { Drag, useDrag } from "@fluidkit/drag/react";
-import { Indicator, useIndicator } from "@fluidkit/indicator/react";
-import { transitions } from "@fluidkit/core";
-import { Layout } from "@fluidkit/layout/react";
-import { Lift, useLift } from "@fluidkit/lift/react";
-import { Morph, useMorph } from "@fluidkit/morph/react";
+import {
+  Glass,
+  glass,
+  Drag,
+  useDrag,
+  Indicator,
+  useIndicator,
+  transitions,
+  Layout,
+  Lift,
+  useLift,
+  Morph,
+  useMorph,
+} from "@fluidkit/react";
 
 type Log = (line: string) => void;
 

@@ -1,4 +1,4 @@
-import { createMorph, type Morph, type MorphOptions } from "@fluidkit/morph";
+import { createMorph, type Morph, type MorphOptions } from "@fluidkit/core";
 
 /**
  * A control that flows into its panel and back: what a menu needs on top of a morph, until the UI

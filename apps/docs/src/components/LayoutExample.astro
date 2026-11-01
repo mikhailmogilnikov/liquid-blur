@@ -238,7 +238,7 @@ const settings = [
 </style>
 
 <script>
-  import { createLayout } from "@fluidkit/layout";
+  import { createLayout } from "@fluidkit/core";
 
   /** Its items as the page has them: not one going out */
   const live = (root: Element) => [...root.children].filter((el) => !el.hasAttribute("data-fk-part"));

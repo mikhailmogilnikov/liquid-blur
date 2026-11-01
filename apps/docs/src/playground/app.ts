@@ -1,5 +1,4 @@
-import { SpringAnimator } from "@fluidkit/core";
-import { installGlassGroups } from "@fluidkit/blur/melt";
+import { SpringAnimator, installGlassGroups } from "@fluidkit/core";
 import { segmented } from "../scripts/segmented";
 import { CASES, PACKAGES, type CaseMeta } from "./cases";
 import type { Kit, Run, Setup } from "./kit";
@@ -356,7 +355,7 @@ $("copy").addEventListener("click", async () => {
     `- Speed: ${speedLabel()} · Backdrop: ${bg} · Theme: ${theme} · Debug: ${debug.on ? "on" : "off"}`,
     `- Browser: ${navigator.userAgent}`,
     `- Viewport: ${innerWidth}×${innerHeight} @${devicePixelRatio}x`,
-    `- Packages: ${page.dataset.versions}`,
+    `- Version: ${page.dataset.versions}`,
   ].join("\n");
   const label = $("copy-label");
   try {

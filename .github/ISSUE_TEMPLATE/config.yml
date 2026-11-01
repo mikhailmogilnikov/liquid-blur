@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: Documentation
     url: https://mikhailmogilnikov.github.io/fluid-kit/
-    about: Classes, options, layout rules and limitations of every package.
+    about: Classes, options, layout rules and limitations of every feature.

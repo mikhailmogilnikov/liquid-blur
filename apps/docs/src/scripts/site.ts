@@ -1,5 +1,4 @@
-import { installPress } from "@fluidkit/blur/press";
-import { createIndicator } from "@fluidkit/indicator";
+import { installPress, createIndicator } from "@fluidkit/core";
 import { segmented } from "./segmented";
 
 installPress();
@@ -51,8 +50,8 @@ const COMMANDS: Record<string, [string, string]> = {
 
 for (const block of document.querySelectorAll<HTMLElement>("[data-install]")) {
   const out = block.querySelector<HTMLElement>("code")!;
-  // The package to install: `data-install="@fluidkit/morph"`
-  const pkg = block.dataset.install || "@fluidkit/blur";
+  // The package to install: `data-install="@fluidkit/core"`
+  const pkg = block.dataset.install || "@fluidkit/core";
   const show = (pm: string) => {
     const [cmd, verb] = COMMANDS[pm] ?? COMMANDS.pnpm;
     out.innerHTML = `<span class="tk-cmd">${cmd}</span> ${verb} ${pkg}`;

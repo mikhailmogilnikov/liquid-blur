@@ -1,5 +1,4 @@
-import { SpringAnimator, springs, transitions } from "@fluidkit/core";
-import { createLayout } from "@fluidkit/layout";
+import { SpringAnimator, springs, transitions, createLayout } from "@fluidkit/core";
 import { expect, first, sample } from "./check";
 import type { Kit, Setup } from "./kit";
 

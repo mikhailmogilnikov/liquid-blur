@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // The components, runes and their tests are checked by svelte-check (tsconfig.svelte.json)
+  "include": ["vite.config.ts"]
+}

@@ -1,4 +1,4 @@
-import { createIndicator } from "@fluidkit/indicator";
+import { createIndicator } from "@fluidkit/core";
 import { TextMorph } from "torph";
 import { expect, same, sample, unseen } from "./check";
 import type { Kit, Setup } from "./kit";

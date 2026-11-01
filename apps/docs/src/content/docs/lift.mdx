@@ -1,5 +1,5 @@
 ---
-package: "@fluidkit/lift"
+package: "@fluidkit/core"
 name: Lift
 order: 5
 description: "Long-press any element to lift it above the page, with the background dimmed and blurred, and open your menu next to it. The iOS context menu, for the web."
@@ -29,7 +29,7 @@ Lift takes an element and your menu. Hold the element for half a second (or righ
 
 **Install.**
 
-<Install pkg="@fluidkit/lift" />
+<Install pkg="@fluidkit/core" />
 
 </Step>
 <Step>
@@ -52,7 +52,7 @@ Lift takes an element and your menu. Hold the element for half a second (or righ
 **Create the lift** once the elements are in the DOM.
 
 ```ts
-import { createLift } from "@fluidkit/lift";
+import { createLift } from "@fluidkit/core";
 
 const lift = createLift({
   element: document.querySelector(".photo")!,
@@ -73,9 +73,9 @@ const lift = createLift({
 <Steps>
 <Step>
 
-**Install.** The React components are included in the package (React 18+).
+**Install.** The React components and hooks, with all of core (React 18+).
 
-<Install pkg="@fluidkit/lift" />
+<Install pkg="@fluidkit/react" />
 
 </Step>
 <Step>
@@ -83,7 +83,7 @@ const lift = createLift({
 **Add the parts.** Put the target, the menu and its items inside `Lift.Root`. The menu stays hidden until the target is lifted, and `onSelect` receives the `value` of the chosen item.
 
 ```tsx
-import { Lift } from "@fluidkit/lift/react";
+import { Lift } from "@fluidkit/react";
 
 export function Photo({ src }: { src: string }) {
   return (
@@ -110,9 +110,9 @@ Components are marked `"use client"`. On the server they render plain markup. A 
 <Steps>
 <Step>
 
-**Install.** The Vue components are included in the package (Vue 3.5+).
+**Install.** The Vue components and composables, with all of core (Vue 3.5+).
 
-<Install pkg="@fluidkit/lift" />
+<Install pkg="@fluidkit/vue" />
 
 </Step>
 <Step>
@@ -121,7 +121,7 @@ Components are marked `"use client"`. On the server they render plain markup. A 
 
 ```vue
 <script setup lang="ts">
-import { Lift } from "@fluidkit/lift/vue";
+import { Lift } from "@fluidkit/vue";
 
 defineProps<{ src: string }>();
 </script>
@@ -151,9 +151,9 @@ On the server, including Nuxt, the components render plain markup; the lift star
 <Steps>
 <Step>
 
-**Install.** The Svelte components are included in the package (Svelte 5.29+).
+**Install.** The Svelte components and runes, with all of core (Svelte 5.29+).
 
-<Install pkg="@fluidkit/lift" />
+<Install pkg="@fluidkit/svelte" />
 
 </Step>
 <Step>
@@ -162,7 +162,7 @@ On the server, including Nuxt, the components render plain markup; the lift star
 
 ```svelte
 <script lang="ts">
-  import { Lift } from "@fluidkit/lift/svelte";
+  import { Lift } from "@fluidkit/svelte";
 
   let { src }: { src: string } = $props();
 </script>
@@ -202,9 +202,8 @@ Hold a photo, or right-click it. It shrinks slightly while held (`data-lifting`)
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createIndicator } from "@fluidkit/indicator";
-import { createLift } from "@fluidkit/lift";
+import "@fluidkit/core/style.css";
+import { createIndicator, createLift } from "@fluidkit/core";
 
 const menu = document.querySelector<HTMLElement>(".menu")!;
 const highlight = createIndicator({ container: menu, indicator: menu.querySelector(".menu__highlight")! });
@@ -224,10 +223,9 @@ for (const photo of document.querySelectorAll<HTMLElement>(".photo")) {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 import { useState } from "react";
-import { Indicator } from "@fluidkit/indicator/react";
-import { Lift } from "@fluidkit/lift/react";
+import { Indicator, Lift } from "@fluidkit/react";
 
 const items = ["Copy", "Share", "Favorite", "Delete"];
 
@@ -257,10 +255,9 @@ export function Photo({ src }: { src: string }) {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 import { ref } from "vue";
-import { Indicator } from "@fluidkit/indicator/vue";
-import { Lift } from "@fluidkit/lift/vue";
+import { Indicator, Lift } from "@fluidkit/vue";
 
 defineProps<{ src: string }>();
 const items = ["Copy", "Share", "Favorite", "Delete"];
@@ -293,9 +290,8 @@ const act = (value: string) => {
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Indicator } from "@fluidkit/indicator/svelte";
-  import { Lift } from "@fluidkit/lift/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Indicator, Lift } from "@fluidkit/svelte";
 
   let { src }: { src: string } = $props();
   const items = ["Copy", "Share", "Favorite", "Delete"];
@@ -419,7 +415,7 @@ export function Bubble({ text }: { text: string }) {
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Lift } from "@fluidkit/lift/vue";
+import { Lift } from "@fluidkit/vue";
 
 defineProps<{ text: string }>();
 const reactions = ["❤️", "👍", "😂", "😮", "😢", "🔥"];
@@ -454,7 +450,7 @@ const choose = (value: string) => {
 
 ```svelte
 <script lang="ts">
-  import { Lift } from "@fluidkit/lift/svelte";
+  import { Lift } from "@fluidkit/svelte";
 
   let { text }: { text: string } = $props();
   const reactions = ["❤️", "👍", "😂", "😮", "😢", "🔥"];
@@ -522,7 +518,7 @@ export function AppIcon({ app }: { app: App }) {
 
 ```vue
 <script setup lang="ts">
-import { Lift } from "@fluidkit/lift/vue";
+import { Lift } from "@fluidkit/vue";
 
 defineProps<{ app: { name: string; glyph: string; gradient: string } }>();
 const run = (action: string) => {
@@ -551,7 +547,7 @@ const run = (action: string) => {
 
 ```svelte
 <script lang="ts">
-  import { Lift } from "@fluidkit/lift/svelte";
+  import { Lift } from "@fluidkit/svelte";
 
   let { app }: { app: { name: string; glyph: string; gradient: string } } = $props();
   const run = (action: string) => {
@@ -844,7 +840,7 @@ Put classes and other attributes on the part itself (`<Lift.Target class="photo"
 Use `useLift(options)` when the parts don't fit your markup. It takes the same options as `Lift.Root` (except `onSelect` receives the item element) and returns refs.
 
 ```tsx
-import { useLift } from "@fluidkit/lift/react";
+import { useLift } from "@fluidkit/react";
 
 const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
 
@@ -870,7 +866,7 @@ Use `useLift(options)` when the parts don't fit your markup. Options can be an o
 
 ```vue
 <script setup lang="ts">
-import { useLift } from "@fluidkit/lift/vue";
+import { useLift } from "@fluidkit/vue";
 
 const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
 </script>
@@ -899,7 +895,7 @@ Use `useLift(() => options)` when the parts don't fit your markup. Call it in a 
 
 ```svelte
 <script lang="ts">
-  import { useLift } from "@fluidkit/lift/svelte";
+  import { useLift } from "@fluidkit/svelte";
 
   let { src }: { src: string } = $props();
   const lift = useLift(() => ({ onSelect: (item) => act(item.dataset.action) }));

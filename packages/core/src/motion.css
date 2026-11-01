@@ -8,7 +8,7 @@
  * Each spring is `--fk-<name>` (its duration and easing, for a transition or an animation), and
  * `--fk-<name>-duration` and `--fk-<name>-easing` apart: the easing with another duration is the
  * same spring at another pace. A CSS transition interrupted starts over from where it is with no
- * speed; the packages' springs keep theirs.
+ * speed; the engines' springs keep theirs.
  */
 
 /* springs: written from `springs` by `pnpm --filter @fluidkit/core gen:motion`, not by hand */

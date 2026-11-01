@@ -1,5 +1,5 @@
 ---
-package: "@fluidkit/morph"
+package: "@fluidkit/core"
 name: Morph
 order: 2
 description: "Animate one element into another with a single continuous shape, on springs you can interrupt. Works with any element, and with Liquid Blur glass."
@@ -29,7 +29,7 @@ A morph switches between **states**: ordinary elements laid out where they shoul
 
 **Install.**
 
-<Install pkg="@fluidkit/morph" />
+<Install pkg="@fluidkit/core" />
 
 </Step>
 <Step>
@@ -69,8 +69,8 @@ A morph switches between **states**: ordinary elements laid out where they shoul
 **Create the morph** once the elements are in the DOM, and call `to()` from your handlers. Accessibility details like `aria-expanded`, Escape and focus are up to you; `onStart` and `onRest` are good places for them.
 
 ```ts
-import "@fluidkit/blur/style.css"; // the glass, if the states are glass
-import { createMorph } from "@fluidkit/morph";
+import "@fluidkit/core/style.css"; // the glass, if the states are glass
+import { createMorph } from "@fluidkit/core";
 
 const button = document.getElementById("more")!;
 const panel = document.getElementById("panel")!;
@@ -111,9 +111,9 @@ document.addEventListener("keydown", onKey);
 <Steps>
 <Step>
 
-**Install.** The React components are included in the package (React 18+).
+**Install.** The React components and hooks, with all of core (React 18+).
 
-<Install pkg="@fluidkit/morph" />
+<Install pkg="@fluidkit/react" />
 
 </Step>
 <Step>
@@ -121,8 +121,8 @@ document.addEventListener("keydown", onKey);
 **Add the states.** Each `Morph.State` has a `value`. A `Morph.Trigger` switches to its `value` when clicked. A state can also be a trigger: here the button opens the panel.
 
 ```tsx
-import "@fluidkit/blur/style.css"; // the glass, if the states are glass
-import { Morph } from "@fluidkit/morph/react";
+import "@fluidkit/react/style.css"; // the glass, if the states are glass
+import { Morph } from "@fluidkit/react";
 
 export function More() {
   return (
@@ -174,9 +174,9 @@ Components are marked `"use client"`. On the server they render plain markup, an
 <Steps>
 <Step>
 
-**Install.** The Vue components are included in the package (Vue 3.5+).
+**Install.** The Vue components and composables, with all of core (Vue 3.5+).
 
-<Install pkg="@fluidkit/morph" />
+<Install pkg="@fluidkit/vue" />
 
 </Step>
 <Step>
@@ -185,8 +185,8 @@ Components are marked `"use client"`. On the server they render plain markup, an
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css"; // the glass, if the states are glass
-import { Morph } from "@fluidkit/morph/vue";
+import "@fluidkit/vue/style.css"; // the glass, if the states are glass
+import { Morph } from "@fluidkit/vue";
 </script>
 
 <template>
@@ -237,9 +237,9 @@ On the server, including Nuxt, the components render plain markup, and the panel
 <Steps>
 <Step>
 
-**Install.** The Svelte components are included in the package (Svelte 5.29+).
+**Install.** The Svelte components and runes, with all of core (Svelte 5.29+).
 
-<Install pkg="@fluidkit/morph" />
+<Install pkg="@fluidkit/svelte" />
 
 </Step>
 <Step>
@@ -248,8 +248,8 @@ On the server, including Nuxt, the components render plain markup, and the panel
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css"; // the glass, if the states are glass
-  import { Morph } from "@fluidkit/morph/svelte";
+  import "@fluidkit/svelte/style.css"; // the glass, if the states are glass
+  import { Morph } from "@fluidkit/svelte";
 </script>
 
 <div class="morph-scene">
@@ -328,7 +328,7 @@ No Liquid Blur: a solid pill turns into a solid panel.
 <Fragment slot="js">
 
 ```ts
-import { createMorph } from "@fluidkit/morph";
+import { createMorph } from "@fluidkit/core";
 
 const share = document.getElementById("share")!;
 const panel = document.getElementById("share-panel")!;
@@ -353,7 +353,7 @@ document.addEventListener("keydown", (e) => {
 
 ```tsx
 import { useCallback, useEffect, useState } from "react";
-import { Morph } from "@fluidkit/morph/react";
+import { Morph } from "@fluidkit/react";
 
 const items = ["Messages", "Copy Link", "Add to Favorites"];
 
@@ -403,7 +403,7 @@ function useEscape(back: () => void) {
 ```vue
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { Morph } from "@fluidkit/morph/vue";
+import { Morph } from "@fluidkit/vue";
 
 const items = ["Messages", "Copy Link", "Add to Favorites"];
 const value = ref("share");
@@ -443,7 +443,7 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
 
 ```svelte
 <script lang="ts">
-  import { Morph } from "@fluidkit/morph/svelte";
+  import { Morph } from "@fluidkit/svelte";
 
   const items = ["Messages", "Copy Link", "Add to Favorites"];
   let value = $state("share");
@@ -554,8 +554,8 @@ The pill is glass with a solid layer on top; the panel is plain glass. Because t
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createMorph } from "@fluidkit/morph";
+import "@fluidkit/core/style.css";
+import { createMorph } from "@fluidkit/core";
 
 const share = document.getElementById("share")!;
 const panel = document.getElementById("share-panel")!;
@@ -578,9 +578,9 @@ document.addEventListener("keydown", (e) => {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 import { useCallback, useEffect, useState } from "react";
-import { Morph } from "@fluidkit/morph/react";
+import { Morph } from "@fluidkit/react";
 
 const items = ["Messages", "Copy Link", "Add to Favorites"];
 
@@ -630,9 +630,9 @@ function useEscape(back: () => void) {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 import { onMounted, onUnmounted, ref } from "vue";
-import { Morph } from "@fluidkit/morph/vue";
+import { Morph } from "@fluidkit/vue";
 
 const items = ["Messages", "Copy Link", "Add to Favorites"];
 const value = ref("share");
@@ -673,8 +673,8 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Morph } from "@fluidkit/morph/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Morph } from "@fluidkit/svelte";
 
   const items = ["Messages", "Copy Link", "Add to Favorites"];
   let value = $state("share");
@@ -796,9 +796,8 @@ A button in a toolbar whose glass is merged. The panel opens on top of the other
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { installGlassGroups } from "@fluidkit/blur/melt";
-import { createMorph } from "@fluidkit/morph";
+import "@fluidkit/core/style.css";
+import { installGlassGroups, createMorph } from "@fluidkit/core";
 
 // Merges the toolbar buttons into one piece of glass, including the moving shape
 installGlassGroups();
@@ -824,10 +823,9 @@ document.addEventListener("keydown", (e) => {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
-import { Glass } from "@fluidkit/blur/react";
+import "@fluidkit/react/style.css";
+import { Glass, Morph } from "@fluidkit/react";
 import { useCallback, useEffect, useState } from "react";
-import { Morph } from "@fluidkit/morph/react";
 
 const items = ["Messages", "Copy Link", "Add to Favorites"];
 
@@ -883,10 +881,9 @@ function useEscape(back: () => void) {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
-import { Glass } from "@fluidkit/blur/vue";
+import "@fluidkit/vue/style.css";
+import { Glass, Morph } from "@fluidkit/vue";
 import { onMounted, onUnmounted, ref } from "vue";
-import { Morph } from "@fluidkit/morph/vue";
 
 const items = ["Messages", "Copy Link", "Add to Favorites"];
 const value = ref("share");
@@ -933,9 +930,8 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Glass } from "@fluidkit/blur/svelte";
-  import { Morph } from "@fluidkit/morph/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Glass, Morph } from "@fluidkit/svelte";
 
   const items = ["Messages", "Copy Link", "Add to Favorites"];
   let value = $state("share");
@@ -1069,8 +1065,8 @@ Give an element in each of two states the same `data-fk-match`, and it moves fro
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createMorph } from "@fluidkit/morph";
+import "@fluidkit/core/style.css";
+import { createMorph } from "@fluidkit/core";
 
 const sort = document.getElementById("sort")!;
 const panel = document.getElementById("sort-panel")!;
@@ -1104,9 +1100,9 @@ document.addEventListener("keydown", (e) => {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 import { useCallback, useEffect, useState } from "react";
-import { Morph } from "@fluidkit/morph/react";
+import { Morph } from "@fluidkit/react";
 
 const options = ["Newest", "Oldest", "Most Popular", "A–Z"];
 
@@ -1166,9 +1162,9 @@ function useEscape(back: () => void) {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 import { onMounted, onUnmounted, ref } from "vue";
-import { Morph } from "@fluidkit/morph/vue";
+import { Morph } from "@fluidkit/vue";
 
 const options = ["Newest", "Oldest", "Most Popular", "A–Z"];
 const sort = ref("Newest");
@@ -1219,8 +1215,8 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Morph } from "@fluidkit/morph/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Morph } from "@fluidkit/svelte";
 
   const options = ["Newest", "Oldest", "Most Popular", "A–Z"];
   let sort = $state("Newest");
@@ -1381,8 +1377,8 @@ A morph can have any number of states and can go from any state to any other. He
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createMorph } from "@fluidkit/morph";
+import "@fluidkit/core/style.css";
+import { createMorph } from "@fluidkit/core";
 
 const dot = document.getElementById("dot")!;
 const bar = document.getElementById("bar")!;
@@ -1414,9 +1410,9 @@ document.addEventListener("keydown", (e) => {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 import { useEffect, useState } from "react";
-import { Morph } from "@fluidkit/morph/react";
+import { Morph } from "@fluidkit/react";
 
 const steps = ["dot", "bar", "card"];
 
@@ -1484,9 +1480,9 @@ export function NowPlaying() {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 import { onMounted, onUnmounted, ref } from "vue";
-import { Morph } from "@fluidkit/morph/vue";
+import { Morph } from "@fluidkit/vue";
 
 const steps = ["dot", "bar", "card"];
 const value = ref("dot");
@@ -1545,8 +1541,8 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Morph } from "@fluidkit/morph/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Morph } from "@fluidkit/svelte";
 
   const steps = ["dot", "bar", "card"];
   let value = $state("dot");
@@ -1864,7 +1860,7 @@ Every part also takes a `child` snippet, see [Composition](#composition).
 **Glass.** Make a state glass with `className="lb"`, or render it as [`Glass`](/blur#components). Inside a [`Glass.Group`](/blur#groups), the shape merges with neighboring glass as it moves.
 
 ```tsx
-import { Glass } from "@fluidkit/blur/react";
+import { Glass } from "@fluidkit/react";
 
 <Glass.Group className="toolbar">
   <Glass interactive render={<button aria-label="Back" />}><BackIcon /></Glass>
@@ -1947,7 +1943,7 @@ import { Glass } from "@fluidkit/blur/react";
 Use `useMorph(options)` when the parts don't fit your markup. It takes the same options as `Morph.Root` and returns a ref for each state.
 
 ```tsx
-import { useMorph } from "@fluidkit/morph/react";
+import { useMorph } from "@fluidkit/react";
 
 const morph = useMorph({ defaultValue: "button" });
 
@@ -1972,7 +1968,7 @@ Use `useMorph(options)` when the parts don't fit your markup. Options can be an 
 
 ```vue
 <script setup lang="ts">
-import { useMorph } from "@fluidkit/morph/vue";
+import { useMorph } from "@fluidkit/vue";
 
 const morph = useMorph({ defaultValue: "button" });
 </script>
@@ -2000,7 +1996,7 @@ Use `useMorph(() => options)` when the parts don't fit your markup. Call it in a
 
 ```svelte
 <script lang="ts">
-  import { useMorph } from "@fluidkit/morph/svelte";
+  import { useMorph } from "@fluidkit/svelte";
 
   const morph = useMorph(() => ({ defaultValue: "button" }));
 </script>
@@ -2103,7 +2099,7 @@ dialog::backdrop { opacity: var(--open, 1); }
 In React, open the dialog in the trigger's `onClick`, before switching, and close it when `to()` resolves:
 
 ```tsx
-import { useMergedRefs } from "@fluidkit/core/react";
+import { useMergedRefs } from "@fluidkit/react";
 
 const morph = useMorph({ defaultValue: "button" });
 const dialog = useRef<HTMLDialogElement>(null);
@@ -2124,7 +2120,7 @@ In Vue, open the dialog in the click handler, before switching, and close it whe
 ```vue
 <script setup lang="ts">
 import { shallowRef } from "vue";
-import { useMorph } from "@fluidkit/morph/vue";
+import { useMorph } from "@fluidkit/vue";
 
 const morph = useMorph({ defaultValue: "button" });
 const dialog = shallowRef<HTMLDialogElement | null>(null);
@@ -2156,7 +2152,7 @@ In Svelte, open the dialog in the click handler, before switching, and close it 
 
 ```svelte
 <script lang="ts">
-  import { useMorph } from "@fluidkit/morph/svelte";
+  import { useMorph } from "@fluidkit/svelte";
 
   const morph = useMorph(() => ({ defaultValue: "button" }));
   let dialog = $state<HTMLDialogElement>();

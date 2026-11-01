@@ -1,7 +1,5 @@
 // Types an app leans on, checked and never run: what must compile, and what mustn't
-import { Glass } from "@fluidkit/blur/react";
-import { useIndicator } from "@fluidkit/indicator/react";
-import { useMorph } from "@fluidkit/morph/react";
+import { Glass, useIndicator, useMorph } from "@fluidkit/react";
 
 export function Types() {
   // The states' type is the one given, not read from the first state

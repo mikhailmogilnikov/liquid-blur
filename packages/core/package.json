@@ -1,13 +1,19 @@
 {
   "name": "@fluidkit/core",
   "version": "1.6.0",
-  "description": "Shared ground of the Fluid Kit packages: an interruptible, velocity-keeping spring, and the DOM contract they meet by.",
+  "description": "Fluid Kit without a framework: Liquid Blur's glass, morph, indicator, drag, lift and layout on interruptible springs that keep their speed, and Apple's springs and transitions for CSS.",
   "keywords": [
     "animation",
+    "drag",
     "fluidkit",
-    "react",
+    "gesture",
+    "glass",
+    "ios",
+    "layout",
+    "liquid-glass",
+    "morph",
     "spring",
-    "svelte"
+    "transitions"
   ],
   "homepage": "https://fluidkit.mogilnikov.dev/core",
   "bugs": {
@@ -26,7 +32,8 @@
   ],
   "type": "module",
   "sideEffects": [
-    "*.css"
+    "*.css",
+    "./dist/auto.js"
   ],
   "types": "./dist/index.d.ts",
   "exports": {
@@ -34,22 +41,17 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./react": {
-      "types": "./dist/react.d.ts",
-      "default": "./dist/react.js"
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "default": "./dist/auto.js"
     },
-    "./vue": {
-      "types": "./dist/vue.d.ts",
-      "default": "./dist/vue.js"
+    "./style.css": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/style.css"
     },
-    "./svelte": {
-      "types": "./dist/svelte/index.d.ts",
-      "svelte": "./dist/svelte/index.js",
-      "default": "./dist/svelte/index.js"
-    },
-    "./motion.css": {
-      "types": "./dist/motion-css.d.ts",
-      "default": "./dist/motion.css"
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     },
     "./package.json": "./package.json"
   },
@@ -57,43 +59,17 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack && fk-svelte-package -i src/svelte -o dist/svelte --tsconfig tsconfig.svelte.json",
+    "build": "vp pack",
     "dev": "vp pack --watch",
-    "check-types": "tsc --noEmit && fk-svelte-check --tsconfig tsconfig.svelte.json",
+    "check-types": "tsc --noEmit",
     "test": "vp test run",
-    "gen:motion": "FK_WRITE_MOTION=1 vp test run test/motion.test.ts",
+    "gen:motion": "FK_WRITE_MOTION=1 vp test run test/base/motion.test.ts",
     "prepack": "pnpm build",
     "prepublishOnly": "pnpm check-types && pnpm test"
   },
   "devDependencies": {
-    "@fluidkit/svelte-tools": "workspace:*",
-    "@sveltejs/vite-plugin-svelte": "7.3.1",
-    "@testing-library/react": "16.3.3",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vue/test-utils": "2.5.1",
     "happy-dom": "^21.0.4",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "svelte": "5.57.3",
     "typescript": "^7.0.2",
-    "vite-plus": "^1.3.0",
-    "vue": "3.5.44"
-  },
-  "peerDependencies": {
-    "react": ">=18",
-    "svelte": ">=5.29",
-    "vue": ">=3.5"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    },
-    "vue": {
-      "optional": true
-    },
-    "svelte": {
-      "optional": true
-    }
+    "vite-plus": "^1.3.0"
   }
 }

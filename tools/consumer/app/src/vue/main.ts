@@ -1,5 +1,4 @@
-import "@fluidkit/blur/style.css";
-import "@fluidkit/core/motion.css";
+import "@fluidkit/vue/style.css";
 import "../scene.css";
 import { createApp } from "vue";
 import App from "./App.vue";

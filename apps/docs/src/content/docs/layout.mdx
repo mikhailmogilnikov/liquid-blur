@@ -1,5 +1,5 @@
 ---
-package: "@fluidkit/layout"
+package: "@fluidkit/core"
 name: Layout
 order: 6
 description: "When the layout changes, elements move to their new places on springs instead of jumping: lists, grids, sections that open, labels that grow."
@@ -26,7 +26,7 @@ Layout watches an element and its items, its children unless you say otherwise. 
 
 **Install.**
 
-<Install pkg="@fluidkit/layout" />
+<Install pkg="@fluidkit/core" />
 
 </Step>
 <Step>
@@ -34,7 +34,7 @@ Layout watches an element and its items, its children unless you say otherwise. 
 **Call `createLayout` on the element whose items move.**
 
 ```ts
-import { createLayout } from "@fluidkit/layout";
+import { createLayout } from "@fluidkit/core";
 
 createLayout({ root: document.querySelector<HTMLElement>(".list")! });
 ```
@@ -60,9 +60,9 @@ section.classList.add("open"); // a size that changed: it grows, what's under it
 <Steps>
 <Step>
 
-**Install.** The React components are included in the package (React 18+).
+**Install.** The React components and hooks, with all of core (React 18+).
 
-<Install pkg="@fluidkit/layout" />
+<Install pkg="@fluidkit/react" />
 
 </Step>
 <Step>
@@ -70,7 +70,7 @@ section.classList.add("open"); // a size that changed: it grows, what's under it
 **Wrap the list in `Layout.Root`.** Its children are the items. Render it as your own element with `render`.
 
 ```tsx
-import { Layout } from "@fluidkit/layout/react";
+import { Layout } from "@fluidkit/react";
 
 export function Reminders({ todos }: { todos: Todo[] }) {
   return (
@@ -99,9 +99,9 @@ Components are marked `"use client"`. On the server they render plain markup.
 <Steps>
 <Step>
 
-**Install.** The Vue components are included in the package (Vue 3.5+).
+**Install.** The Vue components and composables, with all of core (Vue 3.5+).
 
-<Install pkg="@fluidkit/layout" />
+<Install pkg="@fluidkit/vue" />
 
 </Step>
 <Step>
@@ -110,7 +110,7 @@ Components are marked `"use client"`. On the server they render plain markup.
 
 ```vue
 <script setup lang="ts">
-import { Layout } from "@fluidkit/layout/vue";
+import { Layout } from "@fluidkit/vue";
 
 defineProps<{ todos: { id: string; text: string }[] }>();
 </script>
@@ -140,9 +140,9 @@ On the server it renders plain markup.
 <Steps>
 <Step>
 
-**Install.** The Svelte components are included in the package (Svelte 5.29+).
+**Install.** The Svelte components and runes, with all of core (Svelte 5.29+).
 
-<Install pkg="@fluidkit/layout" />
+<Install pkg="@fluidkit/svelte" />
 
 </Step>
 <Step>
@@ -151,7 +151,7 @@ On the server it renders plain markup.
 
 ```svelte
 <script lang="ts">
-  import { Layout } from "@fluidkit/layout/svelte";
+  import { Layout } from "@fluidkit/svelte";
 
   let { todos }: { todos: { id: string; text: string }[] } = $props();
 </script>
@@ -202,7 +202,7 @@ Put one in at the top and the rest slide down while it fades in. Tick one off an
 <Fragment slot="js">
 
 ```ts
-import { createLayout } from "@fluidkit/layout";
+import { createLayout } from "@fluidkit/core";
 
 const list = document.querySelector<HTMLElement>(".list")!;
 createLayout({ root: list });
@@ -228,7 +228,7 @@ function shuffle() {
 
 ```tsx
 import { useState } from "react";
-import { Layout } from "@fluidkit/layout/react";
+import { Layout } from "@fluidkit/react";
 
 export function Reminders() {
   const [todos, setTodos] = useState(initial);
@@ -254,7 +254,7 @@ export function Reminders() {
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Layout } from "@fluidkit/layout/vue";
+import { Layout } from "@fluidkit/vue";
 
 const todos = ref(initial);
 const add = (text: string) => todos.value.unshift({ id: crypto.randomUUID(), text });
@@ -279,7 +279,7 @@ const shuffle = () => (todos.value = [...todos.value].sort(() => Math.random() -
 
 ```svelte
 <script lang="ts">
-  import { Layout } from "@fluidkit/layout/svelte";
+  import { Layout } from "@fluidkit/svelte";
 
   let todos = $state(initial);
   const add = (text: string) => todos.unshift({ id: crypto.randomUUID(), text });
@@ -323,7 +323,7 @@ Filter the grid and the photos that don't match fade where they were, while the 
 <Fragment slot="js">
 
 ```ts
-import { createLayout } from "@fluidkit/layout";
+import { createLayout } from "@fluidkit/core";
 
 const grid = document.querySelector<HTMLElement>(".grid")!;
 const photos = [...grid.children];
@@ -340,7 +340,7 @@ function show(match: (photo: Element) => boolean) {
 <Fragment slot="react">
 
 ```tsx
-import { Layout } from "@fluidkit/layout/react";
+import { Layout } from "@fluidkit/react";
 
 export function Photos({ photos, filter }: { photos: Photo[]; filter: (p: Photo) => boolean }) {
   return (
@@ -400,7 +400,7 @@ A section opens by its real height on a spring: its text is revealed, never sque
 <Fragment slot="js">
 
 ```ts
-import { createLayout } from "@fluidkit/layout";
+import { createLayout } from "@fluidkit/core";
 
 const sections = document.querySelector<HTMLElement>(".sections")!;
 createLayout({ root: sections });
@@ -415,7 +415,7 @@ for (const section of sections.children) {
 
 ```tsx
 import { useState } from "react";
-import { Layout } from "@fluidkit/layout/react";
+import { Layout } from "@fluidkit/react";
 
 export function Settings({ sections }: { sections: { title: string; text: string }[] }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -440,7 +440,7 @@ export function Settings({ sections }: { sections: { title: string; text: string
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Layout } from "@fluidkit/layout/vue";
+import { Layout } from "@fluidkit/vue";
 
 defineProps<{ sections: { title: string; text: string }[] }>();
 const open = ref<string | null>(null);
@@ -461,7 +461,7 @@ const open = ref<string | null>(null);
 
 ```svelte
 <script lang="ts">
-  import { Layout } from "@fluidkit/layout/svelte";
+  import { Layout } from "@fluidkit/svelte";
 
   let { sections }: { sections: { title: string; text: string }[] } = $props();
   let open = $state<string | null>(null);
@@ -490,8 +490,8 @@ Follow becomes Following: the glass button widens on the spring, its label shown
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createLayout } from "@fluidkit/layout";
+import "@fluidkit/core/style.css";
+import { createLayout } from "@fluidkit/core";
 
 const profile = document.querySelector<HTMLElement>(".profile")!;
 createLayout({ root: profile });
@@ -506,10 +506,9 @@ follow.addEventListener("click", () => {
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
+import "@fluidkit/react/style.css";
 import { useState } from "react";
-import { Glass } from "@fluidkit/blur/react";
-import { Layout } from "@fluidkit/layout/react";
+import { Glass, Layout } from "@fluidkit/react";
 
 export function Profile() {
   const [following, setFollowing] = useState(false);
@@ -530,10 +529,9 @@ export function Profile() {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
+import "@fluidkit/vue/style.css";
 import { ref } from "vue";
-import { Glass } from "@fluidkit/blur/vue";
-import { Layout } from "@fluidkit/layout/vue";
+import { Glass, Layout } from "@fluidkit/vue";
 
 const following = ref(false);
 </script>
@@ -556,9 +554,8 @@ const following = ref(false);
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Glass } from "@fluidkit/blur/svelte";
-  import { Layout } from "@fluidkit/layout/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Glass, Layout } from "@fluidkit/svelte";
 
   let following = $state(false);
 </script>
@@ -777,7 +774,7 @@ Changing props never recreates it. Changing `items` does.
 Use `useLayout(options)` when the component doesn't fit your markup. It takes the same options as `Layout.Root` and returns a ref.
 
 ```tsx
-import { useLayout } from "@fluidkit/layout/react";
+import { useLayout } from "@fluidkit/react";
 
 const layout = useLayout({ size: false });
 
@@ -798,7 +795,7 @@ Use `useLayout(options)` when the component doesn't fit your markup. Options can
 
 ```vue
 <script setup lang="ts">
-import { useLayout } from "@fluidkit/layout/vue";
+import { useLayout } from "@fluidkit/vue";
 
 const layout = useLayout({ size: false });
 </script>
@@ -822,7 +819,7 @@ Use `useLayout(() => options)` when the component doesn't fit your markup. Call 
 
 ```svelte
 <script lang="ts">
-  import { useLayout } from "@fluidkit/layout/svelte";
+  import { useLayout } from "@fluidkit/svelte";
 
   const layout = useLayout(() => ({ size: false }));
 </script>

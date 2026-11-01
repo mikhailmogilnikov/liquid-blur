@@ -1,12 +1,12 @@
 name: Idea
-description: Something the packages could do
+description: Something Fluid Kit could do
 labels: [enhancement]
 body:
   - type: textarea
     id: idea
     attributes:
       label: What you'd like to do
-      description: The interface you're building, and where the packages fall short of it.
+      description: The interface you're building, and where Fluid Kit falls short of it.
     validations:
       required: true
   - type: textarea

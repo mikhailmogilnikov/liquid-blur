@@ -1,0 +1,77 @@
+{
+  "name": "@fluidkit/react",
+  "version": "1.6.0",
+  "description": "Fluid Kit for React: Liquid Blur's glass, morph, indicator, drag, lift and layout as components and hooks, on interruptible springs that keep their speed.",
+  "keywords": [
+    "animation",
+    "drag",
+    "fluidkit",
+    "gesture",
+    "glass",
+    "ios",
+    "layout",
+    "liquid-glass",
+    "morph",
+    "react",
+    "spring",
+    "transitions"
+  ],
+  "homepage": "https://fluidkit.mogilnikov.dev",
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/fluid-kit/issues"
+  },
+  "license": "MIT",
+  "author": "Mikhail Mogilnikov",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/fluid-kit.git",
+    "directory": "packages/react"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./style.css": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/style.css"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack && cp ../core/dist/style.css dist/style.css",
+    "dev": "vp pack --watch",
+    "check-types": "tsc --noEmit",
+    "test": "vp test run",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
+  },
+  "dependencies": {
+    "@fluidkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "happy-dom": "^21.0.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.3.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

@@ -1,5 +1,5 @@
 ---
-package: "@fluidkit/drag"
+package: "@fluidkit/core"
 name: Drag
 order: 4
 description: "Drag an element with rubber-band edges and snap points. On release, a spring carries the pointer's speed. For sheets, swipe actions and switches."
@@ -29,7 +29,7 @@ Drag moves an element with a pointer, along one axis or both. It follows the poi
 
 **Install.**
 
-<Install pkg="@fluidkit/drag" />
+<Install pkg="@fluidkit/core" />
 
 </Step>
 <Step>
@@ -51,7 +51,7 @@ Drag moves an element with a pointer, along one axis or both. It follows the poi
 **Create the drag** once the element is in the DOM.
 
 ```ts
-import { createDrag } from "@fluidkit/drag";
+import { createDrag } from "@fluidkit/core";
 
 const sheet = createDrag({
   element: document.querySelector(".sheet")!,
@@ -74,9 +74,9 @@ const sheet = createDrag({
 <Steps>
 <Step>
 
-**Install.** The React components are included in the package (React 18+).
+**Install.** The React components and hooks, with all of core (React 18+).
 
-<Install pkg="@fluidkit/drag" />
+<Install pkg="@fluidkit/react" />
 
 </Step>
 <Step>
@@ -94,7 +94,7 @@ const sheet = createDrag({
 **Add `Drag.Root`.** It's the element that moves. Snap points can be a function of the parent's size; it's called again when the size changes.
 
 ```tsx
-import { Drag } from "@fluidkit/drag/react";
+import { Drag } from "@fluidkit/react";
 
 export function Sheet({ children }: { children: React.ReactNode }) {
   return (
@@ -122,9 +122,9 @@ Components are marked `"use client"`. On the server they render plain markup at 
 <Steps>
 <Step>
 
-**Install.** The Vue components are included in the package (Vue 3.5+).
+**Install.** The Vue components and composables, with all of core (Vue 3.5+).
 
-<Install pkg="@fluidkit/drag" />
+<Install pkg="@fluidkit/vue" />
 
 </Step>
 <Step>
@@ -143,7 +143,7 @@ Components are marked `"use client"`. On the server they render plain markup at 
 
 ```vue
 <script setup lang="ts">
-import { Drag } from "@fluidkit/drag/vue";
+import { Drag } from "@fluidkit/vue";
 </script>
 
 <template>
@@ -165,9 +165,9 @@ On the server, including Nuxt, the components render plain markup at offset 0.
 <Steps>
 <Step>
 
-**Install.** The Svelte components are included in the package (Svelte 5.29+).
+**Install.** The Svelte components and runes, with all of core (Svelte 5.29+).
 
-<Install pkg="@fluidkit/drag" />
+<Install pkg="@fluidkit/svelte" />
 
 </Step>
 <Step>
@@ -189,7 +189,7 @@ A class on a part reaches its element, but a component's scoped styles don't: pu
 ```svelte
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { Drag } from "@fluidkit/drag/svelte";
+  import { Drag } from "@fluidkit/svelte";
 
   let { children }: { children: Snippet } = $props();
 </script>
@@ -236,8 +236,8 @@ The list inside scrolls, and one finger gesture can move both, like in iOS: push
 <Fragment slot="js">
 
 ```ts
-import "@fluidkit/blur/style.css";
-import { createDrag } from "@fluidkit/drag";
+import "@fluidkit/core/style.css";
+import { createDrag } from "@fluidkit/core";
 
 const screen = document.querySelector<HTMLElement>(".screen")!;
 const sheet = screen.querySelector<HTMLElement>(".sheet")!;
@@ -260,8 +260,8 @@ createDrag({
 <Fragment slot="react">
 
 ```tsx
-import "@fluidkit/blur/style.css";
-import { Drag } from "@fluidkit/drag/react";
+import "@fluidkit/react/style.css";
+import { Drag } from "@fluidkit/react";
 
 export function Nearby({ places }: { places: Place[] }) {
   return (
@@ -294,8 +294,8 @@ export function Nearby({ places }: { places: Place[] }) {
 
 ```vue
 <script setup lang="ts">
-import "@fluidkit/blur/style.css";
-import { Drag } from "@fluidkit/drag/vue";
+import "@fluidkit/vue/style.css";
+import { Drag } from "@fluidkit/vue";
 
 defineProps<{ places: { id: string; name: string }[] }>();
 </script>
@@ -324,8 +324,8 @@ defineProps<{ places: { id: string; name: string }[] }>();
 
 ```svelte
 <script lang="ts">
-  import "@fluidkit/blur/style.css";
-  import { Drag } from "@fluidkit/drag/svelte";
+  import "@fluidkit/svelte/style.css";
+  import { Drag } from "@fluidkit/svelte";
 
   let { places }: { places: { id: string; name: string }[] } = $props();
 </script>
@@ -409,7 +409,7 @@ Rows like in Mail: swipe right to mark as read, left to flag or delete. Swipe al
 <Fragment slot="js">
 
 ```ts
-import { createDrag, type Drag } from "@fluidkit/drag";
+import { createDrag, type Drag } from "@fluidkit/core";
 
 const LEAD = 92;
 const TRAIL = 168;
@@ -463,7 +463,7 @@ for (const row of document.querySelectorAll<HTMLElement>(".row")) {
 
 ```tsx
 import { useRef, useState } from "react";
-import { Drag } from "@fluidkit/drag/react";
+import { Drag } from "@fluidkit/react";
 
 const LEAD = 92;
 const TRAIL = 168;
@@ -562,7 +562,7 @@ function Row({ mail, snap, onSnapChange, onStart }: RowProps) {
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Drag } from "@fluidkit/drag/vue";
+import { Drag } from "@fluidkit/vue";
 
 type Mail = { id: string; subject: string };
 defineProps<{ mails: Mail[] }>();
@@ -633,7 +633,7 @@ const land = (mail: Mail, snap: number) => {
 
 ```svelte
 <script lang="ts">
-  import { Drag } from "@fluidkit/drag/svelte";
+  import { Drag } from "@fluidkit/svelte";
 
   type Mail = { id: string; subject: string };
   let { mails }: { mails: Mail[] } = $props();
@@ -755,7 +755,7 @@ The thumb is the dragged element and the whole switch is its `handle`. Drag it a
 <Fragment slot="js">
 
 ```ts
-import { createDrag } from "@fluidkit/drag";
+import { createDrag } from "@fluidkit/core";
 
 const toggle = document.querySelector<HTMLElement>(".switch")!;
 const thumb = toggle.querySelector<HTMLElement>(".switch__thumb")!;
@@ -789,8 +789,7 @@ toggle.addEventListener("click", () => {
 
 ```tsx
 import { useRef } from "react";
-import { useMergedRefs } from "@fluidkit/core/react";
-import { useDrag } from "@fluidkit/drag/react";
+import { useMergedRefs, useDrag } from "@fluidkit/react";
 
 type SwitchProps = { checked: boolean; onCheckedChange: (checked: boolean) => void; label: string };
 
@@ -835,7 +834,7 @@ export function Switch({ checked, onCheckedChange, label }: SwitchProps) {
 ```vue
 <script setup lang="ts">
 import { shallowRef } from "vue";
-import { useDrag } from "@fluidkit/drag/vue";
+import { useDrag } from "@fluidkit/vue";
 
 defineProps<{ label: string }>();
 const checked = defineModel<boolean>({ required: true });
@@ -884,7 +883,7 @@ const toggleRef = (el: unknown) => {
 
 ```svelte
 <script lang="ts">
-  import { useDrag } from "@fluidkit/drag/svelte";
+  import { useDrag } from "@fluidkit/svelte";
 
   let { label, checked = $bindable(false) }: { label: string; checked?: boolean } = $props();
   let toggle = $state<HTMLElement>();
@@ -972,7 +971,7 @@ The knob is the dragged element and the whole slider is its `handle`. It's limit
 <Fragment slot="js">
 
 ```ts
-import { createDrag } from "@fluidkit/drag";
+import { createDrag } from "@fluidkit/core";
 
 const slider = document.querySelector<HTMLElement>(".slider")!;
 const knob = slider.querySelector<HTMLElement>(".slider__knob")!;
@@ -1007,8 +1006,7 @@ slider.addEventListener("click", (e) => {
 
 ```tsx
 import { useEffect, useRef, useState } from "react";
-import { useMergedRefs } from "@fluidkit/core/react";
-import { useDrag } from "@fluidkit/drag/react";
+import { useMergedRefs, useDrag } from "@fluidkit/react";
 
 export function Volume() {
   const slider = useRef<HTMLDivElement>(null);
@@ -1056,7 +1054,7 @@ export function Volume() {
 ```vue
 <script setup lang="ts">
 import { ref, shallowRef, watch } from "vue";
-import { useDrag } from "@fluidkit/drag/vue";
+import { useDrag } from "@fluidkit/vue";
 
 const slider = shallowRef<HTMLElement | null>(null);
 const knob = shallowRef<HTMLElement | null>(null);
@@ -1112,7 +1110,7 @@ const jump = (e: MouseEvent) =>
 
 ```svelte
 <script lang="ts">
-  import { useDrag } from "@fluidkit/drag/svelte";
+  import { useDrag } from "@fluidkit/svelte";
 
   let slider = $state<HTMLElement>();
   let knob = $state<HTMLElement>();
@@ -1198,7 +1196,7 @@ A video that moves on both axes and snaps to the four corners. Throw it and it g
 <Fragment slot="js">
 
 ```ts
-import { createDrag } from "@fluidkit/drag";
+import { createDrag } from "@fluidkit/core";
 
 const room = document.querySelector<HTMLElement>(".room")!;
 const video = room.querySelector<HTMLElement>(".pip")!;
@@ -1230,7 +1228,7 @@ video.addEventListener("click", (e) => {
 
 ```tsx
 import { useRef, useState } from "react";
-import { Drag } from "@fluidkit/drag/react";
+import { Drag } from "@fluidkit/react";
 
 export function Pip({ src }: { src: string }) {
   const [big, setBig] = useState(false);
@@ -1268,7 +1266,7 @@ export function Pip({ src }: { src: string }) {
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { Drag, type DragArea } from "@fluidkit/drag/vue";
+import { Drag, type DragArea } from "@fluidkit/vue";
 
 defineProps<{ src: string }>();
 const big = ref(false);
@@ -1302,7 +1300,7 @@ const tap = (e: MouseEvent) => {
 
 ```svelte
 <script lang="ts">
-  import { Drag, type DragArea } from "@fluidkit/drag/svelte";
+  import { Drag, type DragArea } from "@fluidkit/svelte";
 
   let { src }: { src: string } = $props();
   let big = $state(false);
@@ -1547,7 +1545,7 @@ Changing props never recreates the drag. Changing `axis`, or adding a handle or 
 **Glass.** Make it glass with `className="lb"`, or render it as [`Glass`](/blur#components). Drag only writes `translate`, so press effects keep working.
 
 ```tsx
-import { Glass } from "@fluidkit/blur/react";
+import { Glass } from "@fluidkit/react";
 
 <Drag.Root axis="y" snaps={snaps} render={<Glass render={<section className="sheet" />} />}>…</Drag.Root>
 ```
@@ -1625,7 +1623,7 @@ import { Glass } from "@fluidkit/blur/react";
 Use `useDrag(options)` when the parts don't fit your markup. It takes the same options as `Drag.Root` and returns refs.
 
 ```tsx
-import { useDrag } from "@fluidkit/drag/react";
+import { useDrag } from "@fluidkit/react";
 
 const drag = useDrag({ axis: "x", snaps: ({ width, element }) => [0, width - element.offsetWidth] });
 
@@ -1650,7 +1648,7 @@ Use `useDrag(options)` when the parts don't fit your markup. Options can be an o
 
 ```vue
 <script setup lang="ts">
-import { useDrag } from "@fluidkit/drag/vue";
+import { useDrag } from "@fluidkit/vue";
 
 const drag = useDrag({ axis: "x", snaps: ({ width, element }) => [0, width - element.offsetWidth] });
 </script>
@@ -1680,7 +1678,7 @@ Use `useDrag(() => options)` when the parts don't fit your markup. Call it in a 
 
 ```svelte
 <script lang="ts">
-  import { useDrag } from "@fluidkit/drag/svelte";
+  import { useDrag } from "@fluidkit/svelte";
 
   const drag = useDrag(() => ({ axis: "x", snaps: ({ width, element }) => [0, width - element.offsetWidth] }));
 </script>

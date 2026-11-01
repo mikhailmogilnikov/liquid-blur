@@ -1,4 +1,4 @@
-import { createIndicator } from "@fluidkit/indicator";
+import { createIndicator } from "@fluidkit/core";
 
 /**
  * A `.seg`: buttons with `data-value`, one of them `aria-pressed`, and a `.seg__thumb` resting on

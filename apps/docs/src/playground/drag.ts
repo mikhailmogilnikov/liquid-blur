@@ -1,4 +1,4 @@
-import { createDrag } from "@fluidkit/drag";
+import { createDrag } from "@fluidkit/core";
 import { expect, first } from "./check";
 import type { Setup } from "./kit";
 
