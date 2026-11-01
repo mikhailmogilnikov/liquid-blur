@@ -6,10 +6,9 @@ import Icon from "./Icon.astro";
  *   - list: reminders, one put in at the top, ticked off, shuffled; the rest make room or close up
  *   - grid: photos filtered by chips, the ones that go fading where they were
  *   - settings: sections that open by their real height, what's under them moving down
- *   - follow: a glass button whose label grows, the name beside it giving way
  */
 interface Props {
-  kind: "list" | "grid" | "settings" | "follow";
+  kind: "list" | "grid" | "settings";
   /** As a library's card on the landing: the card's size and corners, and room for a hint (the slot) */
   card?: boolean;
 }
@@ -32,7 +31,7 @@ const settings = [
 
   {
     kind === "list" && (
-      <div class="ly__reminders lb">
+      <div class="ly__reminders">
         <div class="ly__bar">
           <b>Today</b>
           <button type="button" class="ly__icon lb lb-interactive" aria-label="Shuffle" data-ly-shuffle>
@@ -87,7 +86,7 @@ const settings = [
   {
     kind === "settings" && (
       <div class="ly__settings">
-        <div class="ly__sections lb" data-ly-root>
+        <div class="ly__sections" data-ly-root>
           {settings.map(([title, text]) => (
             <section class="ly__section">
               <button type="button" class="ly__head" aria-expanded="false">
@@ -98,30 +97,19 @@ const settings = [
             </section>
           ))}
         </div>
-        <p class="ly__after lb">Battery 82%</p>
+        <p class="ly__after">Battery 82%</p>
       </div>
     )
   }
 
-  {
-    kind === "follow" && (
-      <div class="ly__profile lb" data-ly-root>
-        <span class="ly__avatar" aria-hidden="true" />
-        <span class="ly__who">
-          <b>Nadia Ortega</b>
-          <span>Photographer · Lisbon</span>
-        </span>
-        <button type="button" class="ly__follow lb lb-interactive" aria-pressed="false" data-ly-follow>
-          Follow
-        </button>
-      </div>
-    )
-  }
   <slot />
 </div>
 
 <style>
+  /* Content on a solid surface, as iOS draws it: glass only on the controls over it */
   .ly {
+    --ly-surface: #fff;
+    --ly-shadow: 0 10px 30px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.06);
     position: relative;
     height: 420px;
     display: grid;
@@ -132,7 +120,16 @@ const settings = [
     /* No wider than the page */
     grid-template-columns: minmax(0, 1fr);
   }
-  .ly--follow { height: 220px; }
+  :global(:root[data-theme="dark"]) .ly {
+    --ly-surface: #1c1c1e;
+    --ly-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .ly {
+      --ly-surface: #1c1c1e;
+      --ly-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+    }
+  }
   .ly--card {
     height: var(--mdemo-height);
     border-radius: var(--radius);
@@ -142,9 +139,13 @@ const settings = [
 
   /* Reminders: a card with its rows, a bar to put one in or shuffle them */
   .ly__reminders {
+    /* Over the backdrop */
+    position: relative;
     width: min(340px, calc(100% - 32px));
     padding: 14px 10px 10px;
     border-radius: 28px;
+    background: var(--ly-surface);
+    box-shadow: var(--ly-shadow);
     color: var(--ink);
   }
   .ly__bar { display: flex; align-items: center; gap: 8px; padding: 0 6px 10px 10px; }
@@ -190,7 +191,7 @@ const settings = [
 
   /* Settings: sections that open, and something under them */
   .ly__settings { position: relative; width: min(340px, calc(100% - 32px)); display: grid; gap: 12px; align-self: start; margin-top: 40px; }
-  .ly__sections { border-radius: 24px; color: var(--ink); overflow: hidden; }
+  .ly__sections { border-radius: 24px; background: var(--ly-surface); box-shadow: var(--ly-shadow); color: var(--ink); overflow: hidden; }
   .ly__section + .ly__section { box-shadow: inset 0 1px 0 rgb(127 127 127 / 0.16); }
   .ly__head {
     display: flex;
@@ -208,33 +209,7 @@ const settings = [
   .ly__head[aria-expanded="true"] :global(svg) { rotate: 180deg; }
   .ly__body { display: none; margin: 0; padding: 0 18px 16px; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
   .ly__section.is-open .ly__body { display: block; }
-  .ly__after { margin: 0; padding: 14px 18px; border-radius: 20px; color: var(--ink-2); font-size: 14px; }
-
-  /* A profile with a button whose label grows */
-  .ly__profile {
-    width: min(360px, calc(100% - 32px));
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 10px 10px 12px;
-    border-radius: 999px;
-    color: var(--ink);
-  }
-  .ly__avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ff9f0a, #ff375f); }
-  .ly__who { flex: 1; min-width: 0; display: grid; }
-  .ly__who b, .ly__who span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .ly__who b { font-size: 15px; }
-  .ly__who span { color: var(--ink-2); font-size: 13px; }
-  .ly__follow {
-    flex: none;
-    padding: 9px 18px;
-    border-radius: 999px;
-    color: var(--ink);
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .ly__follow[aria-pressed="true"] { --lb-tint: #0a84ff; color: #fff; }
+  .ly__after { margin: 0; padding: 14px 18px; border-radius: 20px; background: var(--ly-surface); box-shadow: var(--ly-shadow); color: var(--ink-2); font-size: 14px; }
 </style>
 
 <script>
@@ -307,17 +282,6 @@ const settings = [
           head.setAttribute("aria-expanded", String(open));
         });
       }
-      continue;
     }
-
-    // Follow: the label changes, the button's width follows on the spring
-    createLayout({ root });
-    const button = scene.querySelector<HTMLElement>("[data-ly-follow]")!;
-    button.addEventListener("click", () => {
-      const on = button.getAttribute("aria-pressed") !== "true";
-      button.setAttribute("aria-pressed", String(on));
-      button.classList.toggle("lb-tinted", on);
-      button.textContent = on ? "Following" : "Follow";
-    });
   }
 </script>

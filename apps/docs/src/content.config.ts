@@ -1,6 +1,7 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
+import { changelog } from "./changelog";
 
 /** One page per package: `src/content/docs/blur.mdx` is /blur */
 const docs = defineCollection({
@@ -24,4 +25,16 @@ const docs = defineCollection({
   }),
 });
 
-export const collections = { docs };
+/** Every release, newest first (`order`): `two` since 2.0, when the four packages came out together */
+const releases = defineCollection({
+  loader: changelog(),
+  schema: z.object({
+    order: z.number(),
+    two: z.boolean(),
+    /** When it was tagged, `YYYY-MM-DD`; empty without the tags */
+    date: z.string(),
+    versions: z.array(z.object({ pkg: z.string(), version: z.string() })),
+  }),
+});
+
+export const collections = { docs, releases };

@@ -3,7 +3,7 @@ package: "@fluidkit/core"
 name: Layout
 order: 6
 description: "When the layout changes, elements move to their new places on springs instead of jumping: lists, grids, sections that open, labels that grow."
-intro: "Rows put in, ticked off and reordered, a grid filtered, a section opened, a label that grew. Change the page as you always do, and its elements move to where they now are on springs that keep their speed. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
+intro: "Rows put in, ticked off and reordered, a grid filtered, a section opened. Change the page as you always do, and its elements move to where they now are on springs that keep their speed. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
 frameworks: ["react", "vue", "svelte"]
 ---
 
@@ -392,7 +392,7 @@ export function Photos({ photos, filter }: { photos: Photo[]; filter: (p: Photo)
 
 ### Settings
 
-A section opens by its real height on a spring: its text is revealed, never squeezed, and the sections under it and the card after them move down with it. Open another while the first is still opening and both carry on together.
+A section opens by its real height on a spring: its text is revealed, never squeezed, and the sections under it and the card after them move down with it. Open another while the first is still opening and both carry on together. Any item whose size changes does the same, whatever changed it: its text, an image loading, a font.
 
 <Example>
 <LayoutExample kind="settings" />
@@ -475,109 +475,6 @@ const open = ref<string | null>(null);
     </section>
   {/each}
 </Layout.Root>
-```
-
-</Fragment>
-</Example>
-
-### A label that grows
-
-Follow becomes Following: the glass button widens on the spring, its label shown whole as it does, and the name beside it gives way. Any item whose size changes does the same, whatever changed it: a label, an image loading, a font.
-
-<Example>
-<LayoutExample kind="follow" />
-
-<Fragment slot="js">
-
-```ts
-import "@fluidkit/core/style.css";
-import { createLayout } from "@fluidkit/core";
-
-const profile = document.querySelector<HTMLElement>(".profile")!;
-createLayout({ root: profile });
-
-const follow = profile.querySelector<HTMLButtonElement>(".follow")!;
-follow.addEventListener("click", () => {
-  follow.textContent = follow.textContent === "Follow" ? "Following" : "Follow";
-});
-```
-
-</Fragment>
-<Fragment slot="react">
-
-```tsx
-import "@fluidkit/react/style.css";
-import { useState } from "react";
-import { Glass, Layout } from "@fluidkit/react";
-
-export function Profile() {
-  const [following, setFollowing] = useState(false);
-  return (
-    <Layout.Root render={<Glass className="profile" />}>
-      <img className="avatar" src="/nadia.jpg" alt="" />
-      <b className="name">Nadia Ortega</b>
-      <Glass interactive tint={following} render={<button onClick={() => setFollowing(!following)} />}>
-        {following ? "Following" : "Follow"}
-      </Glass>
-    </Layout.Root>
-  );
-}
-```
-
-</Fragment>
-<Fragment slot="vue">
-
-```vue
-<script setup lang="ts">
-import "@fluidkit/vue/style.css";
-import { ref } from "vue";
-import { Glass, Layout } from "@fluidkit/vue";
-
-const following = ref(false);
-</script>
-
-<template>
-  <Layout.Root as-child>
-    <Glass class="profile">
-      <img class="avatar" src="/nadia.jpg" alt="" />
-      <b class="name">Nadia Ortega</b>
-      <Glass interactive :tint="following" as-child>
-        <button @click="following = !following">{{ following ? "Following" : "Follow" }}</button>
-      </Glass>
-    </Glass>
-  </Layout.Root>
-</template>
-```
-
-</Fragment>
-<Fragment slot="svelte">
-
-```svelte
-<script lang="ts">
-  import "@fluidkit/svelte/style.css";
-  import { Glass, Layout } from "@fluidkit/svelte";
-
-  let following = $state(false);
-</script>
-
-<Layout.Root class="profile lb">
-  <img class="avatar" src="/nadia.jpg" alt="" />
-  <b class="name">Nadia Ortega</b>
-  <Glass interactive tint={following}>
-    {#snippet child({ props })}
-      <button {...props} onclick={() => (following = !following)}>{following ? "Following" : "Follow"}</button>
-    {/snippet}
-  </Glass>
-</Layout.Root>
-```
-
-</Fragment>
-<Fragment slot="css">
-
-```css
-.profile { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 999px; }
-.name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.profile button { padding: 9px 18px; border-radius: 999px; white-space: nowrap; }
 ```
 
 </Fragment>

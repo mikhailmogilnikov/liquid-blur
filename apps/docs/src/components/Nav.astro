@@ -11,6 +11,8 @@ interface Props {
 const { current } = Astro.props;
 const packages = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
 const here = (id: string) => (current === id ? "page" : undefined);
+/** Pages that are in the Docs menu only, under its line */
+const inMenu = ["playground", "changelog"];
 
 /** What each page is, in a few words, under its name in the Docs menu */
 const blurbs: Record<string, string> = {
@@ -39,12 +41,11 @@ const blurbs: Record<string, string> = {
         type="button"
         aria-haspopup="true"
         aria-controls="nav-docs"
-        data-current={packages.some((p) => p.id === current) ? "" : undefined}
+        data-current={packages.some((p) => p.id === current) || inMenu.includes(current) ? "" : undefined}
         data-nav-docs
       >
         Docs<Icon name="chevron" size={15} />
       </button>
-      <a class="nav__play" href="/playground" aria-current={here("playground")}>Playground</a>
     </div>
     <div class="nav__end">
       <ThemeSwitch />
@@ -69,6 +70,10 @@ const blurbs: Record<string, string> = {
     <a href="/playground" aria-current={here("playground")}>
       <b>Playground</b>
       <span>The hard cases, live</span>
+    </a>
+    <a href="/changelog" aria-current={here("changelog")}>
+      <b>Changelog</b>
+      <span>Every release, newest first</span>
     </a>
   </nav>
 </header>

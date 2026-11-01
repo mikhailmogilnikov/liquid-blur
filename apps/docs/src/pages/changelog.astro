@@ -1,0 +1,133 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+
+/** Every release, from the packages' changelogs (`src/changelog.ts`), newest first */
+const releases = (await getCollection("releases")).sort((a, b) => a.data.order - b.data.order);
+const told = await Promise.all(releases.map(async (r) => ({ ...r, Content: (await render(r)).Content })));
+const two = told.filter((r) => r.data.two);
+const before = told.filter((r) => !r.data.two);
+
+const day = (date: string) =>
+  date ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "";
+
+/** The contents: each release since 2.0, then the ones before at once */
+const toc = [...two.map((r) => [r.id, r.data.versions[0].version] as const), ["before-2", "Before 2.0"] as const];
+---
+
+<Base title="Changelog — Fluid Kit" description="Every release of Fluid Kit: what changed, in which package, and when.">
+  <Nav current="changelog" />
+
+  <main>
+    <section class="docs-head">
+      <h1 class="docs-head__title">
+        <span class="mark mark--hero"><span class="lb"></span></span>
+        <span class="rise">Changelog</span>
+      </h1>
+      <p class="docs-head__lead rise" style="--i: 1">
+        Every release, newest first. Since 2.0 the four packages come out together, at one version; before, each feature was
+        a package of its own.
+      </p>
+    </section>
+
+    <div class="docs">
+      <aside class="toc" aria-label="On this page" data-toc>
+        <span class="toc__title">On this page</span>
+        <span class="toc__mark" aria-hidden="true" data-toc-mark></span>
+        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      </aside>
+
+      <!-- Narrower screens: the same contents, folded, under the nav -->
+      <details class="toc-fold lb" data-toc-fold>
+        <summary>
+          <span class="toc-fold__label">On this page</span>
+          <span class="toc-fold__current" data-toc-current></span>
+          <Icon name="plus" size={18} />
+        </summary>
+        <nav aria-label="On this page">{toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}</nav>
+      </details>
+
+      <div class="docs__body">
+        {
+          two.map(({ id, data, Content }) => (
+            <section class="doc reveal" id={id}>
+              <h2 class="doc__title">
+                <a class="anchor" href={`#${id}`}>
+                  {data.versions[0].version}
+                </a>
+                {data.date && <time class="release__date" datetime={data.date}>{day(data.date)}</time>}
+              </h2>
+              <p class="release__packages">{data.versions.map((v) => <code>@fluidkit/{v.pkg}</code>)}</p>
+              <div class="release__body">
+                <Content />
+              </div>
+            </section>
+          ))
+        }
+
+        <section class="doc reveal" id="before-2">
+          <h2 class="doc__title"><a class="anchor" href="#before-2">Before 2.0</a></h2>
+          <p>
+            Each feature was a package of its own, released when it changed. Those packages are deprecated now: their features
+            are in the four above, as they were.
+          </p>
+          {
+            before.map(({ id, data, Content }) => (
+              <article class="release" id={id}>
+                <h3 class="release__title">
+                  <a class="anchor" href={`#${id}`}>
+                    {data.versions.map((v) => (
+                      <span>
+                        {v.pkg} <b>{v.version}</b>
+                      </span>
+                    ))}
+                  </a>
+                  {data.date && <time class="release__date" datetime={data.date}>{day(data.date)}</time>}
+                </h3>
+                <div class="release__body">
+                  <Content />
+                </div>
+              </article>
+            ))
+          }
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .release__date {
+    margin-left: 12px;
+    color: var(--ink-3);
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .release__packages { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 20px; }
+  /* A changelog's table lists several packages a cell: they wrap, as the text does */
+  .release__body :global(td:first-child),
+  .release__body :global(td:first-child code) { white-space: normal; }
+
+  .release { margin-top: 36px; }
+  .release + .release { padding-top: 28px; border-top: 1px solid var(--hair); }
+  .release__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    margin: 0 0 12px;
+    font-size: 17px;
+    line-height: 1.4;
+  }
+  .release__title .anchor { display: inline-flex; flex-wrap: wrap; gap: 2px 14px; }
+  .release__title .anchor span { white-space: nowrap; font-weight: 500; }
+  .release__title b { font-weight: 650; }
+  .release__title .release__date { margin-left: 0; }
+</style>
