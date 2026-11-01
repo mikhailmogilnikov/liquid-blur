@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/vue",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Fluid Kit for Vue: Liquid Blur's glass, morph, indicator, drag, lift and layout as components and composables, on interruptible springs that keep their speed.",
   "keywords": [
     "animation",

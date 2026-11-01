@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/react",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Fluid Kit for React: Liquid Blur's glass, morph, indicator, drag, lift and layout as components and hooks, on interruptible springs that keep their speed.",
   "keywords": [
     "animation",
