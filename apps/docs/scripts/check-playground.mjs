@@ -62,6 +62,7 @@ try {
     const browser = await BROWSERS[name].launch({ env });
     for (const [screen, options] of Object.entries(SCREENS)) {
       const page = await browser.newPage(options);
+      await warmUp(page);
       const errors = [];
       page.on("pageerror", (e) => errors.push(e.message));
       await page.goto(url);
@@ -99,3 +100,27 @@ try {
   server.close();
 }
 process.exit(failed ? 1 : 0);
+
+/**
+ * What a software renderer compiles the first time it draws it, drawn once before anything is timed.
+ * WebKit on Linux without a GPU (CI's) holds every frame for seconds the first time it blurs a layer
+ * of its own, and a spring on its way stops dead meanwhile: a blur coming in, glass, a fade
+ */
+async function warmUp(page) {
+  await page.setContent(`
+    <div id="a" style="width: 160px; height: 80px; background: #0a84ff; will-change: filter;
+      transition: filter 0.3s, opacity 0.3s, scale 0.3s, translate 0.3s"></div>
+    <div style="width: 160px; height: 80px; margin-top: -40px; backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px)"></div>`);
+  await page.evaluate(async () => {
+    const el = document.getElementById("a");
+    const frames = (n) =>
+      new Promise((done) => requestAnimationFrame(() => (n > 1 ? frames(n - 1).then(done) : done())));
+    await frames(2);
+    Object.assign(el.style, { filter: "blur(8px)", opacity: "0.5", scale: "0.9", translate: "0 12px" });
+    await frames(2);
+    Object.assign(el.style, { filter: "blur(0px)", opacity: "1", scale: "1", translate: "0 0" });
+    await new Promise((done) => setTimeout(done, 400));
+    await frames(3);
+  });
+}

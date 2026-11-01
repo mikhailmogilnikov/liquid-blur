@@ -1,5 +1,5 @@
 import { SpringAnimator, createLayout } from "@fluidkit/core";
-import { expect, first, sample } from "./check";
+import { FRAME, expect, first, sample } from "./check";
 import type { Kit, Setup } from "./kit";
 
 /** An element's items as the page has them: not one going out */
@@ -24,14 +24,21 @@ const clean = (root: HTMLElement) => {
  * 20px a frame here); one shown somewhere else at once (a flight started from the wrong place) jumps
  */
 const steps = (root: HTMLElement) => {
-  const seen = sample(() => new Map(live(root).map((el) => [el, el.getBoundingClientRect().top])));
+  const seen = sample(() => ({
+    at: performance.now(),
+    tops: new Map(live(root).map((el) => [el, el.getBoundingClientRect().top])),
+  }));
   return () => {
     seen.stop();
     let worst = 0;
     for (let i = 1; i < seen.seen.length; i++) {
-      for (const [el, top] of seen.seen[i]) {
-        const before = seen.seen[i - 1].get(el);
-        if (before !== undefined) worst = Math.max(worst, Math.abs(top - before));
+      const { at, tops } = seen.seen[i];
+      const last = seen.seen[i - 1];
+      // A frame held long (a slow machine's, or a renderer compiling) is a step of several frames
+      const frames = Math.max(1, (at - last.at) / FRAME);
+      for (const [el, top] of tops) {
+        const before = last.tops.get(el);
+        if (before !== undefined) worst = Math.max(worst, Math.abs(top - before) / frames);
       }
     }
     return worst / SpringAnimator.timeScale;

@@ -87,6 +87,9 @@ export const unseen = (el: Element) => {
 /** The lift's dialog while one is open */
 export const liftLayer = () => document.querySelector<HTMLDialogElement>("dialog[data-fk-lift]");
 
+/** A frame at 60 Hz, ms */
+export const FRAME = 1000 / 60;
+
 /**
  * Something sampled every frame until `stop()`: what a check can't see once it has settled (an
  * indicator lagging a tab that grew, a copy landing where the element was). Read once the frame is

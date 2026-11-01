@@ -84,6 +84,30 @@ try {
 }
 process.exit(failed ? 1 : 0);
 
+/**
+ * What a software renderer compiles the first time it draws it, drawn once before anything is timed.
+ * WebKit on Linux without a GPU (CI's) holds every frame for seconds the first time it blurs a layer
+ * of its own, and a spring on its way stops dead meanwhile: a blur coming in, glass, a fade
+ */
+async function warmUp(page) {
+  await page.setContent(`
+    <div id="a" style="width: 160px; height: 80px; background: #0a84ff; will-change: filter;
+      transition: filter 0.3s, opacity 0.3s, scale 0.3s, translate 0.3s"></div>
+    <div style="width: 160px; height: 80px; margin-top: -40px; backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px)"></div>`);
+  await page.evaluate(async () => {
+    const el = document.getElementById("a");
+    const frames = (n) =>
+      new Promise((done) => requestAnimationFrame(() => (n > 1 ? frames(n - 1).then(done) : done())));
+    await frames(2);
+    Object.assign(el.style, { filter: "blur(8px)", opacity: "0.5", scale: "0.9", translate: "0 12px" });
+    await frames(2);
+    Object.assign(el.style, { filter: "blur(0px)", opacity: "1", scale: "1", translate: "0 0" });
+    await new Promise((done) => setTimeout(done, 400));
+    await frames(3);
+  });
+}
+
 /** The scene on each framework's page, in each browser: `true` when all of it does what it should */
 async function checkPages(dist) {
   const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" };
@@ -109,6 +133,9 @@ async function checkPages(dist) {
           ? { ...process.env, MOZ_APP_DATA: mkdtempSync(join(tmpdir(), "consumer-firefox-")) }
           : undefined;
       const browser = await BROWSERS[name].launch({ env });
+      const warm = await browser.newPage();
+      await warmUp(warm);
+      await warm.close();
       for (const framework of FRAMEWORKS) {
         const page = await browser.newPage({ viewport: { width: 1000, height: 800 } });
         const failures = await checkScene(page, `http://localhost:${PORT}/${framework}.html`, name);
@@ -229,46 +256,60 @@ async function checkScene(page, url, browser) {
         [list, count],
         { timeout },
       );
+    // What the layout wrote, as it wrote it: a frame can take longer than the whole way (a software
+    // renderer compiling its first blur, as on CI), and a poll would find only the end of it
+    await page.$eval(list, (ul) => {
+      const seen = (window.__layout = { moved: false, blurred: false, out: false });
+      new MutationObserver(() => {
+        const [first, ...rest] = ul.children;
+        seen.moved ||= rest.some((el) => el.style.translate);
+        seen.blurred ||= /blur\(/.test(first?.style.filter ?? "");
+        seen.out ||= !!ul.querySelector(":scope > [data-fk-part]");
+      }).observe(ul, { subtree: true, childList: true, attributes: true });
+    });
+    const saw = (what) => page.waitForFunction((what) => window.__layout[what], what, { timeout });
     await page.click(id("layout-add"));
-    await page.waitForFunction((list) => document.querySelector(list).children[1]?.style.translate, list, {
-      timeout,
-    });
+    await saw("moved");
     // The new one comes in out of a blur, as `transitions.blurReplace()` has it
-    await page.waitForFunction((list) => /blur\(/.test(document.querySelector(list).children[0].style.filter), list, {
-      timeout,
-    });
+    await saw("blurred");
     await rest(4);
     await page.click(id("layout-drop"));
-    await page.waitForSelector(`${list} > [data-fk-part]`, { timeout });
+    await saw("out");
     await rest(3);
   });
 
-  // motion.css as the app's bundler minified it: shown, the toast comes in on its spring (seen
-  // half way); hidden, it goes out the same way, and is gone. Firefox doesn't transition `display`
-  // yet: there it's gone at once
+  // The stylesheet as the app's bundler minified it: shown, the toast comes in on its spring (its
+  // opacity transition started, eased by the spring's `linear()`); hidden, it goes out the same way,
+  // and is gone. Read as the change is made, not caught half way: a frame can outlast it. Firefox
+  // doesn't transition `display` yet: there it's gone at once
   await check("motion", async () => {
     const toast = id("toast");
-    const halfWay = () =>
-      page.waitForFunction(
-        (toast) => {
-          const style = getComputedStyle(document.querySelector(toast));
-          const opacity = parseFloat(style.opacity);
-          return style.display !== "none" && opacity > 0 && opacity < 1;
-        },
+    const springs = async (hidden) => {
+      const on = await page.$eval(
         toast,
-        { timeout, polling: "raf" },
+        (el, hidden) => {
+          el.hidden = hidden;
+          // Brings the style up to date, so the transitions are there
+          return el
+            .getAnimations()
+            .filter((a) => a.transitionProperty === "opacity")
+            .map((a) => ({ easing: a.effect.getTiming().easing, duration: a.effect.getTiming().duration }));
+        },
+        hidden,
       );
+      if (!on.some((t) => t.duration > 0 && t.easing.startsWith("linear(")))
+        throw new Error(`no spring on its opacity: ${JSON.stringify(on).slice(0, 120)}`);
+    };
     const style = (prop, value) =>
       page.waitForFunction(
         ([toast, prop, value]) => getComputedStyle(document.querySelector(toast))[prop] === value,
         [toast, prop, value],
         { timeout },
       );
-    await page.$eval(toast, (el) => (el.hidden = false));
-    await halfWay();
+    await springs(false);
     await style("opacity", "1");
-    await page.$eval(toast, (el) => (el.hidden = true));
-    if (browser !== "firefox") await halfWay();
+    if (browser === "firefox") await page.$eval(toast, (el) => (el.hidden = true));
+    else await springs(true);
     await style("display", "none");
   });
 

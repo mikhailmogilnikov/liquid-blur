@@ -1,5 +1,5 @@
 import { SpringAnimator, springs, transitions, createLayout } from "@fluidkit/core";
-import { expect, first, sample } from "./check";
+import { FRAME, expect, first, sample } from "./check";
 import type { Kit, Setup } from "./kit";
 
 /** A CSS transition on a spring, as fast as the springs run: four times longer in slow motion */
@@ -28,14 +28,21 @@ const live = (root: HTMLElement) =>
 
 /** Watches the items' tops every frame from now on: once read, the biggest step any took in a frame */
 const steps = (root: HTMLElement) => {
-  const seen = sample(() => new Map(live(root).map((el) => [el, el.getBoundingClientRect().top])));
+  const seen = sample(() => ({
+    at: performance.now(),
+    tops: new Map(live(root).map((el) => [el, el.getBoundingClientRect().top])),
+  }));
   return () => {
     seen.stop();
     let worst = 0;
     for (let i = 1; i < seen.seen.length; i++) {
-      for (const [el, top] of seen.seen[i]) {
-        const before = seen.seen[i - 1].get(el);
-        if (before !== undefined) worst = Math.max(worst, Math.abs(top - before));
+      const { at, tops } = seen.seen[i];
+      const last = seen.seen[i - 1];
+      // A frame held long (a slow machine's, or a renderer compiling) is a step of several frames
+      const frames = Math.max(1, (at - last.at) / FRAME);
+      for (const [el, top] of tops) {
+        const before = last.tops.get(el);
+        if (before !== undefined) worst = Math.max(worst, Math.abs(top - before) / frames);
       }
     }
     return worst / SpringAnimator.timeScale;
@@ -53,6 +60,29 @@ const clean = (list: HTMLElement) => {
   );
 };
 
+/**
+ * How far a CSS transition takes what `read` reads past where it ends, along its own time: seeked
+ * through and put back where it was, all before a frame is drawn. Its very end isn't seeked to: a
+ * transition finished there is let go of
+ */
+const traced = (el: HTMLElement, property: string, read: () => number) => {
+  const transition = el.getAnimations().find((a) => (a as CSSTransition).transitionProperty === property);
+  if (!transition) return 0;
+  const was = transition.currentTime;
+  const duration = Number(transition.effect!.getComputedTiming().duration) * 0.9999;
+  const at = (t: number) => {
+    transition.currentTime = t;
+    return read();
+  };
+  const start = at(0);
+  const end = at(duration);
+  const sign = Math.sign(end - start);
+  let past = 0;
+  for (let i = 0; i <= 200; i++) past = Math.max(past, (at((duration * i) / 200) - end) * sign);
+  transition.currentTime = was;
+  return past;
+};
+
 export const motion: Record<string, Setup> = {
   "motion-curve": (root) => {
     const js = root.querySelector<HTMLElement>("[data-js]")!;
@@ -68,7 +98,7 @@ export const motion: Record<string, Setup> = {
     let past = () => [0, 0];
     const go = (to: number) => {
       const from = js.getBoundingClientRect().left;
-      const seen = sample(() => [js.getBoundingClientRect().left, css.getBoundingClientRect().left]);
+      const seen = sample(() => js.getBoundingClientRect().left);
       // Slowed down with the rest, never sped up: a frame sped up misses where they turn
       const pace = Math.min(1, SpringAnimator.timeScale);
       const bouncy = springs.bouncy();
@@ -76,13 +106,16 @@ export const motion: Record<string, Setup> = {
       css.style.transitionDuration = `${seconds / pace}s`;
       css.style.translate = `${to}px 0`;
       spring.to({ x: to }, { ...bouncy, duration: (bouncy.duration * SpringAnimator.timeScale) / pace });
-      // How far each went past where it stops: at the turn it's all but still, so a frame or two
-      // between them, or a frame sped up, hardly shows there
+      // The CSS one along its own time, seeked there and back before a frame is drawn: frames on a
+      // slow machine (CI's) can step over where it turns
+      const cssPast = traced(css, "translate", () => css.getBoundingClientRect().left);
+      // How far the JS one went past where it stops: at the turn it's all but still, so a frame or
+      // two there, or a frame sped up, hardly shows
       past = () => {
         seen.stop();
         const end = js.getBoundingClientRect().left;
         const sign = Math.sign(end - from);
-        return [1, 2].map((k) => Math.max(0, ...seen.seen.map((f) => (f[k - 1] - end) * sign)));
+        return [Math.max(0, ...seen.seen.map((left) => (left - end) * sign)), cssPast];
       };
     };
     return {
