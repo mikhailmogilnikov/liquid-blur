@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/core",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Fluid Kit without a framework: Liquid Blur's glass, morph, indicator, drag, lift and layout on interruptible springs that keep their speed, and Apple's springs and transitions for CSS.",
   "keywords": [
     "animation",
